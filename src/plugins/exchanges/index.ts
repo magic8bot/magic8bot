@@ -31,8 +31,8 @@ const exchanges = {
   wexnz,
 }
 
-export const loadExchange = (exchange: string) => {
-  return exchanges[exchange]
+export const loadExchange = (exchange: string) => (conf) => {
+  return exchanges[exchange]({ [exchange]: conf })
 }
 
 const products = new Map()

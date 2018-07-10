@@ -1,7 +1,10 @@
 import { observable, action } from 'mobx'
-import { makeOptions } from '../trader/util'
+import { Collection } from 'mongodb'
+
+import { mongoService } from '../services/mongo.service'
 
 export interface Options {
+  session_id: string
   period: string
   strategy: string
   sell_stop_pct: number
@@ -47,7 +50,50 @@ export interface Options {
 export class OptionStore {
   @observable public options: Options = {} as Options
 
-  constructor(selector, argv, cmd, conf) {
-    this.options = makeOptions(selector, argv, cmd, conf)
+  private sessionId: string
+  private collection: Collection<Options> = mongoService.connection.collection('beta_options')
+
+  constructor() {
+    this.collection.createIndex({ sessionId: 1 })
+  }
+
+  @action
+  async initOptions(sessionId: string, options: Options) {
+    this.sessionId = sessionId
+    const savedOptions = await this.loadOptions()
+
+    if (!savedOptions) {
+      this.options = options
+      this.saveOptions(options)
+      return
+    }
+
+    this.options = this.mergeOptions(savedOptions, options)
+  }
+
+  @action
+  async saveOptions(options: Options) {
+    const { sessionId } = this
+    await this.collection.save({ ...options, sessionId })
+  }
+
+  @action
+  async updateOptions(options: Partial<Options>) {
+    const { sessionId } = this
+
+    await this.collection.findOneAndUpdate({ sessionId }, options)
+  }
+
+  @action
+  mergeOptions(optionsA: Options, optionsB: Options) {
+    const selector = { ...optionsA.selector, ...optionsB.selector }
+
+    return { ...optionsA, ...(optionsB as Options), selector } as Options
+  }
+
+  @action
+  async loadOptions() {
+    const { sessionId } = this
+    return await this.collection.findOne({ sessionId })
   }
 }

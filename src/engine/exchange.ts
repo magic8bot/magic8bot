@@ -1,4 +1,5 @@
-import { ITrade, IQuote, IProduct } from '@types'
+import { Trade, Quote, Product, ExchangeAuth } from '@zbTypes'
+import { loadExchange } from '../plugins/exchanges'
 
 interface BaseOpts {
   asset: string
@@ -13,10 +14,9 @@ type FeeOpts = BaseOpts
 type BalanceOpts = BaseOpts
 
 type TradesOpts = {
-  to: string
-  from: string
-} & BaseOpts &
-  ProductOpts
+  to?: number
+  from: number
+} & ProductOpts
 
 type TradeOpts = {
   price: number
@@ -54,7 +54,13 @@ interface IExchange {
 }
 
 export class Exchange {
-  constructor(private exchange: IExchange) {}
+  private readonly exchange: IExchange
+
+  constructor(exchangeName: string, auth: ExchangeAuth, isPaper: boolean = false) {
+    const exchange = loadExchange(!isPaper ? exchangeName : 'sim')
+    // @todo(notVitaliy): Fix paper trader
+    this.exchange = !isPaper ? exchange(auth) : exchange(auth)
+  }
 
   get name() {
     return this.exchange.name.toUpperCase()
@@ -88,22 +94,22 @@ export class Exchange {
     this.exchange.setFees(opts)
   }
 
-  getProducts(): IProduct[] {
+  getProducts(): Product[] {
     return this.exchange.getProducts()
   }
 
   getCursor(trade) {
-    this.exchange.getCursor(trade)
+    return this.exchange.getCursor(trade)
   }
 
   async getTrades(opts: TradesOpts) {
-    return new Promise<ITrade[]>((resolve, reject) => {
+    return new Promise<Trade[]>((resolve, reject) => {
       this.exchange.getTrades(opts, (err, trades) => (err ? reject(err) : resolve(trades)))
     })
   }
 
   async getQuote(opts: ProductOpts) {
-    return new Promise<IQuote>((resolve, reject) => {
+    return new Promise<Quote>((resolve, reject) => {
       this.exchange.getQuote(opts, (err, quote) => (err ? reject(err) : resolve(quote)))
     })
   }

@@ -13,6 +13,7 @@ interface OrderItem {
   price: number
   size: number
   time: number
+  slippage: number
   type: 'buy' | 'sell'
 }
 
@@ -28,8 +29,8 @@ export class OrderStore {
 
   constructor(private readonly sessionId: string, private readonly selector: string) {
     this.collection.createIndex({ selector: 1 })
-    this.collection.createIndex({ sessionId: 1})
-    this.collection.createIndex({ time: 1})
+    this.collection.createIndex({ sessionId: 1 })
+    this.collection.createIndex({ time: 1 })
   }
 
   @action

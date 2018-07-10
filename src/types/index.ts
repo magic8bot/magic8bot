@@ -1,108 +1,146 @@
-import { Db } from 'mongodb'
+interface MongoBase {
+  host?: string
+  port?: number
+  db?: string
+  username?: string
+  password?: string
+  replicaSet?: string
+  authMechanism?: string
+  connectionString?: string
+}
 
-export interface IZenbotConfig {
-  version: string
-  conf: {
-    eventBus: NodeJS.EventEmitter
-    db: {
-      mongo: Db
-    }
-    srcRoot: string
-    [key: string]: any
+interface MongoAuth extends MongoBase {
+  host: string
+  port: number
+  db: string
+  username: string
+  password: string
+  replicaSet: string
+  authMechanism?: string
+}
+
+interface MongoConn extends MongoBase {
+  connectionString: string
+}
+
+export type MongoConf = MongoAuth | MongoConn
+
+export interface Base {
+  period: string
+  min_periods: number
+  period_length: string
+  sell_stop_pct: number
+  buy_stop_pct: number
+  profit_stop_enable_pct: number
+  profit_stop_pct: number
+  max_slippage_pct: number
+  buy_pct: number
+  sell_pct: number
+  order_adjust_time: number
+  max_sell_loss_pct: number
+  max_buy_loss_pct: number
+  order_poll_time: number
+  wait_for_settlement: number
+  markdown_buy_pct: number
+  markup_sell_pct: number
+  order_type: string
+  post_only: boolean
+  days: number
+  keep_lookback_periods: number
+  poll_trades: number
+  rsi_periods: number
+  balance_snapshot_period: string
+  avg_slippage_pct: number
+  cancel_after: string
+  use_prev_trades: boolean
+  min_prev_trades: number
+  use_fee_asset: boolean
+  reset_profit: boolean
+  exact_buy_orders: boolean
+  exact_sell_orders: boolean
+  currency_increment: number
+  currency_capital: number
+  asset_capital: number
+  symmetrical: boolean
+}
+
+export interface Strategy extends Partial<Base> {
+  selector: string
+  strategyName: string
+  share: number
+}
+
+export interface ExchangeAuth {
+  key?: string
+  secret?: string
+  username?: string
+  b64secret?: string
+  passphrase?: string
+  wallet?: string
+  client_id?: string
+  sandbox?: boolean
+  apiURI?: string
+  websocketURI?: string
+}
+
+export interface ExchangeConf {
+  name: string
+  auth: ExchangeAuth
+  options: {
+    base?: Base
+    strategies: Strategy[]
   }
 }
 
-export interface IZenbotRuntime {
-  options: IOptions
-  exchange: IExchange
-  product_id: string
-  asset: string
-  currency: string
-  asset_capital: number
-  product: IProduct
-  balance: IBalance
-  ctx: ICtx
-  lookback: ILookback[]
-  day_count: number
-  my_trades: ITrade[]
-  my_prev_trades: ITrade[]
-  vol_since_last_blink: number
-  boot_time: number
-  tz_offset: number
-  last_trade_id: number
-  trades: ITrade[]
-  strategy: IStrategy
-  last_day: number
-  period: IPeriod
-  marketData: IMarketData
-  acted_on_stop: boolean
-  action?: string
-  signal?: string
+export interface EngineConf extends Base {
+  share: number
+}
+
+export interface Conf extends Base {
+  session_id?: string
+  exchanges: ExchangeConf[]
+  mode: string
+}
+
+export interface Zenbot {
+  mongo: MongoConf
+  conf: Conf
+
   port: number
-  url: string
-  quote: IQuote
-  start_price: number
-  start_capital: number
-  real_capital: number
-  net_currency: number
-  orig_capital: number
-  orig_price: number
-  stats: IStats
+  version: string
+  srcRoot: string
+  debug: boolean
 }
 
-export interface IStats {
-  profit: string
-  tmp_balance: string
-  buy_hold: string
-  buy_hold_profit: string
-  day_count: number
-  trade_per_day: string
+export interface Quote {
+  bid: number
+  ask: number
 }
 
-export interface IQuote {
-  bid: string
-  ask: string
+export interface Ordertype {
+  type: string
+  options: string[]
 }
 
-export interface IMarketData {
-  open: number[]
-  close: number[]
-  high: number[]
-  low: number[]
-  volume: number[]
+export interface IMinperiods {
+  type: string
+  min: number
+  max: number
 }
 
-export interface IPeriod {
-  period_id: string
-  size: string
-  time: number
-  open: number
-  high: number
-  low: number
-  close: number
-  volume: number
-  close_time: number
-  latest_trade_time: number
-  overbought_rsi_avg_gain: number
-  overbought_rsi_avg_loss: number
-  overbought_rsi: number
-  rsi_avg_gain: number
-  rsi_avg_loss: number
-  rsi: number
+export interface Periodlength {
+  type: string
+  min: number
+  max: number
+  period_length: string
 }
 
-export interface IStrategy {
-  name: string
-  description: string
-  phenotypes: IPhenotypes
-}
-
-export interface IPhenotypes {
-  period_length: IPeriodlength
+export interface Phenotypes {
+  period_length: Periodlength
   min_periods: IMinperiods
   markdown_buy_pct: IMinperiods
   markup_sell_pct: IMinperiods
-  order_type: IOrdertype
+  order_type: Ordertype
   sell_stop_pct: IMinperiods
   buy_stop_pct: IMinperiods
   profit_stop_enable_pct: IMinperiods
@@ -116,25 +154,7 @@ export interface IPhenotypes {
   overbought_rsi: IMinperiods
 }
 
-export interface IOrdertype {
-  type: string
-  options: string[]
-}
-
-export interface IMinperiods {
-  type: string
-  min: number
-  max: number
-}
-
-export interface IPeriodlength {
-  type: string
-  min: number
-  max: number
-  period_length: string
-}
-
-export interface ITrade {
+export interface Trade {
   _id: string
   trade_id: number
   time: number
@@ -145,103 +165,11 @@ export interface ITrade {
   selector: string
 }
 
-export interface ILookback {
-  period_id: string
-  size: string
-  time: number
-  open: number
-  high: number
-  low: number
-  close: number
-  volume: number
-  close_time: number
-  latest_trade_time: number
-  overbought_rsi_avg_gain: number
-  overbought_rsi_avg_loss: number
-  overbought_rsi: number
-  id: string
-  selector: string
-  session_id: string
-  _id: string
-  macd: number
-  macd_histogram: number
-  macd_signal: number
-  rsi_avg_gain: number
-  rsi_avg_loss: number
-  rsi: number
-}
-
-export interface ICtx {}
-
-export interface IBalance {
-  asset: string
-  currency: string
-  currency_hold: string
-  asset_hold: string
-  deposit: number
-}
-
-export interface IProduct {
+export interface Product {
   asset: string
   currency: string
   min_size: string
   max_size: string
   increment: string
   label: string
-}
-
-export interface IExchange {
-  name: string
-  historyScan: string
-  makerFee: number
-  takerFee: number
-  backfillRateLimit: number
-}
-
-export interface IOptions {
-  period: string
-  strategy: string
-  sell_stop_pct: number
-  buy_stop_pct: number
-  profit_stop_enable_pct: number
-  profit_stop_pct: number
-  max_slippage_pct: number
-  buy_pct: number
-  sell_pct: number
-  order_adjust_time: number
-  max_sell_loss_pct: number
-  order_poll_time: number
-  markdown_buy_pct: number
-  markup_sell_pct: number
-  order_type: string
-  poll_trades: number
-  currency_capital: number
-  asset_capital: number
-  rsi_periods: number
-  avg_slippage_pct: number
-  max_buy_loss_pct: number
-  keep_lookback_periods: number
-  min_prev_trades: number
-  currency_increment?: any
-  use_prev_trades: boolean
-  stats: boolean
-  mode: string
-  selector: ISelector
-  period_length: string
-  min_periods: number
-  ema_short_period: number
-  ema_long_period: number
-  signal_period: number
-  up_trend_threshold: number
-  down_trend_threshold: number
-  overbought_rsi_periods: number
-  overbought_rsi: number
-}
-
-export interface ISelector {
-  exchange_id: string
-  product_id: string
-  asset: string
-  currency: string
-  normalized: string
 }

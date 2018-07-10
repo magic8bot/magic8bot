@@ -1,7 +1,8 @@
+import { EventEmitter } from 'events'
 import { observable, action, transaction } from 'mobx'
-import tb from 'timebucket'
 
 import { TradeItem } from './trade.store'
+import { timebucket } from '../util'
 
 interface PeriodItem {
   time: number
@@ -15,7 +16,7 @@ interface PeriodItem {
 export class PeriodStore {
   @observable public periods: PeriodItem[] = []
 
-  constructor(private readonly period: string) {}
+  constructor(private readonly period: string, private periodEvents: EventEmitter) {}
 
   @action
   initPeriods(trades: TradeItem[]) {
@@ -25,7 +26,7 @@ export class PeriodStore {
   @action
   addTrade(trade: TradeItem) {
     const { size, price, time } = trade
-    const bucket = tb(time)
+    const bucket = timebucket(time)
       .resize(this.period)
       .toMilliseconds()
 
@@ -35,6 +36,8 @@ export class PeriodStore {
     this.periods[0].high = Math.min(price, this.periods[0].high)
     this.periods[0].close = price
     this.periods[0].volume += size
+
+    this.periodEvents.emit('newTrade')
   }
 
   @action
@@ -47,5 +50,8 @@ export class PeriodStore {
       close: price,
       volume: size,
     })
+
+    this.periodEvents.emit('newTrade')
+    this.periodEvents.emit('newPeriod')
   }
 }

@@ -14,6 +14,7 @@ config.js
 config.patch
 data/*
 conf.js
+conf.ts
 conf-*
 conf_*
 !conf-sample.js
@@ -39,4 +40,4 @@ gen.*.bat
 gen.*.sh
 .env
 scripts/auto_backtester/backtesting_*.csv
-.vscode
+./dist

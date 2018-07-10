@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import moment from 'moment'
-import { argv } from 'yargs'
-import tb from 'timebucket'
+// import { argv } from 'yargs'
+import { timebucket } from '../util/timebucket'
 import readline from 'readline'
 import z from 'zero-fill'
 import n from 'numbro'
@@ -178,7 +178,7 @@ let processOutput = function(output, taskStrategyName, pheno) {
     r.days = params.days
   }
   if (!days) {
-    days = parseInt(argv.days, 10)
+    // days = parseInt(argv.days, 10)
   }
   if (!days || days < 1) days = 1
 
@@ -279,7 +279,7 @@ let monitor: Record<string, any> = {
 
     if (so.start && so.end) {
       var actualStart = moment(
-        tb(so.start.valueOf())
+        timebucket(so.start.valueOf())
           .resize(so.period_length)
           .subtract(so.min_periods + 2)
           .toMilliseconds()
@@ -413,12 +413,12 @@ let monitor: Record<string, any> = {
     let bestBColor = 'gray'
 
     if (bestP) {
-      if (argv.currency_capital) {
-        let cc = parseFloat(argv.currency_capital)
-        if (cc < 0.1) bestBColor = 'green'
-        else if (cc > bestBalance) bestBColor = 'red'
-        else bestBColor = 'yellow'
-      }
+      // if (argv.currency_capital) {
+      //   let cc = parseFloat(argv.currency_capital)
+      //   if (cc < 0.1) bestBColor = 'green'
+      //   else if (cc > bestBalance) bestBColor = 'red'
+      //   else bestBColor = 'yellow'
+      // }
     }
 
     let bestBalanceString = z(5, n(bestBalance || 0).format('0.0000'), ' ')[bestBColor]
@@ -495,17 +495,17 @@ export default {
   },
 
   ensureBackfill: function() {
-    let days = argv.days
-    if (!days) {
-      if (argv.start) {
-        var start = moment(argv.start, 'YYYYMMDDHHmm')
-        days = Math.max(1, moment().diff(start, 'days'))
-      } else {
-        var end = moment(argv.end, 'YYYYMMDDHHmm')
-        days = moment().diff(end, 'days') + 1
-      }
-    }
-    runUpdate(days, argv.selector)
+    // let days = argv.days
+    // if (!days) {
+    //   if (argv.start) {
+    //     var start = moment(argv.start, 'YYYYMMDDHHmm')
+    //     days = Math.max(1, moment().diff(start, 'days'))
+    //   } else {
+    //     var end = moment(argv.end, 'YYYYMMDDHHmm')
+    //     days = moment().diff(end, 'days') + 1
+    //   }
+    // }
+    // runUpdate(days, argv.selector)
   },
 
   buildCommand: function(taskStrategyName, phenotype, filename) {
@@ -521,9 +521,9 @@ export default {
     delete cmdArgs.help
     delete cmdArgs.version
 
-    if (argv.include_html) cmdArgs.filename = filename
+    // if (argv.include_html) cmdArgs.filename = filename
 
-    if (argv.silent) cmdArgs.silent = true
+    // if (argv.silent) cmdArgs.silent = true
 
     cmdArgs.backtester_generation = phenotype.backtester_generation
 

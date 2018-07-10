@@ -1,46 +1,28 @@
-import 'colors'
-import z from 'zero-fill'
+import { EngineConf } from '@zbTypes'
+import { Exchange } from './exchange'
+import { Strategy } from './strategy'
+import { EventEmitter } from 'events'
+import { TradeStore } from '../store/trade.store'
 
-import { Core } from './core'
+export class Engine {
+  private strategy: Strategy
 
-export default (s, conf) => {
-  const core = new Core(s, conf)
+  private signalEvents: EventEmitter
 
-  return {
-    writeHeader: function() {
-      process.stdout.write(
-        [
-          z(19, 'DATE', ' ').grey,
-          z(17, 'PRICE', ' ').grey,
-          z(9, 'DIFF', ' ').grey,
-          z(10, 'VOL', ' ').grey,
-          z(8, 'RSI', ' ').grey,
-          z(32, 'ACTIONS', ' ').grey,
-          z(s.options.deposit ? 38 : 25, 'BAL', ' ').grey,
-          z(22, 'PROFIT', ' ').grey,
-        ].join('') + '\n'
-      )
-    },
-    update: core.onTrades,
-    exit: function(cb) {
-      if (core.tradeProcessingQueue.length()) {
-        core.tradeProcessingQueue.drain = () => {
-          if (s.strategy.onExit) {
-            s.strategy.onExit.call(s.ctx, s)
-          }
-          cb()
-        }
-      } else {
-        if (s.strategy.onExit) {
-          s.strategy.onExit.call(s.ctx, s)
-        }
-        cb()
-      }
-    },
+  constructor(
+    strategyName: string,
+    private readonly exchange: Exchange,
+    private readonly conf: EngineConf,
+    private readonly tradeStore: TradeStore
+  ) {
+    this.signalEvents = new EventEmitter()
 
-    executeSignal: core.executeSignal,
-    writeReport: core.writeReport,
-    syncBalance: core.syncBalance,
-    setSignal: core.setSignal,
+    this.strategy = new Strategy(strategyName, conf.period || conf.period_length, this.signalEvents)
+
+    this.signalEvents.on('signal', (signal) => {})
   }
+
+  async getTrades() {}
+
+  tick() {}
 }

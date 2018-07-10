@@ -1,5 +1,4 @@
-import tb from 'timebucket'
-import Bucket from 'timebucket/lib/bucket'
+import { timebucket } from '../util/timebucket'
 import n from 'numbro'
 import { Collection } from 'mongodb'
 
@@ -32,12 +31,16 @@ export class BalanceService {
   }
 
   next({ currency, asset, close, orig_capital, orig_price, time = null }) {
-    const d = (tb() as Bucket).resize(this.balanceSnapshotPeriod)
+    const d = timebucket().resize(this.balanceSnapshotPeriod)
     const id = `${this.selector}-${d.toString()}`
     const balance = {
       id,
       _id: id,
-      time: time ? time : (tb() as Bucket).resize(this.balanceSnapshotPeriod).toMilliseconds(),
+      time: time
+        ? time
+        : timebucket()
+            .resize(this.balanceSnapshotPeriod)
+            .toMilliseconds(),
       currency: currency,
       asset: asset,
       price: close,

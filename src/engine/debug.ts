@@ -1,7 +1,7 @@
-import boot from '../../boot'
+import { zenbot } from '../conf'
 import moment from 'moment'
 
-let debug = boot.debug
+let debug = zenbot.debug
 
 export const flip = () => (on = debug = !debug)
 

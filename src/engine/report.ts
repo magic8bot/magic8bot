@@ -7,7 +7,7 @@ import abbreviate from 'number-abbreviate'
 import z from 'zero-fill'
 import n from 'numbro'
 import rsi from '../analysis/rsi'
-import tb from 'timebucket'
+import { timebucket } from '../util/timebucket'
 
 export class Report {
   private assetColWidth: number = 0
@@ -65,7 +65,7 @@ export class Report {
   ): string {
     const baseTime = isProgress
       ? latest_trade_time
-      : tb(time)
+      : timebucket(time)
           .resize(period_length)
           .add(1)
           .toMilliseconds()

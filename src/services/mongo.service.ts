@@ -1,9 +1,10 @@
 import { MongoClient, Db } from 'mongodb'
+import { MongoConf } from '@zbTypes'
 
 class MongoService {
   public connection: Db
 
-  async connect({ username, password, authMechanism, connectionString, host, port, replicaSet, db }) {
+  async connect({ username, password, authMechanism, host, port, replicaSet, db, connectionString }: MongoConf) {
     const conStr = connectionString
       ? connectionString
       : this.makeConnectionString(username, password, host, port, db, replicaSet, authMechanism)
@@ -20,7 +21,7 @@ class MongoService {
     username: string,
     password: string,
     host: string,
-    port: string,
+    port: number,
     db: string,
     replicaSet: string,
     authMechanism: string

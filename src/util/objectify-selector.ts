@@ -1,6 +1,14 @@
 import normalizeSelector from './normalize-selector'
 
-export default (selector) => {
+export interface Selector {
+  exchange_id: string
+  product_id: string
+  asset: string
+  currency: string
+  normalized: string
+}
+
+export default (selector): Selector => {
   var rtn
 
   if (typeof selector == 'string') {

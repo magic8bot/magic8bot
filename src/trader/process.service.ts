@@ -94,7 +94,7 @@ export class ProcessService {
     }
 
     if (!statsonly) {
-      output_lines.forEach(function (line) {
+      output_lines.forEach(function(line) {
         console.log(line)
       })
     }
@@ -121,7 +121,9 @@ export class ProcessService {
 
     const code =
       'var data = ' + JSON.stringify(data) + ';\n' + 'var trades = ' + JSON.stringify(this.s.my_trades) + ';\n'
-    const tpl = fs.readFileSync(path.resolve(__dirname, '..', 'templates', 'sim_result.html.tpl'), { encoding: 'utf8' })
+    const tpl = fs.readFileSync(path.resolve(__dirname, '../..', 'templates', 'sim_result.html.tpl'), {
+      encoding: 'utf8',
+    })
 
     const out = tpl
       .replace('{{code}}', code)
@@ -129,7 +131,7 @@ export class ProcessService {
       .replace('{{output}}', html_output)
       .replace(
         /\{\{symbol\}\}/g,
-        this.s.options.selector.normalized + ' - zenbot ' + require('../package.json').version
+        this.s.options.selector.normalized + ' - zenbot ' + require('../../package.json').version
       )
 
     let out_target

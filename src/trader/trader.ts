@@ -3,7 +3,7 @@ import Bucket from 'timebucket/lib/bucket'
 import { spawn } from 'child_process'
 import path from 'path'
 
-import { makeSettings } from './util'
+import { makeOptions } from './util'
 import engineFactory from '../engine'
 import collectionService from '../services/collection-service'
 import { TradesService } from './trades.service'
@@ -52,7 +52,7 @@ export class Trader {
   private processService: ProcessService
 
   constructor(selector: string, argv: string[], private cmd: Record<string, any>, private conf: Record<string, any>) {
-    this.s = makeSettings(selector, argv, cmd, conf)
+    this.s = { options: makeOptions(selector, argv, cmd, conf) }
 
     this.engine = engineFactory(this.s, conf)
 

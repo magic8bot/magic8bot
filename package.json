@@ -72,6 +72,7 @@
     "micro-request": "^666.0.10",
     "mime": "^2.2.2",
     "minimist": "^1.2.0",
+    "mobx": "^5.0.3",
     "mock-require": "^3.0.2",
     "moment": "^2.22.0",
     "mongodb": "^3.0.5",

@@ -1,5 +1,6 @@
 import 'colors'
 
+import path from 'path'
 import readline from 'readline'
 import cliff from 'cliff'
 import z from 'zero-fill'
@@ -43,6 +44,8 @@ export class ReadlineService {
     ['d', () => this.dumpStats()],
     ['D', () => this.toggleStats()],
     ['L', () => this.toggleDebug()],
+    ['[', () => this.setSignal('buy')],
+    [']', () => this.setSignal('sell')],
   ])
 
   constructor(private s, private engine, private processService: ProcessService) {
@@ -124,8 +127,11 @@ export class ReadlineService {
     console.log(this.s.exchange.name.toUpperCase() + ' exchange active trading options:'.grey)
     console.log()
 
+    const startPath = path.join(process.cwd(), 'src/plugins/strategies', this.s.options.strategy)
+    const strat = require(startPath).default
+
     // prettier-ignore
-    process.stdout.write(z(22, 'STRATEGY'.grey, ' ') + '\t' + this.s.options.strategy + '\t' + (require(`../extensions/strategies/${this.s.options.strategy}/strategy`).description).grey)
+    process.stdout.write(z(22, 'STRATEGY'.grey, ' ') + '\t' + this.s.options.strategy + '\t' + strat.description.grey)
     console.log('\n')
 
     // prettier-ignore
@@ -166,7 +172,7 @@ export class ReadlineService {
 
   private printStats() {
     console.log('\nWriting statistics...'.grey)
-    this.processService.dump()
+    this.processService.dump(true)
   }
 
   private exit() {
@@ -180,12 +186,16 @@ export class ReadlineService {
   }
 
   private toggleStats() {
-    console.log('\nDumping statistics...'.grey)
     this.s.options.save_stats = !this.s.options.save_stats
+    console.log('\nDumping statistics: '.grey + (this.s.options.save_stats ? 'ON'.green : 'OFF'.red))
   }
 
   private toggleDebug() {
     debug.flip()
     console.log('\nDEBUG mode: ' + (debug.on ? 'ON'.green.inverse : 'OFF'.red.inverse))
+  }
+
+  private setSignal(signal: 'buy' | 'sell') {
+    this.engine.setSignal(signal)
   }
 }

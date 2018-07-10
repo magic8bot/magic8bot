@@ -565,32 +565,7 @@ export class Core {
       cancel_after: this.s.options.cancel_after || 'day',
     }
 
-    const api_order = await this.placeOrder(signal, order)
-
-    if (!api_order) {
-      if (api_order === false) {
-        // not enough balance, or signal switched.
-        debug.msg('not enough balance, or signal switched, cancel ' + signal)
-        return
-      }
-
-      if (this.s.last_signal !== signal) {
-        // order timed out but a new signal is taking its place
-        debug.msg('signal switched, cancel ' + signal)
-        return
-      }
-
-      // order timed out and needs adjusting
-      debug.msg(signal + ' order timed out, adjusting price')
-      let remaining_size = this.s[signal + '_order'] ? this.s[signal + '_order'].remaining_size : size
-      if (remaining_size !== size) {
-        debug.msg('remaining size: ' + remaining_size)
-      }
-
-      return this.executeSignal(signal, remaining_size, true)
-    }
-
-    return api_order
+    return this.placeOrder(signal, order)
   }
 
   memDump() {
@@ -699,6 +674,7 @@ export class Core {
         orig_price: opts.price,
         order_type: opts.is_taker ? 'taker' : this.s.options.order_type,
         cancel_after: this.s.options.cancel_after || 'day',
+        is_taker: opts.is_taker,
       }
     }
 
@@ -717,8 +693,6 @@ export class Core {
 
     const api_order = await this.exchange.placeOrder(type, orderCopy)
 
-    this.s.api_order = api_order
-
     if (api_order.status === 'rejected') {
       if (api_order.reject_reason === 'post only') {
         // trigger immediate price adjustment and re-order
@@ -735,7 +709,7 @@ export class Core {
       }
       const err = new Error('\norder rejected') as any
       err.order = api_order
-      return err
+      throw err
     }
 
     // @ts-ignore
@@ -977,7 +951,6 @@ export class Core {
         return ORDER_STATUS.DONE
       }
 
-      this.s.api_order = api_order
       if (api_order.filled_size) {
         order.remaining_size = n(order.size)
           .subtract(api_order.filled_size)
@@ -1015,7 +988,6 @@ export class Core {
     const opts = { order_id: order.order_id, product_id: this.s.product_id }
     const api_order = await this.exchange.getOrder(opts)
 
-    this.s.api_order = api_order
     order.status = api_order.status
     if (api_order.reject_reason) order.reject_reason = api_order.reject_reason
 
@@ -1057,10 +1029,16 @@ export class Core {
 
     if (priceMismatch || priceSlipped) {
       await this.cancelOrder(order, type)
-      return this.placeOrder(type, order)
+      return this.executeSignal(type, order.size, true, order.is_taker)
     }
 
     order.local_time = this.now()
     return asyncTimeout(() => this.checkOrder(order, type), this.s.options.order_poll_time)
+  }
+
+  // FOR DEBUGGING / TESTING
+
+  setSignal = (signal: 'buy' | 'sell') => {
+    this.s.signal = signal
   }
 }

@@ -7,7 +7,7 @@ import ehlers_mama from './ehlers_mama'
 import ehlers_trend from './ehlers_trend'
 import forex_analytics from './forex_analytics'
 import ichimoku from './ichimoku'
-import ichimoku_Score from './ichimoku_Score'
+import ichimoku_score from './ichimoku_score'
 import kc from './kc'
 import macd from './macd'
 import momentum from './momentum'
@@ -46,7 +46,7 @@ const strategies = {
   ehlers_trend,
   forex_analytics,
   ichimoku,
-  ichimoku_Score,
+  ichimoku_score,
   kc,
   macd,
   momentum,

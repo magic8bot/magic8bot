@@ -41,5 +41,6 @@ export default (s, conf) => {
     executeSignal: core.executeSignal,
     writeReport: core.writeReport,
     syncBalance: core.syncBalance,
+    setSignal: core.setSignal,
   }
 }

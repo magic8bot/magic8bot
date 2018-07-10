@@ -299,7 +299,7 @@ export default (program, conf) => {
           })
           var code = 'var data = ' + JSON.stringify(data) + ';\n'
           code += 'var trades = ' + JSON.stringify(s.my_trades) + ';\n'
-          var tpl = fs.readFileSync(path.resolve(__dirname, '..', 'templates', 'sim_result.html.tpl'), {
+          var tpl = fs.readFileSync(path.resolve(__dirname, '../..', 'templates', 'sim_result.html.tpl'), {
             encoding: 'utf8',
           })
           var out = tpl

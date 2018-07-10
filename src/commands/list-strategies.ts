@@ -1,5 +1,6 @@
 import 'colors'
 
+import path from 'path'
 import fs from 'fs'
 
 import { loadStrategy } from '../plugins/strategies'
@@ -9,8 +10,10 @@ export default (program, conf) => {
     .command('list-strategies')
     .description('list available strategies')
     .action(function(/*cmd*/) {
-      var strategies = fs.readdirSync('./plugins/strategies')
+      const startPath = path.join(process.cwd(), 'src/plugins/strategies')
+      var strategies = fs.readdirSync(startPath)
       strategies.forEach((strategy) => {
+        if (fs.statSync(path.join(startPath, strategy)).isFile()) return
         let strat = loadStrategy(strategy)
         console.log(strat.name.cyan + (strat.name === conf.strategy ? ' (default)'.grey : ''))
         if (strat.description) {

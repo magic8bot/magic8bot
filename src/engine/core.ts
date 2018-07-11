@@ -11,7 +11,10 @@ import { TradesService } from '../services/trades.service'
 
 interface EnginesMap {
   tradeStore: TradeStore
-  engines: Engine[]
+  engines: {
+    config: EngineConf
+    engine: Engine
+  }[]
 }
 
 interface ExchangesMap {
@@ -76,16 +79,17 @@ export class Core {
       pairs.set(selector, { tradeStore, engines: [] })
     }
 
-    const { tradeStore } = pairs.get(selector)
+    const { tradeStore, engines } = pairs.get(selector)
     const engine = new Engine(strategyName, exchange, engineConf, tradeStore)
 
-    return engine
+    engines.push({ engine, config: engineConf })
   }
 
   async backfill() {
     this.exchangeEngines.forEach(({ pairs }) => {
-      pairs.forEach(({ tradeStore }) => {
-        tradeStore.getTrades()
+      pairs.forEach(({ tradeStore, engines }) => {
+        const days = engines.map(({ config }) => config.days).reduce((a, b) => a + b)
+        tradeStore.backfill(days)
       })
     })
   }

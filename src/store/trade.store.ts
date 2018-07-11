@@ -3,6 +3,7 @@ import { observable, action, transaction } from 'mobx'
 
 import { mongoService } from '../services/mongo.service'
 import { TradesService } from '../services/trades.service'
+import { sleep } from '../util'
 
 export interface TradeItem {
   trade_id: number
@@ -43,14 +44,43 @@ export class TradeStore {
   }
 
   async getTrades() {
-    console.log(`getting trades: ${this.selector}`)
-    const trades = (await this.tradesService.getTrades()).map((trade) => {
-      trade.selector = this.selector
-      return trade
-    })
+    // console.log(`getting trades: ${this.selector}`)
+    // const trades = (await this.tradesService.getTrades()).map((trade) => {
+    //   trade.selector = this.selector
+    //   return trade
+    // })
+    // console.log(`got trades: ${this.selector}`)
+    // this.collection.insertMany(trades)
+    // console.log(`saved trades: ${this.selector}`)
+  }
 
-    console.log(`got trades: ${this.selector}`)
-    this.collection.insertMany(trades)
-    console.log(`saved trades: ${this.selector}`)
+  async backfill(days: number) {
+    const {
+      tradesService,
+      tradesService: { markerStore },
+    } = this
+    const historyScan = tradesService.getHistoryScan()
+    const markers = await markerStore.loadMarkers()
+
+    if (historyScan === 'backward') {
+      markers.sort(({ to: a }, { to: b }) => (a === b ? 0 : a > b ? -1 : 1))
+    } else {
+      markers.sort(({ from: a }, { from: b }) => (a === b ? 0 : a < b ? -1 : 1))
+    }
+
+    markerStore.marker = markers.length ? markers[0] : markerStore.makeMarker()
+
+    while (true) {
+      const trades = await tradesService.backfill(days)
+      if (!trades.length) return
+
+      console.log(trades.length)
+      console.log(markerStore.marker)
+
+      this.collection.insertMany(trades.map((trade) => ((trade.selector = this.selector), trade)))
+      if (tradesService.getBackfillRateLimit()) {
+        await sleep(tradesService.getBackfillRateLimit())
+      }
+    }
   }
 }

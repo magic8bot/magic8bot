@@ -34,7 +34,7 @@ type CancelOpts = OrderOpts
 
 interface IExchange {
   name: string
-  historyScan: string
+  historyScan: 'backward' | 'forward'
   makerFee: number
   takerFee: number
   backfillRateLimit: number

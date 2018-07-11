@@ -41,4 +41,16 @@ export class TradeStore {
   update(trades: TradeItem[]) {
     transaction(() => trades.forEach((trade) => this.trades.push(trade)))
   }
+
+  async getTrades() {
+    console.log(`getting trades: ${this.selector}`)
+    const trades = (await this.tradesService.getTrades()).map((trade) => {
+      trade.selector = this.selector
+      return trade
+    })
+
+    console.log(`got trades: ${this.selector}`)
+    this.collection.insertMany(trades)
+    console.log(`saved trades: ${this.selector}`)
+  }
 }

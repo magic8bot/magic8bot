@@ -45,6 +45,7 @@ export class Core {
     }
 
     exchanges.forEach((strategy) => this.initExchange(strategy))
+    this.backfill()
   }
 
   private initExchange({ name, auth, options: { base, strategies } }: ExchangeConf) {
@@ -81,5 +82,11 @@ export class Core {
     return engine
   }
 
-  async backfill() {}
+  async backfill() {
+    this.exchangeEngines.forEach(({ pairs }) => {
+      pairs.forEach(({ tradeStore }) => {
+        tradeStore.getTrades()
+      })
+    })
+  }
 }

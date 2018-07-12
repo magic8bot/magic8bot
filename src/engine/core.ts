@@ -1,5 +1,8 @@
-import { timebucket } from '../util/timebucket'
+import { EventEmitter } from 'events'
+import { terminal, ScreenBuffer } from 'terminal-kit'
+import { progressBar } from '../gui'
 
+import { timebucket } from '../util/timebucket'
 import objectifySelector from '../util/objectify-selector'
 
 import { Engine } from './engine'
@@ -11,6 +14,7 @@ import { TradesService } from '../services/trades.service'
 
 interface EnginesMap {
   tradeStore: TradeStore
+  events: EventEmitter
   engines: {
     config: EngineConf
     engine: Engine
@@ -28,6 +32,7 @@ export class Core {
   private exchangeEngines: Map<string, ExchangesMap> = new Map()
 
   private sessionStore: SessionStore
+  private terminal
 
   constructor(private readonly conf: Conf) {
     this.sessionStore = new SessionStore()
@@ -36,6 +41,8 @@ export class Core {
       .resize(period_length)
       .subtract(min_periods * 2)
       .toMilliseconds()
+
+    this.terminal = terminal
   }
 
   async init() {
@@ -66,7 +73,7 @@ export class Core {
   private startEngine(config, name: string, exchange: Exchange, strategy: Strategy) {
     const { selector, strategyName, ...stratConf } = strategy
     const engineConf = { ...config, ...stratConf } as EngineConf
-    const selectorStr = `${exchange.name}.${selector}`
+    const selectorStr = `${exchange.name.toLowerCase()}.${selector}`
     const selectorObj = objectifySelector(selectorStr)
 
     const { pairs } = this.exchangeEngines.get(name)
@@ -74,9 +81,10 @@ export class Core {
     if (!pairs.has(selector)) {
       const opts = { selector: selectorObj, startTime: this.startTime }
       const tradesService = new TradesService(exchange, opts)
-      const tradeStore = new TradeStore(selectorStr, tradesService)
+      const events = this.createTradeEvents(selectorStr)
+      const tradeStore = new TradeStore(selectorStr, tradesService, events)
 
-      pairs.set(selector, { tradeStore, engines: [] })
+      pairs.set(selector, { tradeStore, events, engines: [] })
     }
 
     const { tradeStore, engines } = pairs.get(selector)
@@ -85,7 +93,37 @@ export class Core {
     engines.push({ engine, config: engineConf })
   }
 
+  private buffers = {}
+
+  private createTradeEvents(selector: string) {
+    const events = new EventEmitter()
+    const buffer = ScreenBuffer.create({ dst: terminal })
+    this.buffers[selector] = buffer
+    const offset = Object.keys(this.buffers).length
+
+    events.on('start', () => {
+      const bar = progressBar({
+        eta: true,
+        title: selector,
+        percent: true,
+        dst: buffer,
+      })
+      buffer.draw()
+
+      events.on('update', (percent: number) => {
+        bar.update(percent)
+        buffer.draw()
+      })
+
+      events.on('done', () => bar.update(1))
+    })
+
+    return events
+  }
+
   async backfill() {
+    terminal.fullscreen()
+    terminal.hideCursor()
     this.exchangeEngines.forEach(({ pairs }) => {
       pairs.forEach(({ tradeStore, engines }) => {
         const days = engines.map(({ config }) => config.days).reduce((a, b) => a + b)

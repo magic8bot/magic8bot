@@ -1,35 +1,41 @@
-import semver from 'semver'
+import { window } from './window'
 
-import { zenbot } from './conf'
+window.draw()
 
-import { Conf } from '@zbTypes'
-import { mongoService } from './services/mongo.service'
+setInterval(() => {}, 500)
 
-import { Core } from './engine'
+// import semver from 'semver'
 
-const checkSharePercent = ({ exchanges }: Conf) => {
-  exchanges.forEach(({ name, options: { strategies } }) => {
-    const share = strategies.reduce((acc, { share }) => (acc += share), 0)
-    if (share > 1) throw new Error(`Exchange ${name} over 100% share at ${share}`)
-  })
-}
+// import { zenbot } from './conf'
 
-if (semver.gt('10.0.0', process.versions.node)) {
-  console.error('You are running a node.js version older than 10.x.x, please upgrade via https://nodejs.org/en/')
-  process.exit(1)
-}
+// import { Conf } from '@zbTypes'
+// import { mongoService } from './services/mongo.service'
 
-const run = async () => {
-  try {
-    checkSharePercent(zenbot.conf)
+// import { Core } from './engine'
 
-    await mongoService.connect(zenbot.mongo)
-    const trader = new Core(zenbot.conf)
-    await trader.init()
-  } catch (e) {
-    console.error(e)
-    process.exit(1)
-  }
-}
+// const checkSharePercent = ({ exchanges }: Conf) => {
+//   exchanges.forEach(({ name, options: { strategies } }) => {
+//     const share = strategies.reduce((acc, { share }) => (acc += share), 0)
+//     if (share > 1) throw new Error(`Exchange ${name} over 100% share at ${share}`)
+//   })
+// }
 
-run()
+// if (semver.gt('10.0.0', process.versions.node)) {
+//   console.error('You are running a node.js version older than 10.x.x, please upgrade via https://nodejs.org/en/')
+//   process.exit(1)
+// }
+
+// const run = async () => {
+//   try {
+//     checkSharePercent(zenbot.conf)
+
+//     await mongoService.connect(zenbot.mongo)
+//     const trader = new Core(zenbot.conf)
+//     await trader.init()
+//   } catch (e) {
+//     console.error(e)
+//     process.exit(1)
+//   }
+// }
+
+// run()

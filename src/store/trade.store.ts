@@ -1,3 +1,6 @@
+import { EventEmitter } from 'events'
+import { terminal } from 'terminal-kit'
+
 import { Collection } from 'mongodb'
 import { observable, action, transaction } from 'mobx'
 
@@ -22,7 +25,11 @@ export class TradeStore {
 
   private collection: Collection<TradeCollection> = mongoService.connection.collection('beta_trades')
 
-  constructor(private readonly selector: string, private readonly tradesService: TradesService) {
+  constructor(
+    private readonly selector: string,
+    private readonly tradesService: TradesService,
+    private readonly tradeEvents: EventEmitter
+  ) {
     this.collection.createIndex({ selector: 1 })
     this.collection.createIndex({ time: 1 })
   }
@@ -55,32 +62,32 @@ export class TradeStore {
   }
 
   async backfill(days: number) {
-    const {
-      tradesService,
-      tradesService: { markerStore },
-    } = this
+    const { tradesService } = this
+    tradesService.markerStore.newMarker()
     const historyScan = tradesService.getHistoryScan()
-    const markers = await markerStore.loadMarkers()
 
-    if (historyScan === 'backward') {
-      markers.sort(({ to: a }, { to: b }) => (a === b ? 0 : a > b ? -1 : 1))
-    } else {
-      markers.sort(({ from: a }, { from: b }) => (a === b ? 0 : a < b ? -1 : 1))
-    }
+    const now = new Date().getTime()
+    const targetTime = now - 86400000 * days
 
-    markerStore.marker = markers.length ? markers[0] : markerStore.makeMarker()
+    const baseTime = now - targetTime
 
+    // console.log(`\n${this.selector} start`)
+    this.tradeEvents.emit('start')
     while (true) {
       const trades = await tradesService.backfill(days)
-      if (!trades.length) return
 
-      console.log(trades.length)
-      console.log(markerStore.marker)
+      const oldestTrade = Math.min(...trades.map(({ time }) => time))
+      const percent = (baseTime - (oldestTrade - targetTime)) / baseTime
+      this.tradeEvents.emit('update', percent)
 
-      this.collection.insertMany(trades.map((trade) => ((trade.selector = this.selector), trade)))
-      if (tradesService.getBackfillRateLimit()) {
-        await sleep(tradesService.getBackfillRateLimit())
+      if (historyScan === 'backward' && oldestTrade < targetTime) {
+        this.tradeEvents.emit('done')
+        // console.log(`\n\n${this.selector} done\n`)
+        return
       }
+
+      await this.collection.insertMany(trades)
+      if (tradesService.getBackfillRateLimit()) await sleep(tradesService.getBackfillRateLimit())
     }
   }
 }

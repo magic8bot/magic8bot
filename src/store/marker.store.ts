@@ -18,7 +18,11 @@ export class MarkerStore {
   private collection: Collection<Marker> = mongoService.connection.collection('beta_markers')
   @observable public marker: Marker
 
-  constructor(private readonly selector: string) {}
+  constructor(private readonly selector: string) {
+    this.collection.createIndex('to')
+    this.collection.createIndex('from')
+    this.collection.createIndex('time')
+  }
 
   @action
   newMarker() {
@@ -51,5 +55,9 @@ export class MarkerStore {
   async loadMarkers() {
     const { selector } = this
     return await this.collection.find({ selector }).toArray()
+  }
+
+  async findInRange(selector: string, cursor: number) {
+    return await this.collection.findOne({ selector, to: { $gte: cursor }, from: { $lte: cursor } })
   }
 }

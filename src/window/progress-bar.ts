@@ -107,7 +107,6 @@ export const progressBar = (options) => {
   // This is a naive ETA for instance...
   var etaString = (updated) => {
     var eta = '',
-      elapsedTime,
       elapsedEtaTime,
       remainingTime,
       averageUpdateDelay,
@@ -118,7 +117,6 @@ export const progressBar = (options) => {
     if (progress >= 1) {
       eta = ' done'
     } else if (progress > 0) {
-      elapsedTime = new Date().getTime() - startingTime
       elapsedEtaTime = new Date().getTime() - etaStartingTime
 
       if (!updated && progressUpdateCount > 1) {
@@ -197,8 +195,6 @@ export const progressBar = (options) => {
       }
       return
     }
-
-    terminal.saveCursor()
 
     // If 'y' is null, we are in the blind mode, we haven't get the cursor location
     if (y === null) {
@@ -295,8 +291,6 @@ export const progressBar = (options) => {
     options.etaStyle(eta)
 
     options.itemStyle(itemName)
-
-    terminal.restoreCursor()
 
     if (!options.syncMode) {
       if (redrawTimer) {

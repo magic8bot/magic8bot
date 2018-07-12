@@ -184,7 +184,7 @@ declare module 'terminal-kit' {
   interface putOpts {
     x?: number
     y?: number
-    attr: AttributeObject | number
+    attr?: AttributeObject | number
     wrap?: boolean
     direction?: 'right' | 'left' | 'up' | 'down' | 'none' | null
     dx?: number
@@ -260,7 +260,7 @@ declare module 'terminal-kit' {
     loadSync(filepath: string): ScreenBuffer
   }
 
-  export var React: RectConstructor
+  export var Rect: RectConstructor
 
   interface Rect {
     readonly xmin: number
@@ -270,6 +270,8 @@ declare module 'terminal-kit' {
     readonly width: number
     readonly height: number
     readonly isNull: boolean
+    set(opts: Region): void
+    clip(dstRect: Rect, offsetX?: number, offsetY?: number, dstClipping?: boolean)
   }
 
   interface RectConstructor {
@@ -278,8 +280,6 @@ declare module 'terminal-kit' {
     wrappingRect(
       opts?: WrappingRectOpts
     ): [Blitter] | [Blitter, Blitter] | [Blitter, Blitter, Blitter] | [Blitter, Blitter, Blitter, Blitter]
-    set(opts: Region): void
-    clip(dstRect: Rect, offsetX?: number, offsetY?: number, dstClipping?: boolean)
   }
 
   interface Region {

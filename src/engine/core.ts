@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events'
-import { terminal, ScreenBuffer } from 'terminal-kit'
-import { progressBar } from '../gui'
+import { window } from '../window'
 
 import { timebucket } from '../util/timebucket'
 import objectifySelector from '../util/objectify-selector'
@@ -32,7 +31,6 @@ export class Core {
   private exchangeEngines: Map<string, ExchangesMap> = new Map()
 
   private sessionStore: SessionStore
-  private terminal
 
   constructor(private readonly conf: Conf) {
     this.sessionStore = new SessionStore()
@@ -41,8 +39,6 @@ export class Core {
       .resize(period_length)
       .subtract(min_periods * 2)
       .toMilliseconds()
-
-    this.terminal = terminal
   }
 
   async init() {
@@ -93,37 +89,23 @@ export class Core {
     engines.push({ engine, config: engineConf })
   }
 
-  private buffers = {}
-
   private createTradeEvents(selector: string) {
     const events = new EventEmitter()
-    const buffer = ScreenBuffer.create({ dst: terminal })
-    this.buffers[selector] = buffer
-    const offset = Object.keys(this.buffers).length
 
     events.on('start', () => {
-      const bar = progressBar({
-        eta: true,
-        title: selector,
-        percent: true,
-        dst: buffer,
-      })
-      buffer.draw()
+      const bar = window.addProgressBar(selector)
 
-      events.on('update', (percent: number) => {
-        bar.update(percent)
-        buffer.draw()
+      events.on('update', (percent: number) => bar.update(percent))
+      events.on('done', () => {
+        bar.update(1)
+        bar.done()
       })
-
-      events.on('done', () => bar.update(1))
     })
 
     return events
   }
 
   async backfill() {
-    terminal.fullscreen()
-    terminal.hideCursor()
     this.exchangeEngines.forEach(({ pairs }) => {
       pairs.forEach(({ tradeStore, engines }) => {
         const days = engines.map(({ config }) => config.days).reduce((a, b) => a + b)

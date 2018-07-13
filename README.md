@@ -7,6 +7,8 @@
 
 This is an active fork of zenbot4. It is a complete rewrite and rethinking of the entire platform. I'll add more info about goals and progress here soon.
 
+~notVitaliy
+
 ## Questions
 Please ask (programming) questions related to zenbot on stackoverflow. The tag is [zenbot](https://stackoverflow.com/questions/tagged/zenbot).
 

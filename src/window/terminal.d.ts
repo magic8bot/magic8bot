@@ -166,6 +166,8 @@ declare module 'terminal-kit' {
     dst: Terminal | ScreenBuffer
     x: number
     y: number
+    width: number
+    height: number
     blending: boolean
     fill(options?: { attr: AttributeObject; char: string }): void
     clear(): void

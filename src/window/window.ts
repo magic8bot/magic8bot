@@ -3,7 +3,7 @@ import path from 'path'
 import { EventEmitter } from 'events'
 import { terminal, ScreenBuffer, Terminal } from 'terminal-kit'
 
-import { progressBar } from './progress-bar'
+import { ProgressBar } from './progress-bar'
 
 const { version } = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'UTF-8'))
 
@@ -12,11 +12,11 @@ class Window {
 
   private TITLE: string = `Zenbot ${version}`
   private redrawTimeout: NodeJS.Timer = null
-  private statusTimeout: NodeJS.Timer = null
 
   private term: Terminal = terminal
   private screen: ScreenBuffer
   private header: ScreenBuffer
+  private progressArea: ScreenBuffer
   private footer: ScreenBuffer
 
   private progressBars: ScreenBuffer[] = []
@@ -31,8 +31,8 @@ class Window {
 
     this.createScreen()
     this.createHeader()
+    this.createProgressArea()
     this.createFooter()
-    // this.setStatus('Bot start')
 
     this.term.on('resize', () => {
       if (this.term.width > this.lastWidth) {
@@ -54,55 +54,60 @@ class Window {
     this.redrawTimeout = setTimeout(() => {
       this.clear()
       this.drawHeader()
-      // this.progressBars.forEach((buffer) => buffer.draw())
-      // this.drawFooter()
+
+      this.drawFooter()
       this.screen.draw()
     }, 100)
   }
 
   addProgressBar(title: string) {
-    const dst = this.screen
-    const y = this.term.height - (this.progressBars.length + 3)
+    const dst = this.progressArea
+    const y = this.progressBars.length
 
     const buffer = ScreenBuffer.create({
       dst,
       x: 0,
-      y,
+      y: 0 + y,
       width: this.term.width,
       height: 1,
+      wrap: false,
     })
 
     this.progressBars.push(buffer)
 
-    const bar = progressBar({
-      title,
-      eta: true,
-      percent: true,
-      dst: buffer,
+    dst.resize({
+      height: this.progressBars.length,
+      width: this.term.width,
+      y: this.term.height - (2 + this.progressBars.length),
+      x: 0,
     })
 
-    return {
-      update: (percent: number) => {
-        const idx = this.progressBars.findIndex((b) => b === buffer)
-        const y = this.term.height - (idx + 3)
-        this.term.saveCursor()
-        bar.update(percent)
-        buffer.draw({ y, x: 0, dst })
-        dst.draw()
-        this.term.restoreCursor()
-      },
-      done: () => {
-        const idx = this.progressBars.findIndex((b) => b === buffer)
-        buffer.clear()
-        this.progressBars.splice(idx, 1)
-        this.progressBars.forEach((buffer, idx) => {
-          buffer.draw({ y, x: 0, dst })
-        })
+    const bar = new ProgressBar(buffer, title)
+    // bar.update(0)
 
-        this.setStatus(`${title} done`)
-        dst.draw()
-      },
+    buffer.draw()
+    dst.draw()
+    this.screen.draw()
+
+    const scopedActions = (bar, buffer) => {
+      return {
+        update: (percent: number) => {
+          bar.update(percent)
+          buffer.draw()
+          dst.draw()
+          this.screen.draw()
+        },
+        done: () => {
+          bar.done()
+          buffer.draw()
+          dst.draw()
+          this.setStatus(`${title} done`)
+          this.screen.draw()
+        },
+      }
     }
+
+    return scopedActions(bar, buffer)
   }
 
   setStatus(msg: string) {
@@ -116,16 +121,6 @@ class Window {
     // }, 500)
   }
 
-  private createFooter() {
-    this.footer = ScreenBuffer.create({
-      dst: this.screen,
-      height: 2,
-      y: this.term.height - 2,
-      width: this.term.width,
-      noFill: true,
-    })
-  }
-
   private createScreen() {
     this.screen = ScreenBuffer.create({
       dst: this.term,
@@ -137,7 +132,28 @@ class Window {
   private createHeader() {
     this.header = ScreenBuffer.create({
       dst: this.screen,
-      height: 3,
+      height: 2,
+      width: this.term.width,
+      noFill: true,
+    })
+  }
+
+  private createProgressArea() {
+    this.progressArea = ScreenBuffer.create({
+      dst: this.screen,
+      height: 1,
+      y: this.term.height - 6,
+      width: this.term.width,
+      noFill: true,
+      wrap: false,
+    })
+  }
+
+  private createFooter() {
+    this.footer = ScreenBuffer.create({
+      dst: this.screen,
+      height: 2,
+      y: this.term.height - 2,
       width: this.term.width,
       noFill: true,
     })
@@ -150,22 +166,15 @@ class Window {
 
     const border = '-'.repeat(this.term.width)
 
-    this.header.moveTo(0, 0)
-    this.header.put(null, border)
-    this.header.moveTo(0, 1)
-    this.header.put(null, '|')
-    this.header.moveTo(x, 1)
+    this.header.moveTo(x, 0)
     this.header.put({ attr: { color: 'red', bold: true } }, this.TITLE)
-    this.header.moveTo(this.term.width - 1, 1)
-    this.header.put(null, '|')
-    this.header.moveTo(0, 2)
+    this.header.moveTo(0, 1)
     this.header.put(null, border)
     this.header.draw()
     this.term.restoreCursor()
   }
 
   private drawFooter(status?: string) {
-    terminal.saveCursor()
     if (!status) status = this.lastStatus
     const border = '-'.repeat(this.term.width)
 
@@ -175,7 +184,6 @@ class Window {
     this.footer.put({ attr: { color: 'red', bold: true } }, ' => ')
     this.footer.put({ attr: { color: 'red' } }, status || ' ')
     this.footer.draw()
-    this.term.restoreCursor()
   }
 
   private nuke() {
@@ -195,20 +203,31 @@ class Window {
 
   private clear() {
     this.header.clear()
-    this.screen.clear()
-    this.term.eraseDisplay()
-    this.term.clear()
+    this.progressArea.clear()
+    this.footer.clear()
   }
 
   private exit() {
+    this.term.clear()
+    this.term.eraseDisplay()
+    this.screen.clear()
+    this.header.clear()
+    this.progressArea.clear()
+    this.footer.clear()
+
     this.TITLE = 'GRACEFUL SHUTDOW'
     this.draw()
 
     setTimeout(() => {
+      this.term.clear()
+      this.term.eraseDisplay()
+      this.screen.clear()
+      this.header.clear()
+      this.progressArea.clear()
+      this.footer.clear()
       this.term.hideCursor(false)
       this.term.grabInput(false)
       this.term.fullscreen(false)
-      this.term.clear()
       setTimeout(() => process.exit(), 100)
     }, 1000)
   }

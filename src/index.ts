@@ -12,7 +12,7 @@ import { Core } from './engine'
 const checkSharePercent = ({ exchanges }: Conf) => {
   exchanges.forEach(({ name, options: { strategies } }) => {
     const share = strategies.reduce((acc, { share }) => (acc += share), 0)
-    if (share > 1) throw new Error(`Exchange ${name} over 100% share at ${share}`)
+    if (share > 1) throw new Error(`Exchange ${name} over 100% share at ${share} --- ctrl+c to exit`)
   })
 }
 
@@ -29,8 +29,7 @@ const run = async () => {
     const trader = new Core(zenbot.conf)
     await trader.init()
   } catch (e) {
-    console.error(e)
-    process.exit(1)
+    window.setStatus(e.message)
   }
 }
 

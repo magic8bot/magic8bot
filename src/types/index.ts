@@ -15,7 +15,7 @@ interface MongoAuth extends MongoBase {
   db: string
   username: string
   password: string
-  replicaSet: string
+  replicaSet?: string
   authMechanism?: string
 }
 

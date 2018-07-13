@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { window } from '../window'
+import { window } from '../output'
 
 import { timebucket } from '../util/timebucket'
 import objectifySelector from '../util/objectify-selector'
@@ -92,14 +92,18 @@ export class Core {
   private createTradeEvents(selector: string) {
     const events = new EventEmitter()
 
-    events.on('start', () => {
+    events.once('start', () => {
       const bar = window.addProgressBar(selector)
 
-      events.on('update', (percent: number) => bar.update(percent))
-      events.on('done', () => {
+      const onUpdate = (percent: number) => bar.update(percent)
+      const onDone = () => {
+        events.off('update', onUpdate)
         bar.update(1)
         bar.done()
-      })
+      }
+
+      events.on('update', onUpdate)
+      events.once('done', onDone)
     })
 
     return events
@@ -107,10 +111,13 @@ export class Core {
 
   async backfill() {
     this.exchangeEngines.forEach(({ pairs }) => {
-      pairs.forEach(({ tradeStore, engines }) => {
-        const days = engines.map(({ config }) => config.days).reduce((a, b) => a + b)
-        tradeStore.backfill(days)
+      pairs.forEach(async (enginesMap) => {
+        const days = enginesMap.engines.map(({ config }) => config.days).reduce((a, b) => a + b)
+        await enginesMap.tradeStore.backfill(days)
+        this.runTraders(enginesMap)
       })
     })
   }
+
+  async runTraders(enginesMap: EnginesMap) {}
 }

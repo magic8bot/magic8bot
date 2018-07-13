@@ -90,6 +90,8 @@ class Window {
     this.screen.draw()
 
     const scopedActions = (bar, buffer) => {
+      const dst = this.progressArea
+
       return {
         update: (percent: number) => {
           bar.update(percent)
@@ -98,10 +100,18 @@ class Window {
           this.screen.draw()
         },
         done: () => {
+          const idx = this.progressBars.findIndex((b) => b === buffer)
+          this.progressBars.slice(idx, 1)
           bar.done()
           buffer.draw()
           dst.draw()
           this.setStatus(`${title} done`)
+          if (!this.progressBars.length) {
+            setTimeout(() => {
+              this.setStatus('All done')
+              this.clearProgressArea()
+            }, 100)
+          }
           this.screen.draw()
         },
       }
@@ -147,6 +157,13 @@ class Window {
       noFill: true,
       wrap: false,
     })
+  }
+
+  private clearProgressArea() {
+    this.progressArea.clear()
+    this.progressArea.draw()
+    delete this.progressArea
+    this.nuke()
   }
 
   private createFooter() {
@@ -197,6 +214,7 @@ class Window {
       this.createScreen()
       this.createHeader()
       this.drawHeader()
+      this.drawFooter()
       this.screen.draw()
     }, 400)
   }

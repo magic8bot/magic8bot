@@ -68,26 +68,28 @@ export class TradeStore {
 
     const now = new Date().getTime()
     const targetTime = now - 86400000 * days
-
     const baseTime = now - targetTime
 
-    // console.log(`\n${this.selector} start`)
     this.tradeEvents.emit('start')
-    while (true) {
-      const trades = await tradesService.backfill(days)
+    return historyScan === 'backward' ? await this.backScan(days, targetTime, baseTime) : null
+  }
 
-      const oldestTrade = Math.min(...trades.map(({ time }) => time))
-      const percent = (baseTime - (oldestTrade - targetTime)) / baseTime
-      this.tradeEvents.emit('update', percent)
+  private async backScan(days: number, targetTime: number, baseTime: number) {
+    const { tradesService } = this
 
-      if (historyScan === 'backward' && oldestTrade < targetTime) {
-        this.tradeEvents.emit('done')
-        // console.log(`\n\n${this.selector} done\n`)
-        return
-      }
+    const trades = await tradesService.backfill(days)
 
-      await this.collection.insertMany(trades)
+    const oldestTrade = Math.min(...trades.map(({ time }) => time))
+    const percent = (baseTime - (oldestTrade - targetTime)) / baseTime
+
+    this.tradeEvents.emit('update', percent)
+    await this.collection.insertMany(trades)
+
+    if (oldestTrade > targetTime) {
       if (tradesService.getBackfillRateLimit()) await sleep(tradesService.getBackfillRateLimit())
+      return await this.backScan(days, targetTime, baseTime)
     }
+
+    return this.tradeEvents.emit('done')
   }
 }

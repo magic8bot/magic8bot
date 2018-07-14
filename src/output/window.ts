@@ -1,7 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 import { EventEmitter } from 'events'
-import { terminal, ScreenBuffer, Terminal } from 'terminal-kit'
+import blessed, { Widgets } from 'blessed'
+import contrib from 'blessed-contrib'
 
 import { ProgressBar } from './progress-bar'
 
@@ -10,244 +11,88 @@ const { version } = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package
 class Window {
   public screenEvents: EventEmitter = new EventEmitter()
 
-  private TITLE: string = `Zenbot ${version}`
-  private redrawTimeout: NodeJS.Timer = null
+  private title: string = `Zenbot ${version}`
 
-  private term: Terminal = terminal
-  private screen: ScreenBuffer
-  private header: ScreenBuffer
-  private progressArea: ScreenBuffer
-  private footer: ScreenBuffer
+  private screen: Widgets.Screen
+  private progressArea: Widgets.BoxElement
 
-  private progressBars: ScreenBuffer[] = []
+  private log: Widgets.Node
 
-  private lastWidth: number = this.term.width
-  private lastStatus: string = null
+  private progressBars: Widgets.BoxElement[] = []
 
   constructor() {
-    this.term.hideCursor(true)
-    this.term.fullscreen(true)
-    this.term.grabInput(true)
+    this.screen = blessed.screen({
+      smartCSR: true,
+    })
 
-    this.createScreen()
+    this.screen.key(['escape', 'q', 'C-c'], function() {
+      return process.exit(0)
+    })
+
     this.createHeader()
     this.createProgressArea()
-    this.createFooter()
-
-    this.term.on('resize', () => {
-      if (this.term.width > this.lastWidth) {
-        this.lastWidth = this.term.width
-        this.nuke()
-      } else {
-        this.draw()
-      }
-    })
-
-    this.term.on('key', (name) => {
-      if (name === 'CTRL_C') this.exit()
-    })
-  }
-
-  draw() {
-    clearTimeout(this.redrawTimeout)
-
-    this.redrawTimeout = setTimeout(() => {
-      this.clear()
-      this.drawHeader()
-
-      this.drawFooter()
-      this.screen.draw()
-    }, 100)
+    this.createLog()
   }
 
   addProgressBar(title: string) {
-    const dst = this.progressArea
-    const y = this.progressBars.length
+    const barLine = blessed.box({ height: 1, width: '100%' })
+    const bar = new ProgressBar(barLine, title)
 
-    const buffer = ScreenBuffer.create({
-      dst,
-      x: 0,
-      y: 0 + y,
-      width: this.term.width,
-      height: 1,
-      wrap: false,
-    })
+    this.progressBars.push(barLine)
+    barLine.top = this.progressBars.length - 1
+    this.progressArea.height = this.progressBars.length
 
-    this.progressBars.push(buffer)
+    this.progressArea.append(barLine)
+    this.progressArea.render()
+    this.screen.render()
 
-    dst.resize({
-      height: this.progressBars.length,
-      width: this.term.width,
-      y: this.term.height - (2 + this.progressBars.length),
-      x: 0,
-    })
-
-    const bar = new ProgressBar(buffer, title)
-    // bar.update(0)
-
-    buffer.draw()
-    dst.draw()
-    this.screen.draw()
-
-    const scopedActions = (bar, buffer) => {
-      const dst = this.progressArea
-
-      return {
-        update: (percent: number) => {
-          bar.update(percent)
-          buffer.draw()
-          dst.draw()
-          this.screen.draw()
-        },
-        done: () => {
-          const idx = this.progressBars.findIndex((b) => b === buffer)
-          this.progressBars.slice(idx, 1)
-          bar.done()
-          buffer.draw()
-          dst.draw()
-          this.setStatus(`${title} done`)
-          if (!this.progressBars.length) {
-            setTimeout(() => {
-              this.setStatus('All done')
-              this.clearProgressArea()
-            }, 100)
-          }
-          this.screen.draw()
-        },
-      }
+    return {
+      update: (percent: number) => {
+        bar.update(percent)
+        this.screen.render()
+      },
+      done: () => {
+        // @ts-ignore
+        this.log.log(`${title} done`)
+        bar.done()
+        this.screen.render()
+      },
     }
-
-    return scopedActions(bar, buffer)
   }
 
   setStatus(msg: string) {
-    // clearTimeout(this.statusTimeout)
-
-    // this.statusTimeout = setTimeout(() => {
-    this.footer.clear()
-    this.drawFooter(msg)
-    this.lastStatus = msg
-    this.screen.draw()
-    // }, 500)
-  }
-
-  private createScreen() {
-    this.screen = ScreenBuffer.create({
-      dst: this.term,
-      width: this.term.width,
-      height: this.term.height,
-    })
+    // @ts-ignore
+    this.log.log(msg)
   }
 
   private createHeader() {
-    this.header = ScreenBuffer.create({
-      dst: this.screen,
-      height: 2,
-      width: this.term.width,
-      noFill: true,
-    })
+    const title = blessed.box({ top: 0, left: 0, height: 1, tags: true })
+    title.setContent(`{center}{red-fg}${this.title}{/red-fg}{/center}`)
+
+    const orientation = 'horizontal'
+    const style = { fg: 'cyan' }
+    const line = blessed.line({ top: 1, left: 0, height: 1, orientation, style })
+
+    this.screen.append(title)
+    this.screen.append(line)
   }
 
   private createProgressArea() {
-    this.progressArea = ScreenBuffer.create({
-      dst: this.screen,
-      height: 1,
-      y: this.term.height - 6,
-      width: this.term.width,
-      noFill: true,
-      wrap: false,
+    this.progressArea = blessed.box({ top: 2, height: 1, width: '100%' })
+    this.screen.append(this.progressArea)
+  }
+
+  private createLog() {
+    const logBox = blessed.box({ top: '100%-6', height: 6, width: '100%' })
+    this.log = contrib.log({
+      fg: 'green',
+      label: 'Logs',
+      height: 6,
+      width: '100%',
+      border: { type: 'line', fg: 'cyan' },
     })
-  }
-
-  private clearProgressArea() {
-    this.progressArea.clear()
-    this.progressArea.draw()
-    delete this.progressArea
-    this.nuke()
-  }
-
-  private createFooter() {
-    this.footer = ScreenBuffer.create({
-      dst: this.screen,
-      height: 2,
-      y: this.term.height - 2,
-      width: this.term.width,
-      noFill: true,
-    })
-  }
-
-  private drawHeader() {
-    terminal.saveCursor()
-    const title = ` ${this.TITLE} `
-    const x = Math.round((this.term.width - title.length) / 2)
-
-    const border = '-'.repeat(this.term.width)
-
-    this.header.moveTo(x, 0)
-    this.header.put({ attr: { color: 'red', bold: true } }, this.TITLE)
-    this.header.moveTo(0, 1)
-    this.header.put(null, border)
-    this.header.draw()
-    this.term.restoreCursor()
-  }
-
-  private drawFooter(status?: string) {
-    if (!status) status = this.lastStatus
-    const border = '-'.repeat(this.term.width)
-
-    this.footer.moveTo(0, 0)
-    this.footer.put(null, border)
-    this.footer.moveTo(0, 1)
-    this.footer.put({ attr: { color: 'red', bold: true } }, ' => ')
-    this.footer.put({ attr: { color: 'red' } }, status || ' ')
-    this.footer.draw()
-  }
-
-  private nuke() {
-    clearTimeout(this.redrawTimeout)
-
-    this.redrawTimeout = setTimeout(() => {
-      this.clear()
-      delete this.header
-      delete this.screen
-
-      this.createScreen()
-      this.createHeader()
-      this.drawHeader()
-      this.drawFooter()
-      this.screen.draw()
-    }, 400)
-  }
-
-  private clear() {
-    this.header.clear()
-    this.progressArea.clear()
-    this.footer.clear()
-  }
-
-  private exit() {
-    this.term.clear()
-    this.term.eraseDisplay()
-    this.screen.clear()
-    this.header.clear()
-    this.progressArea.clear()
-    this.footer.clear()
-
-    this.TITLE = 'GRACEFUL SHUTDOW'
-    this.draw()
-
-    setTimeout(() => {
-      this.term.clear()
-      this.term.eraseDisplay()
-      this.screen.clear()
-      this.header.clear()
-      this.progressArea.clear()
-      this.footer.clear()
-      this.term.hideCursor(false)
-      this.term.grabInput(false)
-      this.term.fullscreen(false)
-      setTimeout(() => process.exit(), 100)
-    }, 1000)
+    logBox.append(this.log)
+    this.screen.append(logBox)
   }
 }
 

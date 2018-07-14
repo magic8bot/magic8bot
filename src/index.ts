@@ -22,8 +22,6 @@ if (semver.gt('10.0.0', process.versions.node)) {
 }
 
 const run = async () => {
-  window.draw()
-
   try {
     checkSharePercent(zenbot.conf)
 

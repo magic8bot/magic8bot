@@ -23,6 +23,8 @@
     "async": "^2.5.0",
     "bitfinex-api-node": "^1.2.0",
     "bitstamp": "^1.0.4",
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.8.5",
     "bollinger-bands": "^3.0.1",
     "ccxt": "^1.12.97",
     "cexio-api-node": "^1.0.8",
@@ -63,6 +65,7 @@
     "zero-fill": "^2.2.3"
   },
   "devDependencies": {
+    "@types/blessed": "^0.1.10",
     "@types/moment": "^2.13.0",
     "@types/mongodb": "^3.1.0",
     "rimraf": "^2.6.2",

@@ -1,6 +1,7 @@
 import { MarkerStore, Marker } from '../store/marker.store'
 import { Exchange } from '../engine/exchange'
-import { Selector } from '../util'
+import { Selector, sleep } from '../util'
+import { window } from '../output'
 
 interface TradesOptions {
   selector: Selector
@@ -35,14 +36,16 @@ export class TradesService {
     return trades.map((trade) => ((trade.selector = this.opts.selector.normalized), trade))
   }
 
-  async backfill(days: number) {
+  async backfill(start?: number) {
     const { historyScan } = this.exchange
     if (historyScan === 'backward') {
-      return await this.scanBack(days)
+      return await this.scanBack()
+    } else {
+      return await this.scanForward(start)
     }
   }
 
-  private async scanBack(days: number) {
+  private async scanBack() {
     const to = await this.getNextBackMarker()
 
     const trades = await this.getTrades({ to })
@@ -75,9 +78,43 @@ export class TradesService {
     const nextMarker = await this.markerStore.findInRange(this.opts.selector.normalized, from - 1)
     if (!nextMarker) return from
 
-    // process.stdout.write('s')
     this.markerStore.marker = nextMarker
     return await this.getNextBackMarker()
+  }
+
+  private async scanForward(newestTime: number) {
+    const from = await this.getNextForwardMarker(newestTime)
+
+    const trades = await this.getTrades({ from })
+
+    trades.sort((a, b) => {
+      const aC = this.exchange.getCursor(a)
+      const bC = this.exchange.getCursor(b)
+      return aC === bC ? 0 : aC < bC ? -1 : 1
+    })
+
+    if (!trades.length) return trades
+
+    this.markerStore.marker = this.markerStore.makeMarker()
+    const { marker } = this.markerStore
+    trades.forEach((trade) => {
+      const cursor = this.exchange.getCursor(trade)
+      marker.from = marker.from ? Math.min(marker.from, cursor) : cursor
+      marker.to = marker.to ? Math.max(marker.to, cursor) : cursor
+      marker.newest_time = marker.newest_time ? Math.max(marker.newest_time, trade.time) : trade.time
+      marker.oldest_time = marker.oldest_time ? Math.min(marker.oldest_time, trade.time) : trade.time
+    })
+
+    this.markerStore.saveMarker()
+
+    return trades
+  }
+
+  private async getNextForwardMarker(newestTime: number) {
+    const nextMarker = await this.markerStore.findInRange(this.opts.selector.normalized, newestTime)
+    if (nextMarker) return nextMarker.to + 1
+
+    return newestTime
   }
 
   getTradeCursor() {
@@ -92,6 +129,3 @@ export class TradesService {
     return this.exchange.backfillRateLimit
   }
 }
-
-1530538968219
-1530126367135

@@ -1,87 +1,54 @@
-import { ScreenBuffer } from 'terminal-kit'
+import blessed, { Widgets } from 'blessed'
 
 export class ProgressBar {
-  private readonly barBuffer: ScreenBuffer
-
-  private innerWidth: number
   private progress: number = null
+  private bar: Widgets.ProgressBarElement
+  private line: Widgets.BoxElement
+  private end: Widgets.BoxElement
 
-  private isDone: boolean = false
-
-  constructor(dst: ScreenBuffer, private readonly title: string) {
-    this.innerWidth = dst.width - 4 - title.length
-
-    this.barBuffer = ScreenBuffer.create({ dst, width: dst.width, height: 1 })
+  constructor(private readonly dst: Widgets.Screen | Widgets.BoxElement, private title: string) {
+    this.draw()
+    this.dst.append(this.line)
   }
 
-  private white = (str) => this.barBuffer.put({ attr: { dim: this.isDone, color: 'cyan' } }, str)
-  private blue = (str) => this.barBuffer.put({ attr: { dim: this.isDone, color: 'blue' } }, str)
-  private yellow = (str) => this.barBuffer.put({ attr: { dim: this.isDone, color: 'yellow' } }, str)
-  private whiteBold = (str) => this.barBuffer.put({ attr: { dim: this.isDone, color: 'white', bold: true } }, str)
-  private noStyle = (str) => this.barBuffer.put({ attr: { dim: this.isDone } }, str)
-
-  update(progress: number) {
+  update = (progress: number) => {
     this.progress = progress < 0 ? 0 : progress
-
-    this.draw()
+    this.bar.setProgress(this.progress * 100)
+    const percent = ('   ' + Math.round((this.progress || 0) * 100) + '%').slice(-4)
+    this.end.setContent(`{cyan-fg}]{/cyan-fg} ${percent}`)
   }
 
-  done() {
-    this.isDone = true
-    this.update(1)
+  done = () => {
+    this.bar.setProgress(100)
   }
 
-  clear() {
-    this.barBuffer.clear()
-  }
-
-  force() {
-    this.draw()
+  clear = () => {
+    this.dst.remove(this.line)
   }
 
   private draw() {
-    this.barBuffer.moveTo(0, 0)
+    const baseOpts = { top: 0, left: 0, height: 1, tags: true }
 
+    const title = blessed.box({ ...baseOpts, width: this.title.length + 4 })
+    title.setContent(` {white-fg}{bold}${this.title}{/bold}{/white-fg} {cyan-fg}[{/cyan-fg}`)
+
+    const orientation = 'horizontal'
+    const barBaseOpts = { top: 0, height: 1, filled: 0, value: 0, pch: '=', keys: false, mouse: false, orientation }
+
+    this.bar = blessed.progressbar({
+      ...barBaseOpts,
+      left: this.title.length + 3,
+      width: `100%-${this.title.length + 10}`,
+      style: { bar: { fg: 'blue' } },
+    })
+
+    this.end = blessed.box({ ...baseOpts, left: '100%-7', width: 7 })
     const percent = ('   ' + Math.round((this.progress || 0) * 100) + '%').slice(-4)
+    this.end.setContent(`{cyan-fg}]{/cyan-fg} ${percent}`)
 
-    const innerBarSize = this.innerWidth - percent.length
-    const progressSize = !this.progress ? 0 : Math.round(innerBarSize * Math.max(Math.min(this.progress, 1), 0))
-    const voidSize = innerBarSize - progressSize
-
-    const voidBar = ' '.repeat(voidSize)
-
-    const progressBar = !progressSize ? '' : `${'='.repeat(progressSize - 1)}>`
-
-    this.whiteBold(this.title)
-
-    if (!this.progress) this.noStyle(' ')
-    else this.blue(' [')
-
-    this.white(progressBar)
-    this.noStyle(voidBar)
-
-    if (!this.progress) this.noStyle(' ')
-    else this.blue('] ')
-
-    this.yellow(percent)
-    this.barBuffer.draw()
-  }
-
-  private getEtaTimeString(elapsedEtaTime: number, progress: number) {
-    const remainingTime = (elapsedEtaTime * ((1 - progress) / progress)) / 1000
-
-    if (remainingTime < 10) {
-      return Math.round(remainingTime * 10) / 10 + 's'
-    } else if (remainingTime < 120) {
-      return Math.round(remainingTime) + 's'
-    } else if (remainingTime < 7200) {
-      return Math.round(remainingTime / 60) + 'min'
-    } else if (remainingTime < 172800) {
-      return Math.round(remainingTime / 3600) + 'hours'
-    } else if (remainingTime < 31536000) {
-      return Math.round(remainingTime / 86400) + 'days'
-    } else {
-      return 'few years'
-    }
+    this.line = blessed.box({ ...baseOpts, width: '100%' })
+    this.line.append(title)
+    this.line.append(this.bar)
+    this.line.append(this.end)
   }
 }

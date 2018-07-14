@@ -1,5 +1,4 @@
 import { EventEmitter } from 'events'
-import { terminal } from 'terminal-kit'
 
 import { Collection } from 'mongodb'
 import { observable, action, transaction } from 'mobx'
@@ -7,6 +6,7 @@ import { observable, action, transaction } from 'mobx'
 import { mongoService } from '../services/mongo.service'
 import { TradesService } from '../services/trades.service'
 import { sleep } from '../util'
+import { window } from '../output'
 
 export interface TradeItem {
   trade_id: number
@@ -71,13 +71,15 @@ export class TradeStore {
     const baseTime = now - targetTime
 
     this.tradeEvents.emit('start')
-    return historyScan === 'backward' ? await this.backScan(days, targetTime, baseTime) : null
+    return historyScan === 'backward'
+      ? await this.backScan(days, targetTime, baseTime)
+      : await this.forwardScan(days, targetTime, now)
   }
 
   private async backScan(days: number, targetTime: number, baseTime: number) {
     const { tradesService } = this
 
-    const trades = await tradesService.backfill(days)
+    const trades = await tradesService.backfill()
 
     const oldestTrade = Math.min(...trades.map(({ time }) => time))
     const percent = (baseTime - (oldestTrade - targetTime)) / baseTime
@@ -88,6 +90,30 @@ export class TradeStore {
     if (oldestTrade > targetTime) {
       if (tradesService.getBackfillRateLimit()) await sleep(tradesService.getBackfillRateLimit())
       return await this.backScan(days, targetTime, baseTime)
+    }
+
+    return this.tradeEvents.emit('done')
+  }
+
+  private async forwardScan(startTime: number, now: number, latestTime?: number) {
+    const { tradesService } = this
+
+    const trades = await tradesService.backfill(latestTime ? latestTime : startTime)
+
+    if (!trades.length) {
+      return this.tradeEvents.emit('done')
+    }
+
+    const newestTime = Math.max(...trades.map(({ time }) => time))
+    const percent = (newestTime - startTime) / (now - startTime)
+
+    window.setStatus(`${percent} - ${now} - ${newestTime} - ${startTime} - ${Math.random()}`)
+    this.tradeEvents.emit('update', percent)
+    await this.collection.insertMany(trades)
+
+    if (newestTime < now) {
+      if (tradesService.getBackfillRateLimit()) await sleep(tradesService.getBackfillRateLimit())
+      return await this.forwardScan(startTime, now, newestTime)
     }
 
     return this.tradeEvents.emit('done')

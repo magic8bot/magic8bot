@@ -1,4 +1,4 @@
-![zenbot logo](https://rawgit.com/deviavir/zenbot/master/assets/logo.png)
+![zenbot logo](https://rawgit.com/notvitaliy/zenbot/master/logo.png)
 
 > “To follow the path, look to the master, follow the master, walk with the master, see through the master, become the master.”
 > – Zen Proverb
@@ -10,6 +10,7 @@ This is an active fork of zenbot4. It is a complete rewrite and rethinking of th
 ~notVitaliy
 
 ## Questions
+
 Please ask (programming) questions related to zenbot on stackoverflow. The tag is [zenbot](https://stackoverflow.com/questions/tagged/zenbot).
 
 ### Community
@@ -46,7 +47,7 @@ P.S., some have asked for how to donate to Zenbot development. We accept donatio
 
 Thanks!
 
-- - -
+---
 
 ### License: MIT
 

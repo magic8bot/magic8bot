@@ -1,11 +1,21 @@
-![zenbot logo](https://rawgit.com/notvitaliy/zenbot/master/logo.png)
+![zenbot logo](https://rawgit.com/notvitaliy/zenbot/master/assets/logo.png)
 
 > “To follow the path, look to the master, follow the master, walk with the master, see through the master, become the master.”
 > – Zen Proverb
 
 ## Current Status (UPDATE July 13th '18)
 
-This is an active fork of zenbot4. It is a complete rewrite and rethinking of the entire platform. I'll add more info about goals and progress here soon.
+This is an active fork of zenbot4. It is a complete rewrite and rethinking of the entire platform. The overall goals of zenbot5 are:
+
+- reducing code repitition
+- separation of concerns
+- rewrite everything in typescript
+- getting rid of all the callbacks
+- allow multiple strategies to run simultaneously
+- a complete overhaul of the cli ui
+- expose all trading data via a websocket api
+- event based signal processing
+- creating a new plugin type: position strategy
 
 ~notVitaliy
 
@@ -43,7 +53,11 @@ P.S., some have asked for how to donate to Zenbot development. We accept donatio
 
 `3BZojxm9q8uGWvvsudLCmqfBhtT7ceeSQk`
 
-![zenbot logo](https://rawgit.com/deviavir/zenbot/master/assets/zenbot_square.png)
+### notVitaliy (zenbot 5 author)
+
+`32gjP2cSQqaoaZ25ixvtqNhM272sRhXWjA`
+
+![zenbot logo](https://rawgit.com/notvitaliy/zenbot/master/assets/logo-sm.png)
 
 Thanks!
 

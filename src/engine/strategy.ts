@@ -15,7 +15,6 @@ interface IStrategy {
 export class Strategy {
   private readonly strategy: IStrategy
   private readonly periodStore: PeriodStore
-  private readonly periodEvents: EventEmitter
 
   private lastSignal: 'buy' | 'sell' = null
 
@@ -31,8 +30,12 @@ export class Strategy {
     signal: null,
   }
 
-  constructor(strategyName: string, period: string, private signalEvents: EventEmitter) {
-    this.periodEvents = new EventEmitter()
+  constructor(
+    strategyName: string,
+    period: string,
+    private periodEvents: EventEmitter,
+    private signalEvents: EventEmitter
+  ) {
     this.strategy = loadStrategy(strategyName)
     this.periodStore = new PeriodStore(period, this.periodEvents)
 

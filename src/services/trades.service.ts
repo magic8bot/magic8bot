@@ -97,9 +97,9 @@ export class TradesService {
 
     this.markerStore.marker = this.markerStore.makeMarker()
     const { marker } = this.markerStore
+    marker.from = from
     trades.forEach((trade) => {
       const cursor = this.exchange.getCursor(trade)
-      marker.from = marker.from ? Math.min(marker.from, cursor) : cursor
       marker.to = marker.to ? Math.max(marker.to, cursor) : cursor
       marker.newest_time = marker.newest_time ? Math.max(marker.newest_time, trade.time) : trade.time
       marker.oldest_time = marker.oldest_time ? Math.min(marker.oldest_time, trade.time) : trade.time
@@ -112,7 +112,7 @@ export class TradesService {
 
   private async getNextForwardMarker(newestTime: number) {
     const nextMarker = await this.markerStore.findInRange(this.opts.selector.normalized, newestTime)
-    if (nextMarker) return nextMarker.to + 1
+    if (nextMarker) return await this.getNextForwardMarker(nextMarker.to + 1)
 
     return newestTime
   }

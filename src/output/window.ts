@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { EventEmitter } from 'events'
 import blessed, { Widgets } from 'blessed'
-import contrib from 'blessed-contrib'
+import contrib, { ContribWidgets } from 'blessed-contrib'
 
 import { ProgressBar } from './progress-bar'
 
@@ -16,7 +16,7 @@ class Window {
   private screen: Widgets.Screen
   private progressArea: Widgets.BoxElement
 
-  private log: Widgets.Node
+  private log: ContribWidgets.LogElement
 
   private progressBars: Widgets.BoxElement[] = []
 
@@ -61,7 +61,6 @@ class Window {
   }
 
   setStatus(msg: string) {
-    // @ts-ignore
     this.log.log(msg)
   }
 

@@ -73,7 +73,7 @@ export class TradeStore {
     this.tradeEvents.emit('start')
     return historyScan === 'backward'
       ? await this.backScan(days, targetTime, baseTime)
-      : await this.forwardScan(days, targetTime, now)
+      : await this.forwardScan(targetTime, now)
   }
 
   private async backScan(days: number, targetTime: number, baseTime: number) {
@@ -86,13 +86,15 @@ export class TradeStore {
 
     this.tradeEvents.emit('update', percent)
     await this.collection.insertMany(trades)
+    trades.forEach((trade) => this.trades.push(trade))
 
     if (oldestTrade > targetTime) {
       if (tradesService.getBackfillRateLimit()) await sleep(tradesService.getBackfillRateLimit())
       return await this.backScan(days, targetTime, baseTime)
     }
 
-    return this.tradeEvents.emit('done')
+    this.tradeEvents.emit('done')
+    return Math.max(...trades.map(({ time }) => time))
   }
 
   private async forwardScan(startTime: number, now: number, latestTime?: number) {
@@ -107,7 +109,6 @@ export class TradeStore {
     const newestTime = Math.max(...trades.map(({ time }) => time))
     const percent = (newestTime - startTime) / (now - startTime)
 
-    window.setStatus(`${percent} - ${now} - ${newestTime} - ${startTime} - ${Math.random()}`)
     this.tradeEvents.emit('update', percent)
     await this.collection.insertMany(trades)
 
@@ -116,6 +117,7 @@ export class TradeStore {
       return await this.forwardScan(startTime, now, newestTime)
     }
 
-    return this.tradeEvents.emit('done')
+    this.tradeEvents.emit('done')
+    return newestTime
   }
 }

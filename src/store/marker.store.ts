@@ -4,6 +4,8 @@ import { action, observable, transaction } from 'mobx'
 
 import { Trade } from '@zbTypes'
 import { mongoService } from '../services/mongo.service'
+import { window } from '../output'
+import { sleep } from '../util'
 
 export interface Marker {
   _id: string
@@ -58,6 +60,7 @@ export class MarkerStore {
   }
 
   async findInRange(selector: string, cursor: number) {
+    window.setStatus(String(selector) + ' ' + String(cursor))
     return await this.collection.findOne({ selector, to: { $gte: cursor }, from: { $lte: cursor } })
   }
 }

@@ -90,23 +90,23 @@ export class Core {
   }
 
   private createTradeEvents(selector: string) {
-    const events = new EventEmitter()
+    const tradeEvents = new EventEmitter()
 
-    events.once('start', () => {
+    tradeEvents.once('start', () => {
       const bar = window.addProgressBar(selector)
 
       const onUpdate = (percent: number) => bar.update(percent)
       const onDone = () => {
-        events.off('update', onUpdate)
+        tradeEvents.off('update', onUpdate)
         bar.update(1)
         bar.done()
       }
 
-      events.on('update', onUpdate)
-      events.once('done', onDone)
+      tradeEvents.on('update', onUpdate)
+      tradeEvents.once('done', onDone)
     })
 
-    return events
+    return tradeEvents
   }
 
   async backfill() {
@@ -119,5 +119,9 @@ export class Core {
     })
   }
 
-  async runTraders(enginesMap: EnginesMap) {}
+  async runTraders({ engines, events, tradeStore }: EnginesMap) {
+    engines.forEach(({ engine }) => {
+      engine.tick()
+    })
+  }
 }

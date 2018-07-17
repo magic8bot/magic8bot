@@ -160,7 +160,7 @@ export interface Trade {
   time: number
   size: number
   price: number
-  side: string
+  side: 'buy' | 'sell'
   id: string
   selector: string
 }

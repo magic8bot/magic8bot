@@ -1,5 +1,5 @@
 import n from 'numbro'
-import { Exchange } from './exchange'
+import { ExchangeService } from '../services/exchange.service'
 import { Selector } from '../util'
 import { Product } from '@zbTypes'
 
@@ -25,7 +25,7 @@ export class Orders {
   private openOrders: any[] = []
 
   constructor(
-    private readonly exchange: Exchange,
+    private readonly exchange: ExchangeService,
     private readonly selector: Selector,
     private readonly product: Product,
     private readonly markdown: number,

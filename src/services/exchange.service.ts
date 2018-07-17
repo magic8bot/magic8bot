@@ -15,7 +15,7 @@ type BalanceOpts = BaseOpts
 
 type TradesOpts = {
   to?: number
-  from: number
+  from?: number
 } & ProductOpts
 
 type TradeOpts = {
@@ -53,7 +53,7 @@ interface IExchange {
   getOrder: (opts: OrderOpts, cb: any) => void
 }
 
-export class Exchange {
+export class ExchangeService {
   private readonly exchange: IExchange
 
   constructor(exchangeName: string, auth: ExchangeAuth, isPaper: boolean = false) {

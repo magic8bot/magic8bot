@@ -1,5 +1,5 @@
 import n from 'numbro'
-import { Exchange } from './exchange'
+import { ExchangeService } from '../services/exchange.service'
 
 export interface QuoteResponse {
   bid: number
@@ -7,7 +7,7 @@ export interface QuoteResponse {
 }
 
 export class Quote {
-  static async getQuote(exchange: Exchange, product_id) {
+  static async getQuote(exchange: ExchangeService, product_id) {
     return await exchange.getQuote({ product_id })
   }
 

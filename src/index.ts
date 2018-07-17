@@ -1,5 +1,3 @@
-import { window } from './output'
-
 import semver from 'semver'
 
 import { zenbot } from './conf'
@@ -8,11 +6,12 @@ import { Conf } from '@zbTypes'
 import { mongoService } from './services/mongo.service'
 
 import { Core } from './engine'
+// import { window } from './output'
 
 const checkSharePercent = ({ exchanges }: Conf) => {
-  exchanges.forEach(({ name, options: { strategies } }) => {
+  exchanges.forEach(({ exchangeName, options: { strategies } }) => {
     const share = strategies.reduce((acc, { share }) => (acc += share), 0)
-    if (share > 1) throw new Error(`Exchange ${name} over 100% share at ${share} --- ctrl+c to exit`)
+    if (share > 1) throw new Error(`Exchange ${exchangeName} over 100% share at ${share} --- ctrl+c to exit`)
   })
 }
 
@@ -26,10 +25,10 @@ const run = async () => {
     checkSharePercent(zenbot.conf)
 
     await mongoService.connect(zenbot.mongo)
-    const trader = new Core(zenbot.conf)
-    await trader.init()
+    const core = new Core(zenbot.conf)
+    await core.init()
   } catch (e) {
-    window.setStatus(e.message)
+    // window.setStatus(e.message)
   }
 }
 

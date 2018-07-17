@@ -1,12 +1,7 @@
-import { EventEmitter } from 'events'
-
 import { Collection } from 'mongodb'
-import { observable, action, transaction } from 'mobx'
-
 import { mongoService } from '../services/mongo.service'
-import { TradesService } from '../services/trades.service'
+
 import { sleep } from '../util'
-import { window } from '../output'
 
 export interface TradeItem {
   trade_id: number
@@ -21,103 +16,34 @@ type TradeCollection = TradeItem & {
 }
 
 export class TradeStore {
-  @observable public trades: TradeItem[] = []
-
+  public tradesMap: Map<string, TradeItem[]> = new Map()
   private collection: Collection<TradeCollection> = mongoService.connection.collection('beta_trades')
 
-  constructor(
-    private readonly selector: string,
-    private readonly tradesService: TradesService,
-    private readonly tradeEvents: EventEmitter
-  ) {
+  constructor() {
     this.collection.createIndex({ selector: 1 })
     this.collection.createIndex({ time: 1 })
   }
 
-  @action
-  async loadTrades() {
-    await transaction(async () => {
-      const { selector } = this
-      this.trades = await this.collection
-        .find({ selector })
-        .sort({ time: 1 })
-        .toArray()
-    })
+  addSelector(selector: string) {
+    if (this.tradesMap.has(selector)) return
+
+    this.tradesMap.set(selector, [])
   }
 
-  @action
-  update(trades: TradeItem[]) {
-    transaction(() => trades.forEach((trade) => this.trades.push(trade)))
+  async loadTrades(selector: string) {
+    const trades = await this.collection
+      .find({ selector })
+      .sort({ time: 1 })
+      .toArray()
+
+    this.tradesMap.set(selector, trades)
   }
 
-  async getTrades() {
-    // console.log(`getting trades: ${this.selector}`)
-    // const trades = (await this.tradesService.getTrades()).map((trade) => {
-    //   trade.selector = this.selector
-    //   return trade
-    // })
-    // console.log(`got trades: ${this.selector}`)
-    // this.collection.insertMany(trades)
-    // console.log(`saved trades: ${this.selector}`)
-  }
+  async update(selector: string, newTrades: TradeItem[]) {
+    await this.collection.insertMany(newTrades)
 
-  async backfill(days: number) {
-    const { tradesService } = this
-    tradesService.markerStore.newMarker()
-    const historyScan = tradesService.getHistoryScan()
-
-    const now = new Date().getTime()
-    const targetTime = now - 86400000 * days
-    const baseTime = now - targetTime
-
-    this.tradeEvents.emit('start')
-    return historyScan === 'backward'
-      ? await this.backScan(days, targetTime, baseTime)
-      : await this.forwardScan(targetTime, now)
-  }
-
-  private async backScan(days: number, targetTime: number, baseTime: number) {
-    const { tradesService } = this
-
-    const trades = await tradesService.backfill()
-
-    const oldestTrade = Math.min(...trades.map(({ time }) => time))
-    const percent = (baseTime - (oldestTrade - targetTime)) / baseTime
-
-    this.tradeEvents.emit('update', percent)
-    await this.collection.insertMany(trades)
-    trades.forEach((trade) => this.trades.push(trade))
-
-    if (oldestTrade > targetTime) {
-      if (tradesService.getBackfillRateLimit()) await sleep(tradesService.getBackfillRateLimit())
-      return await this.backScan(days, targetTime, baseTime)
-    }
-
-    this.tradeEvents.emit('done')
-    return Math.max(...trades.map(({ time }) => time))
-  }
-
-  private async forwardScan(startTime: number, now: number, latestTime?: number) {
-    const { tradesService } = this
-
-    const trades = await tradesService.backfill(latestTime ? latestTime : startTime)
-
-    if (!trades.length) {
-      return this.tradeEvents.emit('done')
-    }
-
-    const newestTime = Math.max(...trades.map(({ time }) => time))
-    const percent = (newestTime - startTime) / (now - startTime)
-
-    this.tradeEvents.emit('update', percent)
-    await this.collection.insertMany(trades)
-
-    if (newestTime < now) {
-      if (tradesService.getBackfillRateLimit()) await sleep(tradesService.getBackfillRateLimit())
-      return await this.forwardScan(startTime, now, newestTime)
-    }
-
-    this.tradeEvents.emit('done')
-    return newestTime
+    const trades = !this.tradesMap.has(selector) ? [] : this.tradesMap.get(selector)
+    newTrades.forEach((trade) => trades.push(trade))
+    this.tradesMap.set(selector, trades)
   }
 }

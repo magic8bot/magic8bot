@@ -16,7 +16,7 @@ interface PeriodItem {
 export class PeriodStore {
   @observable public periods: PeriodItem[] = []
 
-  constructor(private readonly period: string, private periodEvents: EventEmitter) {}
+  constructor(private readonly period: string) {}
 
   @action
   initPeriods(trades: TradeItem[]) {
@@ -37,7 +37,7 @@ export class PeriodStore {
     this.periods[0].close = price
     this.periods[0].volume += size
 
-    this.periodEvents.emit('newTrade')
+    // this.periodEvents.emit('newTrade')
   }
 
   @action
@@ -51,7 +51,7 @@ export class PeriodStore {
       volume: size,
     })
 
-    this.periodEvents.emit('newTrade')
-    this.periodEvents.emit('newPeriod')
+    // this.periodEvents.emit('newTrade')
+    // this.periodEvents.emit('newPeriod')
   }
 }

@@ -1,5 +1,3 @@
-import { EventEmitter } from 'events'
-
 import { loadStrategy } from '../plugins/strategies'
 import { PeriodStore } from '../store/period.store'
 
@@ -12,35 +10,29 @@ interface IStrategy {
   onReport: (s: any) => any[]
 }
 
-export class Strategy {
+interface LocalState {
+  period: Record<string, any>
+  lookback: Record<string, any>[]
+  options: Record<string, any>
+  signal: 'buy' | 'sell'
+}
+
+export class StrategyService {
   private readonly strategy: IStrategy
   private readonly periodStore: PeriodStore
 
   private lastSignal: 'buy' | 'sell' = null
 
-  private localState: {
-    period: Record<string, any>
-    lookback: Record<string, any>[]
-    options: Record<string, any>
-    signal: 'buy' | 'sell'
-  } = {
+  private localState: LocalState = {
     period: {},
     lookback: [],
     options: {},
     signal: null,
   }
 
-  constructor(
-    strategyName: string,
-    period: string,
-    private periodEvents: EventEmitter,
-    private signalEvents: EventEmitter
-  ) {
+  constructor(strategyName: string, period: string) {
     this.strategy = loadStrategy(strategyName)
-    this.periodStore = new PeriodStore(period, this.periodEvents)
-
-    this.periodEvents.on('newTrade', () => this.calculate())
-    this.periodEvents.on('newPeriod', () => this.onPeriod())
+    this.periodStore = new PeriodStore(period)
   }
 
   get name() {
@@ -63,7 +55,6 @@ export class Strategy {
 
     if (this.localState.signal && this.localState.signal !== this.lastSignal) {
       this.lastSignal = this.localState.signal
-      this.signalEvents.emit('signal', this.localState.signal)
     }
   }
 

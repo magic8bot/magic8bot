@@ -28,7 +28,6 @@ export type MongoConf = MongoAuth | MongoConn
 export interface Base {
   period: string
   min_periods: number
-  period_length: string
   sell_stop_pct: number
   buy_stop_pct: number
   profit_stop_enable_pct: number
@@ -64,7 +63,7 @@ export interface Base {
   symmetrical: boolean
 }
 
-export interface Strategy extends Partial<Base> {
+export interface StrategyConf extends Partial<Base> {
   selector: string
   strategyName: string
   share: number
@@ -84,11 +83,11 @@ export interface ExchangeAuth {
 }
 
 export interface ExchangeConf {
-  name: string
+  exchangeName: string
   auth: ExchangeAuth
   options: {
     base?: Base
-    strategies: Strategy[]
+    strategies: StrategyConf[]
   }
 }
 

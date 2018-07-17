@@ -14,7 +14,9 @@
   },
   "scripts": {
     "clean": "rimraf ./dist",
-    "dist": "npm run clean && ./node_modules/.bin/tsc",
+    "build": "tsc",
+    "dist": "npm run build",
+    "rebuild": "npm run clean && npm run dist",
     "start": "node ./zenbot.js",
     "start:dev": "NODE_ENV=development node ./zenbot.js"
   },

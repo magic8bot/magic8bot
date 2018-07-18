@@ -2,7 +2,7 @@ import semver from 'semver'
 
 import { magic8bot } from './conf'
 
-import { Conf } from '@zbTypes'
+import { Conf } from '@m8bTypes'
 import { mongoService } from './services/mongo.service'
 
 import { Core } from './engine'

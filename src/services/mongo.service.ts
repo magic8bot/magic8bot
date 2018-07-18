@@ -1,5 +1,5 @@
 import { MongoClient, Db } from 'mongodb'
-import { MongoConf } from '@zbTypes'
+import { MongoConf } from '@m8bTypes'
 
 class MongoService {
   public connection: Db

@@ -1,4 +1,4 @@
-import { ExchangeConf } from '@zbTypes'
+import { ExchangeConf } from '@m8bTypes'
 import { ExchangeService } from '../services/exchange.service'
 import { StrategyService } from '../services/strategy.service'
 import { TradeStore } from '../store/trade.store'
@@ -26,10 +26,15 @@ export class Engine {
     this.tradeStore = new TradeStore()
     this.tradeService = new TradeService(this.exchangeService)
 
+    options.strategies.map(strat => strat.selector)
+      .forEach(currency => {
+        const selectorStr = `${exchangeName.toLowerCase()}.${currency}`
+        if (!this.backfillers.has(selectorStr)) this.backfillers.set(selectorStr, BACKFILL_STATUS.INIT)
+      })
+
     options.strategies.forEach(({ strategyName, share, period, selector, ...strategyConf }) => {
       const selectorStr = `${exchangeName.toLowerCase()}.${selector}`
       const selectorObj = objectifySelector(selectorStr)
-      if (!this.backfillers.has(selectorStr)) this.backfillers.set(selectorStr, BACKFILL_STATUS.INIT)
 
       this.tradeStore.addSelector(selectorStr)
       this.tradeService.addSelector(selectorStr, selectorObj.product_id)
@@ -38,14 +43,19 @@ export class Engine {
   }
 
   async init() {
-    Array.from(this.backfillers.entries())
-      .map(([selector]) => selector)
+    Array.from(this.backfillers.keys())
       .forEach(async (selector) => {
         // @todo(notVitaliy): Fix this shit... eventually
         const days = 5
+        this.backfillers[selector] = BACKFILL_STATUS.RUNNING
         await this.backfill(selector, days)
-        // this is fucked for now. Will only tick for the first strategy for a currency pair
-        this.tick(selector)
+        this.backfillers[selector] = BACKFILL_STATUS.DONE
+
+        // tick every strategy with the given selector
+        this.strategies.forEach((strategy, strategySelector) => {
+          if (selector == strategySelector)
+            this.tick(selector, strategy)
+        })
       })
   }
 
@@ -103,5 +113,5 @@ export class Engine {
     return newestTime
   }
 
-  async tick(selector: string) {}
+  async tick(selector: string, strategy: StrategyService) {}
 }

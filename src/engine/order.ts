@@ -1,7 +1,7 @@
 import n from 'numbro'
 import { ExchangeService } from '../services/exchange.service'
 import { Selector } from '../util'
-import { Product } from '@zbTypes'
+import { Product } from '@m8bTypes'
 
 interface Balance {
   asset: number

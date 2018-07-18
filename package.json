@@ -1,6 +1,6 @@
 {
-  "name": "magic8bot4",
-  "version": "5.0.0-alpha-1",
+  "name": "magic8bot",
+  "version": "0.0.1-alpha-1",
   "description": "Cryptocurrency trading bot",
   "bugs": "https://github.com/notvitaliy/magic8bot/issues",
   "license": "MIT",
@@ -78,6 +78,6 @@
     "typescript": "^2.9.2"
   },
   "engines": {
-    "node": "^8.3.0 || ^9.0.0"
+    "node": "^10.0.0"
   }
 }

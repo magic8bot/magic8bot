@@ -1,24 +1,24 @@
 {
-  "name": "zenbot4",
+  "name": "magic8bot4",
   "version": "5.0.0-alpha-1",
   "description": "Cryptocurrency trading bot",
-  "bugs": "https://github.com/deviavir/zenbot/issues",
+  "bugs": "https://github.com/notvitaliy/magic8bot/issues",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/deviavir/zenbot.git"
+    "url": "https://github.com/notvitaliy/magic8bot.git"
   },
-  "main": "./zenbot.js",
+  "main": "./magic8bot.js",
   "bin": {
-    "zenbot": "./zenbot.sh"
+    "magic8bot": "./magic8bot.sh"
   },
   "scripts": {
     "clean": "rimraf ./dist",
     "build": "tsc",
     "dist": "npm run build",
     "rebuild": "npm run clean && npm run dist",
-    "start": "node ./zenbot.js",
-    "start:dev": "cross-env NODE_ENV=development node ./zenbot.js"
+    "start": "node ./magic8bot.js",
+    "start:dev": "cross-env NODE_ENV=development node ./magic8bot.js"
   },
   "dependencies": {
     "@slack/client": "^4.1.0",

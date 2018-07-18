@@ -1,7 +1,7 @@
 {
-  "name": "zenbot_gemini",
+  "name": "magic8bot_gemini",
   "version": "0.0.1",
-  "description": "Zenbot supporting code for Gemini",
+  "description": "Magic8bot supporting code for Gemini",
   "dependencies": {
     "gemini-api": "^2.0.4"
   }

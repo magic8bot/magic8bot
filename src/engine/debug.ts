@@ -1,7 +1,7 @@
-import { zenbot } from '../conf'
+import { magic8bot } from '../conf'
 import moment from 'moment'
 
-let debug = zenbot.debug
+let debug = magic8bot.debug
 
 export const flip = () => (on = debug = !debug)
 

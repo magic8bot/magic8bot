@@ -131,7 +131,7 @@ export class ProcessService {
       .replace('{{output}}', html_output)
       .replace(
         /\{\{symbol\}\}/g,
-        this.s.options.selector.normalized + ' - zenbot ' + require('../../package.json').version
+        this.s.options.selector.normalized + ' - magic8bot ' + require('../../package.json').version
       )
 
     let out_target

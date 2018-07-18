@@ -1,6 +1,6 @@
 import semver from 'semver'
 
-import { zenbot } from './conf'
+import { magic8bot } from './conf'
 
 import { Conf } from '@zbTypes'
 import { mongoService } from './services/mongo.service'
@@ -22,10 +22,10 @@ if (semver.gt('10.0.0', process.versions.node)) {
 
 const run = async () => {
   try {
-    checkSharePercent(zenbot.conf)
+    checkSharePercent(magic8bot.conf)
 
-    await mongoService.connect(zenbot.mongo)
-    const core = new Core(zenbot.conf)
+    await mongoService.connect(magic8bot.mongo)
+    const core = new Core(magic8bot.conf)
     await core.init()
   } catch (e) {
     // window.setStatus(e.message)

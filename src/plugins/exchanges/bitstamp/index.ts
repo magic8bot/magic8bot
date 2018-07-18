@@ -20,7 +20,7 @@ var wsOpts = {
 // The use of bitstamp-ws  requires that
 // Knowledge of the asset/currency pair
 // before the first call for a trade
-// As zenbot dont returns the currency pair
+// As magic8bot dont returns the currency pair
 // before the first trade is requested
 // it has been neccessary to get it from
 // t:he command line arguments

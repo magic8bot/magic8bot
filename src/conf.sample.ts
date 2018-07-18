@@ -4,13 +4,13 @@
  *              All other config options will be through GUI.
  */
 
-import { MongoConf, Base, ExchangeConf, Conf, Zenbot } from '@zbTypes'
+import { MongoConf, Base, ExchangeConf, Conf, Magic8bot } from '@zbTypes'
 
 // Your mongodb conf
 const mongo: MongoConf = {
   host: 'localhost',
   port: 27017,
-  db: 'zenbot4',
+  db: 'magic8bot',
   username: null,
   password: null,
   replicaSet: null,
@@ -130,7 +130,7 @@ const conf: Conf = {
   mode: 'live',
 }
 
-export const zenbot: Zenbot = {
+export const magic8bot: Magic8bot = {
   conf,
   mongo,
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 var request = require('micro-request')
-request('https://api.bitfinex.com/v1/symbols_details', {headers: {'User-Agent': 'zenbot/4'}}, function (err, resp, body) {
+request('https://api.bitfinex.com/v1/symbols_details', {headers: {'User-Agent': 'magic8bot/1'}}, function (err, resp, body) {
   if (err) throw err
   if (resp.statusCode !== 200) {
     var err = new Error('non-200 status: ' + resp.statusCode)
@@ -14,7 +14,7 @@ request('https://api.bitfinex.com/v1/symbols_details', {headers: {'User-Agent': 
     var min_size = parseFloat(product.minimum_order_size)
     var prec = 0
     if (min_size > 130 ) {
-      prec = 4 
+      prec = 4
     } else if (min_size > 30) {
       prec = 3
     } else if (min_size > 1) {

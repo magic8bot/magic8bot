@@ -25,7 +25,7 @@ export default () => {
   //   app.set('view engine', 'ejs')
   //   app.use('/assets', express.static(__dirname + '/../../../templates/dashboard_assets'))
   //   app.use('/assets-wp', express.static(__dirname + '/../../dist/'))
-  //   app.use('/assets-zenbot', express.static(__dirname + '/../../assets'))
+  //   app.use('/assets-magic8bot', express.static(__dirname + '/../../assets'))
   //   app.get('/', function(req, res) {
   //     app.locals.moment = moment
   //     app.locals.deposit = tradeObject.options.deposit

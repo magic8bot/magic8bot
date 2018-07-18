@@ -1,10 +1,8 @@
-![logo](https://rawgit.com/notvitaliy/zenbot/master/assets/logo-sm.png)
-
-> Rebranding in progress. New bot name TBD.
+![logo](https://rawgit.com/notvitaliy/magic8bot/master/assets/logo.svg)
 
 ## Current Status (UPDATE July 17th '18)
 
-This is a crypto trading bot originally based off of zenbot4. It is a complete rewrite and rethinking of the entire platform. The overall goals are:
+Magic8bot a crypto trading bot originally based off of zenbot4. It is a complete rewrite and rethinking of the entire platform. The overall goals are:
 
 - reducing code repitition
 - separation of concerns
@@ -26,7 +24,7 @@ This is a crypto trading bot originally based off of zenbot4. It is a complete r
 
 ## Chat with other users
 
-[![logo](https://rawgit.com/notvitaliy/zenbot/master/assets/discord.png)](https://discord.gg/JGCNsh8)
+[![logo](https://rawgit.com/notvitaliy/magic8bot/master/assets/discord.png)](https://discord.gg/JGCNsh8)
 
 this bot has a Discord chat! You can get in [through this invite link](https://discord.gg/JGCNsh8).
 
@@ -36,14 +34,6 @@ this bot has a Discord chat! You can get in [through this invite link](https://d
 
 `32gjP2cSQqaoaZ25ixvtqNhM272sRhXWjA`
 
-### carlos8f's BTC (original zenbot author, the inspiration for this bot)
-
-`187rmNSkSvehgcKpBunre6a5wA5hQQop6W`
-
-### DeviaVir's BTC (current maintainer of zenbot)
-
-`3BZojxm9q8uGWvvsudLCmqfBhtT7ceeSQk`
-
-![logo](https://rawgit.com/notvitaliy/zenbot/master/assets/logo-sm.png)
+![logo](https://rawgit.com/notvitaliy/magic8bot/master/assets/logo-sm.svg)
 
 Thanks!

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 var request = require('micro-request')
-request('https://poloniex.com/public?command=returnTicker', {headers: {'User-Agent': 'zenbot/4'}}, function (err, resp, ticker) {
+request('https://poloniex.com/public?command=returnTicker', {headers: {'User-Agent': 'magic8bot/1'}}, function (err, resp, ticker) {
   if (err) throw err
   if (resp.statusCode !== 200) {
     var err = new Error('non-200 status: ' + resp.statusCode)
@@ -9,7 +9,7 @@ request('https://poloniex.com/public?command=returnTicker', {headers: {'User-Age
     console.error(err)
     process.exit(1)
   }
-  request('https://poloniex.com/public?command=returnCurrencies', {headers: {'User-Agent': 'zenbot/4'}}, function (err, resp, currencies) {
+  request('https://poloniex.com/public?command=returnCurrencies', {headers: {'User-Agent': 'magic8bot/1'}}, function (err, resp, currencies) {
     if (err) throw err
     if (resp.statusCode !== 200) {
       var err = new Error('non-200 status: ' + resp.statusCode)

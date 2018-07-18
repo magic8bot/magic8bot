@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 var request = require('micro-request')
-request('https://api.gemini.com/v1/symbols', {headers: {'User-Agent': 'zenbot/4'}}, function (err, resp, body) {
+request('https://api.gemini.com/v1/symbols', {headers: {'User-Agent': 'magic8bot/1'}}, function (err, resp, body) {
   if (err) throw err
   if (resp.statusCode !== 200) {
     var err = new Error('non-200 status: ' + resp.statusCode)

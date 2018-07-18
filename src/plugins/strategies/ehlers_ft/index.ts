@@ -21,7 +21,7 @@ pos_length = 1 does default behavior from the original tradingview strategy.
 If pos_length > 1, make sure pos_length number of previous periods have opposite pos values.
 
 Sample sim command:
-zenbot sim gdax.LTC-USD --strategy ehlers_ft --period_length 15m --days 3 --order_type maker --fish_pct_change 0 --length 10 --pos_length 1 --src HAohlc4 --min_periods 20
+magic8bot sim gdax.LTC-USD --strategy ehlers_ft --period_length 15m --days 3 --order_type maker --fish_pct_change 0 --length 10 --pos_length 1 --src HAohlc4 --min_periods 20
 
 If you have found this strategy useful and would like to show your appreciation, please consider donating
 ETH, BTC, or LTC to the developer, Travis.
@@ -29,7 +29,7 @@ ETH: 0xdA963A127BeCB08227583d11f912F400D5347060
 BTC: 3KKHdBJpEGxghxGazoE4X7ihyr2q6nHUvW
 LTC: MSePEwGJF8W4wvGCbJBqMtatwdBGYhT8FM
 
-Please direct feedback concerning this strategy to the zenbot strategies discord channel @Travis:
+Please direct feedback concerning this strategy to the magic8bot strategies discord channel @Travis:
 https://discordapp.com/channels/316120967200112642/383023593942155274
 
 */

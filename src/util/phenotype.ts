@@ -1,5 +1,5 @@
 /*
- * Zenbot 4 Genetic Backtester
+ * Magic8bot Genetic Backtester
  * Clifford Roche <clifford.roche@gmail.com>
  * 07/01/2017
  */

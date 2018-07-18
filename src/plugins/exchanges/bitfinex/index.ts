@@ -580,7 +580,7 @@ export default (conf) => {
 
     cancelOrder: function(opts, cb) {
       var order = ws_orders['~' + opts.order_id]
-      ws_orders['~' + opts.order_id].reject_reason = 'zenbot cancel'
+      ws_orders['~' + opts.order_id].reject_reason = 'magic8bot cancel'
 
       var ws_cancel_order = [
         0,
@@ -702,7 +702,7 @@ export default (conf) => {
 
       if (order.status === 'rejected' && order.reject_reason === 'post only') {
         return cb(null, order)
-      } else if (order.status === 'rejected' && order.reject_reason === 'zenbot canceled') {
+      } else if (order.status === 'rejected' && order.reject_reason === 'magic8bot canceled') {
         return cb(null, order)
       }
 

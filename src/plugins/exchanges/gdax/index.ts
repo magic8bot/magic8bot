@@ -221,7 +221,7 @@ export default (conf) => {
       cached_order.status = 'done'
 
       // "canceled" is not a success order instead it must be retried
-      // force zenbot a order retry; see "engine.js" for possible retry conditions
+      // force magic8bot a order retry; see "engine.js" for possible retry conditions
       if (reason && reason == 'canceled') {
         cached_order.status = 'rejected'
         cached_order.reject_reason = 'post only'

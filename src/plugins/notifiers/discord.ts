@@ -4,7 +4,7 @@ export const discord = (config) => {
   var discord = {
     pushMessage: function(title, message) {
       var postData = {
-        username: config.username != '' ? config.username : 'Zenbot',
+        username: config.username != '' ? config.username : 'Magic8bot',
         avatar_url:
           config.avatar_url != ''
             ? config.avatar_url

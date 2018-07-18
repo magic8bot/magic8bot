@@ -101,7 +101,7 @@ export interface Conf extends Base {
   mode: string
 }
 
-export interface Zenbot {
+export interface Magic8bot {
   mongo: MongoConf
   conf: Conf
 

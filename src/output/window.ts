@@ -11,7 +11,7 @@ const { version } = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package
 class Window {
   public screenEvents: EventEmitter = new EventEmitter()
 
-  private title: string = `Zenbot ${version}`
+  private title: string = `Magic8bot ${version}`
 
   private screen: Widgets.Screen
   private progressArea: Widgets.BoxElement

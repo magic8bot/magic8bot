@@ -12,11 +12,15 @@ enum BACKFILL_STATUS {
   DONE,
 }
 
+class BackfillState {
+  constructor(public days: number, public status: BACKFILL_STATUS) {}
+}
+
 export class Engine {
   private exchangeService: ExchangeService
   private tradeStore: TradeStore
   private tradeService: TradeService
-  private backfillers: Map<string, BACKFILL_STATUS> = new Map()
+  private backfillers: Map<string, BackfillState> = new Map()
 
   private strategies: Map<string, StrategyService> = new Map()
 
@@ -26,10 +30,12 @@ export class Engine {
     this.tradeStore = new TradeStore()
     this.tradeService = new TradeService(this.exchangeService)
 
-    options.strategies.map(strat => strat.selector)
-      .forEach(currency => {
-        const selectorStr = `${exchangeName.toLowerCase()}.${currency}`
-        if (!this.backfillers.has(selectorStr)) this.backfillers.set(selectorStr, BACKFILL_STATUS.INIT)
+    options.strategies
+      .forEach(({ selector, ...strategyConf }) => {
+        const selectorStr = `${exchangeName.toLowerCase()}.${selector}`
+        if (!this.backfillers.has(selectorStr)) {
+          this.backfillers.set(selectorStr, new BackfillState(strategyConf.days || options.base.days, BACKFILL_STATUS.INIT))
+        }
       })
 
     options.strategies.forEach(({ strategyName, share, period, selector, ...strategyConf }) => {
@@ -43,20 +49,17 @@ export class Engine {
   }
 
   async init() {
-    Array.from(this.backfillers.keys())
-      .forEach(async (selector) => {
-        // @todo(notVitaliy): Fix this shit... eventually
-        const days = 5
-        this.backfillers[selector] = BACKFILL_STATUS.RUNNING
-        await this.backfill(selector, days)
-        this.backfillers[selector] = BACKFILL_STATUS.DONE
+    this.backfillers.forEach(async (backfillState, selector) => {
+      backfillState.status = BACKFILL_STATUS.RUNNING
+      await this.backfill(selector, backfillState.days)
+      backfillState.status = BACKFILL_STATUS.DONE
 
-        // tick every strategy with the given selector
-        this.strategies.forEach((strategy, strategySelector) => {
-          if (selector == strategySelector)
-            this.tick(selector, strategy)
-        })
+      // tick every strategy with the given selector
+      this.strategies.forEach((strategy, strategySelector) => {
+        if (selector == strategySelector)
+          this.tick(selector, strategy)
       })
+    })
   }
 
   async backfill(selector: string, days: number) {

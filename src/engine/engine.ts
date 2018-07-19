@@ -6,21 +6,11 @@ import { TradeService } from '../services/trades.service'
 import { sleep } from '../util'
 import objectifySelector from '../util/objectify-selector'
 
-enum BACKFILL_STATUS {
-  INIT,
-  RUNNING,
-  DONE,
-}
-
-class BackfillState {
-  constructor(public days: number, public status: BACKFILL_STATUS) {}
-}
-
 export class Engine {
   private exchangeService: ExchangeService
   private tradeStore: TradeStore
   private tradeService: TradeService
-  private backfillers: Map<string, BackfillState> = new Map()
+  private backfillers: Map<string, number> = new Map()
 
   private strategies: Map<string, StrategyService> = new Map()
 
@@ -34,7 +24,7 @@ export class Engine {
       .forEach(({ selector, ...strategyConf }) => {
         const selectorStr = `${exchangeName.toLowerCase()}.${selector}`
         if (!this.backfillers.has(selectorStr)) {
-          this.backfillers.set(selectorStr, new BackfillState(strategyConf.days || options.base.days, BACKFILL_STATUS.INIT))
+          this.backfillers.set(selectorStr, strategyConf.days || options.base.days)
         }
       })
 
@@ -49,11 +39,8 @@ export class Engine {
   }
 
   async init() {
-    this.backfillers.forEach(async (backfillState, selector) => {
-      backfillState.status = BACKFILL_STATUS.RUNNING
-      await this.backfill(selector, backfillState.days)
-      backfillState.status = BACKFILL_STATUS.DONE
-
+    this.backfillers.forEach(async (days, selector) => {
+      await this.backfill(selector, days)
       // tick every strategy with the given selector
       this.strategies.forEach((strategy, strategySelector) => {
         if (selector == strategySelector)

@@ -20,8 +20,7 @@ export class TradeStore {
   private collection: Collection<TradeCollection> = mongoService.connection.collection('beta_trades')
 
   constructor() {
-    this.collection.createIndex({ selector: 1 })
-    this.collection.createIndex({ time: 1 })
+    this.collection.createIndex({ selector: 1, time: 1 })
   }
 
   addSelector(selector: string) {
@@ -40,10 +39,11 @@ export class TradeStore {
   }
 
   async update(selector: string, newTrades: TradeItem[]) {
+    newTrades.forEach((value) => value['selector'] = selector)
     await this.collection.insertMany(newTrades)
 
-    const trades = !this.tradesMap.has(selector) ? [] : this.tradesMap.get(selector)
+    if (!this.tradesMap.has(selector)) this.tradesMap.set(selector, [])
+    const trades = this.tradesMap.get(selector)
     newTrades.forEach((trade) => trades.push(trade))
-    this.tradesMap.set(selector, trades)
   }
 }

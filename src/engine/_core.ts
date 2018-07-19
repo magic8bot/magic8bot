@@ -19,7 +19,7 @@ import { Exchange } from './exchange'
 
 import * as debug from './debug'
 import { asyncTimeout } from '../util/async'
-import { EngineConf } from '@zbTypes'
+import { EngineConf } from '@m8bTypes'
 import { Selector } from '../util'
 
 enum ORDER_STATUS {

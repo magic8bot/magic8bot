@@ -30,10 +30,10 @@ export class PeriodStore {
       .resize(this.period)
       .toMilliseconds()
 
-    if (!this.periods.length || this.periods[0].time < bucket) return this.newPeriod(bucket, trade)
+    if (!this.periods.length || this.periods[0].time < bucket) return this.newPeriod(bucket, price)
 
     this.periods[0].low = Math.min(price, this.periods[0].low)
-    this.periods[0].high = Math.min(price, this.periods[0].high)
+    this.periods[0].high = Math.max(price, this.periods[0].high)
     this.periods[0].close = price
     this.periods[0].volume += size
 
@@ -41,14 +41,14 @@ export class PeriodStore {
   }
 
   @action
-  newPeriod(bucket: number, { time, size, price }: TradeItem) {
+  newPeriod(bucket: number, price: number) {
     this.periods.unshift({
       time: bucket,
       open: price,
       high: price,
       low: price,
       close: price,
-      volume: size,
+      volume: 0,
     })
 
     // this.periodEvents.emit('newTrade')

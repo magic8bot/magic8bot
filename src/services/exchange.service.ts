@@ -1,4 +1,4 @@
-import { Trade, Quote, Product, ExchangeAuth } from '@zbTypes'
+import { Trade, Quote, Product, ExchangeAuth } from '@m8bTypes'
 import { loadExchange } from '../plugins/exchanges'
 
 interface BaseOpts {

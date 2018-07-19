@@ -10,7 +10,7 @@
     "jsx": "react",
     "baseUrl": ".",
     "paths": {
-      "@zbTypes": ["./src/types/index.ts"]
+      "@m8bTypes": ["./src/types/index.ts"]
     },
     "typeRoots": ["./node_modules/@types", "./src/types"],
     "outDir": "./dist",

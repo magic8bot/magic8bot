@@ -1,4 +1,4 @@
-import { ExchangeConf } from '@zbTypes'
+import { ExchangeConf } from '@m8bTypes'
 import { ExchangeService } from '../services/exchange.service'
 import { StrategyService } from '../services/strategy.service'
 import { TradeStore } from '../store/trade.store'
@@ -6,17 +6,11 @@ import { TradeService } from '../services/trades.service'
 import { sleep } from '../util'
 import objectifySelector from '../util/objectify-selector'
 
-enum BACKFILL_STATUS {
-  INIT,
-  RUNNING,
-  DONE,
-}
-
 export class Engine {
   private exchangeService: ExchangeService
   private tradeStore: TradeStore
   private tradeService: TradeService
-  private backfillers: Map<string, BACKFILL_STATUS> = new Map()
+  private backfillers: Map<string, number> = new Map()
 
   private strategies: Map<string, StrategyService> = new Map()
 
@@ -26,10 +20,17 @@ export class Engine {
     this.tradeStore = new TradeStore()
     this.tradeService = new TradeService(this.exchangeService)
 
+    options.strategies
+      .forEach(({ selector, ...strategyConf }) => {
+        const selectorStr = `${exchangeName.toLowerCase()}.${selector}`
+        if (!this.backfillers.has(selectorStr)) {
+          this.backfillers.set(selectorStr, strategyConf.days || options.base.days)
+        }
+      })
+
     options.strategies.forEach(({ strategyName, share, period, selector, ...strategyConf }) => {
       const selectorStr = `${exchangeName.toLowerCase()}.${selector}`
       const selectorObj = objectifySelector(selectorStr)
-      if (!this.backfillers.has(selectorStr)) this.backfillers.set(selectorStr, BACKFILL_STATUS.INIT)
 
       this.tradeStore.addSelector(selectorStr)
       this.tradeService.addSelector(selectorStr, selectorObj.product_id)
@@ -38,15 +39,14 @@ export class Engine {
   }
 
   async init() {
-    Array.from(this.backfillers.entries())
-      .map(([selector]) => selector)
-      .forEach(async (selector) => {
-        // @todo(notVitaliy): Fix this shit... eventually
-        const days = 5
-        await this.backfill(selector, days)
-        // this is fucked for now. Will only tick for the first strategy for a currency pair
-        this.tick(selector)
+    this.backfillers.forEach(async (days, selector) => {
+      await this.backfill(selector, days)
+      // tick every strategy with the given selector
+      this.strategies.forEach((strategy, strategySelector) => {
+        if (selector == strategySelector)
+          this.tick(selector, strategy)
       })
+    })
   }
 
   async backfill(selector: string, days: number) {
@@ -103,5 +103,5 @@ export class Engine {
     return newestTime
   }
 
-  async tick(selector: string) {}
+  async tick(selector: string, strategy: StrategyService) {}
 }

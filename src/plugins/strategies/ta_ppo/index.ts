@@ -1,7 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import rsi from '../../../analysis/rsi'
-import ta_ppo from '../../../analysis/ta_ppo'
+import { rsi, taPpo } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {
@@ -43,7 +42,7 @@ export default {
       }
     }
 
-    ta_ppo(s, s.options.ema_long_period, s.options.ema_short_period, s.options.signal_period, s.options.ma_type)
+    taPpo(s, s.options.ema_long_period, s.options.ema_short_period, s.options.signal_period, s.options.ma_type)
       .then(function(ppoSignal) {
         s.period['ppo'] = ppoSignal
 

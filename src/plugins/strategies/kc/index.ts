@@ -1,6 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import kc from '../../../analysis/kc'
+import { kc } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {

@@ -1,7 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import rsi from '../../../analysis/rsi'
-import ta_trix from '../../../analysis/ta_trix'
+import { rsi, taTrix } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {
@@ -40,7 +39,7 @@ export default {
       }
     }
 
-    ta_trix(s, s.options.timeperiod)
+    taTrix(s, s.options.timeperiod)
       .then(function(signal) {
         s.period['trix'] = signal
 

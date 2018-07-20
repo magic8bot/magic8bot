@@ -1,7 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import rsi from '../../../analysis/rsi'
-import ultosc from '../../../analysis/ta_ultosc'
+import { rsi, taUltosc } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {
@@ -48,7 +47,7 @@ export default {
       }
     }
 
-    ultosc(s, s.options.min_periods, s.options.timeperiod1, s.options.timeperiod2, s.options.timeperiod3)
+    taUltosc(s, s.options.min_periods, s.options.timeperiod1, s.options.timeperiod2, s.options.timeperiod3)
       .then(function(signal) {
         s.period['ultosc'] = signal
 

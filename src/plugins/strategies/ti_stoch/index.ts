@@ -1,6 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import tulip_stoch from '../../../analysis/ti_stoch'
+import { tiStoch } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {
@@ -25,7 +25,7 @@ export default {
 
   onPeriod: function(s, cb) {
     if (s.in_preroll) return cb()
-    tulip_stoch(s, 'tulip_stoch', s.options.rsi_periods, s.options.stoch_k, s.options.stoch_d)
+    tiStoch(s, 'tulip_stoch', s.options.rsi_periods, s.options.stoch_k, s.options.stoch_d)
       .then(function(result: Record<string, any>) {
         if (!result) return cb()
         if (result.k.length == 0) return cb()

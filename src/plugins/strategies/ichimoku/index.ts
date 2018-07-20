@@ -1,7 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import highest from '../../../analysis/highest'
-import lowest from '../../../analysis/lowest'
+import { highest, lowest } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {

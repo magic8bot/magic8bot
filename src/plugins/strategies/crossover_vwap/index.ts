@@ -1,8 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import vwap from '../../../analysis/vwap'
-import ema from '../../../analysis/ema'
-import sma from '../../../analysis/sma'
+import { vwap, ema, sma } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {

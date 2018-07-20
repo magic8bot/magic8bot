@@ -1,8 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import ta_ema from '../../../analysis/ta_ema'
-import rsi from '../../../analysis/rsi'
-import stddev from '../../../analysis/stddev'
+import { taEma, rsi, stddev } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {
@@ -55,7 +53,7 @@ export default {
 
     // wait for promise to be resolved
     // we add all maybe we need more indicators
-    Promise.all([ta_ema(s, s.options.trend_ema)]).then((result: Record<string, any>) => {
+    Promise.all([taEma(s, s.options.trend_ema)]).then((result: Record<string, any>) => {
       if (result && result.outReal) {
         s.period.trend_ema = result.outReal
       }

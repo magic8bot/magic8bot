@@ -1,7 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import rsi from '../../../analysis/rsi'
-import ta_macd_ext from '../../../analysis/ta_macd_ext'
+import { rsi, taMacdExt } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {
@@ -75,7 +74,7 @@ export default {
       types['signal_ma_type'] = s.options.signal_ma_type
     }
 
-    ta_macd_ext(
+    taMacdExt(
       s,
       s.options.ema_long_period,
       s.options.ema_short_period,

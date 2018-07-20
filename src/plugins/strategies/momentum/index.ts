@@ -1,6 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import momentum from '../../../analysis/momentum'
+import { momentum } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {

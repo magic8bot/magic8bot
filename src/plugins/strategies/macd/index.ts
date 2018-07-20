@@ -2,8 +2,7 @@ import 'colors'
 
 import z from 'zero-fill'
 import n from 'numbro'
-import ema from '../../../analysis/ema'
-import rsi from '../../../analysis/rsi'
+import { ema, rsi } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {

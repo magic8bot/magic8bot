@@ -1,7 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import wto from '../../../analysis/wto'
-import ema from '../../../analysis/ema'
+import { wto, ema } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {

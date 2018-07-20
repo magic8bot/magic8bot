@@ -1,7 +1,7 @@
 import convnetjs from 'convnetjs'
 import z from 'zero-fill'
 import n from 'numbro'
-import ema from '../../../analysis/ema'
+import { ema } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 import cluster from 'cluster'
 

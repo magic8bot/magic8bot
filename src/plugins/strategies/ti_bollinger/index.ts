@@ -1,6 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import tulip_bollinger from '../../../analysis/ti_bollinger'
+import { tiBollinger } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {
@@ -36,7 +36,7 @@ export default {
   },
 
   onPeriod: function(s, cb) {
-    tulip_bollinger(s, 'tulip_bollinger', s.options.bollinger_size, s.options.bollinger_time)
+    tiBollinger(s, 'tulip_bollinger', s.options.bollinger_size, s.options.bollinger_time)
       .then(function(result: Record<string, any>) {
         if (!result) cb()
         let bollinger = {

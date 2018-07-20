@@ -1,7 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import ti_stoch from '../../../analysis/ti_stoch'
-import ti_bollinger from '../../../analysis/ti_bollinger'
+import { tiStoch, tiBollinger } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {
@@ -48,9 +47,9 @@ export default {
     //make sure we have all values
     if (s.in_preroll) return cb()
 
-    ti_bollinger(s, 'ti_bollinger', s.options.bollinger_size, s.options.bollinger_time)
+    tiBollinger(s, 'ti_bollinger', s.options.bollinger_size, s.options.bollinger_time)
       .then(function(inbol: Record<string, any>) {
-        ti_stoch(s, 'ti_stoch', s.options.stoch_kperiods, s.options.stoch_k, s.options.stoch_d)
+        tiStoch(s, 'ti_stoch', s.options.stoch_kperiods, s.options.stoch_k, s.options.stoch_d)
           .then(function(inres: Record<string, any>) {
             if (!inres) return cb()
             if (inres.k.length == 0) return cb()

@@ -3,7 +3,7 @@ import trend from 'trend'
 import z from 'zero-fill'
 import n from 'numbro'
 import stats from 'stats-lite'
-import ema from '../../../analysis/ema'
+import { ema } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 var oldgrowth = 1

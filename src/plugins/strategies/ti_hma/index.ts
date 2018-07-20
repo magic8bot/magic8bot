@@ -1,7 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import rsi from '../../../analysis/rsi'
-import ti_hma from '../../../analysis/ti_hma'
+import { rsi, tiHma } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {
@@ -40,7 +39,7 @@ export default {
       }
     }
 
-    ti_hma(s, s.options.min_periods, s.options.trend_hma)
+    tiHma(s, s.options.min_periods, s.options.trend_hma)
       .then(function(signal) {
         s.period['trend_hma'] = signal
 

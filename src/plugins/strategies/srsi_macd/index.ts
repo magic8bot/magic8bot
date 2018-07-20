@@ -1,7 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import srsi from '../../../analysis/srsi'
-import ema from '../../../analysis/ema'
+import { srsi, ema } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {

@@ -1,6 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import bollinger from '../../../analysis/bollinger'
+import { bollinger } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {

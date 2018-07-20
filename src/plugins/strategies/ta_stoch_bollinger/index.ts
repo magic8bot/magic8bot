@@ -1,7 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import ta_stoch from '../../../analysis/ta_stoch'
-import ta_bollinger from '../../../analysis/ta_bollinger'
+import { taStoch, taBollinger } from '@plugins'
 import * as Phenotypes from '../../../util/phenotype'
 
 export default {
@@ -56,7 +55,7 @@ export default {
   onPeriod: function(s, cb) {
     //make sure we have all values
     if (s.in_preroll) return cb()
-    ta_bollinger(
+    taBollinger(
       s,
       'tabollinger',
       s.options.bollinger_size,
@@ -65,7 +64,7 @@ export default {
       s.options.bollinger_dType
     )
       .then(function(inbol: Record<string, any>) {
-        ta_stoch(
+        taStoch(
           s,
           'stoch',
           s.options.stoch_periods,

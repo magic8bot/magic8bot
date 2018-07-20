@@ -1,28 +1,7 @@
-import { Collection } from 'mongodb'
-import { mongoService } from '../services/mongo.service'
-
-import { sleep } from '../util'
-
-export interface TradeItem {
-  trade_id: number
-  time: number
-  size: number
-  price: number
-  side: 'buy' | 'sell'
-}
-
-type TradeCollection = TradeItem & {
-  selector: string
-}
+import { dbDriver, TradeItem } from '../lib'
 
 export class TradeStore {
   public tradesMap: Map<string, TradeItem[]> = new Map()
-  private collection: Collection<TradeCollection> = mongoService.connection.collection('beta_trades')
-
-  constructor() {
-    this.collection.createIndex({ selector: 1 })
-    this.collection.createIndex({ time: 1 })
-  }
 
   addSelector(selector: string) {
     if (this.tradesMap.has(selector)) return
@@ -31,7 +10,7 @@ export class TradeStore {
   }
 
   async loadTrades(selector: string) {
-    const trades = await this.collection
+    const trades = await dbDriver.trade
       .find({ selector })
       .sort({ time: 1 })
       .toArray()
@@ -40,7 +19,7 @@ export class TradeStore {
   }
 
   async update(selector: string, newTrades: TradeItem[]) {
-    await this.collection.insertMany(newTrades)
+    await dbDriver.trade.insertMany(newTrades)
 
     const trades = !this.tradesMap.has(selector) ? [] : this.tradesMap.get(selector)
     newTrades.forEach((trade) => trades.push(trade))

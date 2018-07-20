@@ -1,6 +1,6 @@
 import { Engine } from './engine'
 import { SessionStore } from '../store/session.store'
-import { Conf, ExchangeConf } from '@zbTypes'
+import { Conf, ExchangeConf } from '@m8bTypes'
 
 export class Core {
   private sessionStore: SessionStore

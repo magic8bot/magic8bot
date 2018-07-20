@@ -1,4 +1,4 @@
-import { ExchangeConf } from '@zbTypes'
+import { ExchangeConf } from '@m8bTypes'
 import { ExchangeService } from '../services/exchange.service'
 import { StrategyService } from '../services/strategy.service'
 import { TradeStore } from '../store/trade.store'

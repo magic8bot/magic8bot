@@ -2,8 +2,8 @@ import semver from 'semver'
 
 import { magic8bot } from './conf'
 
-import { Conf } from '@zbTypes'
-import { mongoService } from './services/mongo.service'
+import { Conf } from '@m8bTypes'
+import { dbDriver } from './lib'
 
 import { Core } from './engine'
 // import { window } from './output'
@@ -24,7 +24,11 @@ const run = async () => {
   try {
     checkSharePercent(magic8bot.conf)
 
-    await mongoService.connect(magic8bot.mongo)
+    await dbDriver.connect(
+      'mongo',
+      magic8bot.mongo
+    )
+
     const core = new Core(magic8bot.conf)
     await core.init()
   } catch (e) {

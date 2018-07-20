@@ -4,7 +4,7 @@
  *              All other config options will be through GUI.
  */
 
-import { MongoConf, Base, ExchangeConf, Conf, Magic8bot } from '@zbTypes'
+import { MongoConf, Base, ExchangeConf, Conf, Magic8bot } from '@m8bTypes'
 
 // Your mongodb conf
 const mongo: MongoConf = {

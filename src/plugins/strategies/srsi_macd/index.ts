@@ -1,13 +1,13 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { srsi, ema } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'srsi_macd',
   description: 'Stochastic MACD Strategy',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length, same as --period_length', String, '30m')
     this.option('period_length', 'period length, same as --period', String, '30m')
     this.option('min_periods', 'min. number of history periods', Number, 200)
@@ -24,7 +24,7 @@ export default {
     this.option('down_trend_threshold', 'threshold to trigger a sold signal', Number, 0)
   },
 
-  calculate: function(s) {
+  calculate(s) {
     // compute Stochastic RSI
     srsi(s, 'srsi', s.options.rsi_periods, s.options.srsi_k, s.options.srsi_d)
 
@@ -40,40 +40,46 @@ export default {
     }
   },
 
-  onPeriod: function(s, cb) {
-    if (!s.in_preroll)
+  onPeriod(s, cb) {
+    if (!s.in_preroll) {
       if (
         typeof s.period.macd_histogram === 'number' &&
         typeof s.lookback[0].macd_histogram === 'number' &&
         typeof s.period.srsi_K === 'number' &&
         typeof s.period.srsi_D === 'number'
-      )
-        if (s.period.macd_histogram >= s.options.up_trend_threshold)
+      ) {
+        if (s.period.macd_histogram >= s.options.up_trend_threshold) {
           if (
             s.period.srsi_K > s.period.srsi_D &&
             s.period.srsi_K > s.lookback[0].srsi_K &&
             s.period.srsi_K < s.options.oversold_rsi
-          )
+          ) {
             // Buy signal
             s.signal = 'buy'
+          }
+        }
+      }
+    }
 
     // Sell signal
-    if (s.period.macd_histogram < s.options.down_trend_threshold)
+    if (s.period.macd_histogram < s.options.down_trend_threshold) {
       if (
         s.period.srsi_K < s.period.srsi_D &&
         s.period.srsi_K < s.lookback[0].srsi_K &&
         s.period.srsi_K > s.options.overbought_rsi
-      )
+      ) {
         s.signal = 'sell'
+      }
+    }
 
     // Hold
-    //s.signal = null;
+    // s.signal = null;
     cb()
   },
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
     if (typeof s.period.macd_histogram === 'number') {
-      var color = 'grey'
+      let color = 'grey'
       if (s.period.macd_histogram > 0) {
         color = 'green'
       } else if (s.period.macd_histogram < 0) {
@@ -90,27 +96,27 @@ export default {
 
   phenotypes: {
     // -- common
-    period_length: Phenotypes.RangePeriod(1, 120, 'm'),
-    min_periods: Phenotypes.Range(1, 200),
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 5),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 5),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    period_length: phenotypes.rangePeriod(1, 120, 'm'),
+    min_periods: phenotypes.range0(1, 200),
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 5),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 5),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
     // -- strategy
-    rsi_periods: Phenotypes.Range(1, 200),
-    srsi_periods: Phenotypes.Range(1, 200),
-    srsi_k: Phenotypes.Range(1, 50),
-    srsi_d: Phenotypes.Range(1, 50),
-    oversold_rsi: Phenotypes.Range(1, 100),
-    overbought_rsi: Phenotypes.Range(1, 100),
-    ema_short_period: Phenotypes.Range(1, 20),
-    ema_long_period: Phenotypes.Range(20, 100),
-    signal_period: Phenotypes.Range(1, 20),
-    up_trend_threshold: Phenotypes.Range(0, 20),
-    down_trend_threshold: Phenotypes.Range(0, 20),
+    rsi_periods: phenotypes.range0(1, 200),
+    srsi_periods: phenotypes.range0(1, 200),
+    srsi_k: phenotypes.range0(1, 50),
+    srsi_d: phenotypes.range0(1, 50),
+    oversold_rsi: phenotypes.range0(1, 100),
+    overbought_rsi: phenotypes.range0(1, 100),
+    ema_short_period: phenotypes.range0(1, 20),
+    ema_long_period: phenotypes.range0(20, 100),
+    signal_period: phenotypes.range0(1, 20),
+    up_trend_threshold: phenotypes.range0(0, 20),
+    down_trend_threshold: phenotypes.range0(0, 20),
   },
 }

@@ -14,12 +14,12 @@ export const crossunderVal = (p1val1, p1val2, p2val1, p2val2) => {
   return p1val1 < p1val2 && p2val1 >= p2val2
 }
 
-export const nz = (src, val = 0) => {
-  return typeof src != 'number' || isNaN(src) ? val : src
+export const nz = (srcStr, val = 0) => {
+  return typeof srcStr !== 'number' || isNaN(srcStr) ? val : srcStr
 }
 
 export const iff = (v, r, r2) => {
-  return v != undefined && v ? r : r2
+  return v !== undefined && v ? r : r2
 }
 
 export const hl2 = (period) => {
@@ -34,79 +34,79 @@ export const ohlc4 = (period) => {
   return (period.open + period.high + period.low + period.close) / 4
 }
 
-export const HAhlc3 = (period, lookback?) => {
+export const hAhlc3 = (period, lookback?) => {
   /*
     xClose = (Open+High+Low+Close)/4
     xOpen = [xOpen(Previous Bar) + xClose(Previous Bar)]/2
     xHigh = Max(High, xOpen, xClose)
     xLow = Min(Low, xOpen, xClose)
     */
-  let haClose = (period.open + period.high + period.low + period.close) / 4,
-    haClosePeriod = lookback != undefined ? lookback : period,
-    haClosePrev = (haClosePeriod.open + haClosePeriod.high + haClosePeriod.low + haClosePeriod.close) / 4,
-    haOpen = (period.haOpen ? period.haOpen : period.open + haClosePrev) / 2,
-    haHigh = Math.max(period.high, haOpen, haClose),
-    haLow = Math.min(period.low, haOpen, haClose)
+  const haClose = (period.open + period.high + period.low + period.close) / 4
+  const haClosePeriod = lookback !== undefined ? lookback : period
+  const haClosePrev = (haClosePeriod.open + haClosePeriod.high + haClosePeriod.low + haClosePeriod.close) / 4
+  const haOpen = (period.haOpen ? period.haOpen : period.open + haClosePrev) / 2
+  const haHigh = Math.max(period.high, haOpen, haClose)
+  const haLow = Math.min(period.low, haOpen, haClose)
   // save haOpen
   period.haOpen = haOpen
   return (haClose + haHigh + haLow) / 3
 }
 
-export const HAohlc4 = (period, lookback?) => {
+export const hAohlc4 = (period, lookback?) => {
   /*
     xClose = (Open+High+Low+Close)/4
     xOpen = [xOpen(Previous Bar) + xClose(Previous Bar)]/2
     xHigh = Max(High, xOpen, xClose)
     xLow = Min(Low, xOpen, xClose)
     */
-  let haClose = (period.open + period.high + period.low + period.close) / 4,
-    haClosePeriod = lookback != undefined ? lookback : period,
-    haClosePrev = (haClosePeriod.open + haClosePeriod.high + haClosePeriod.low + haClosePeriod.close) / 4,
-    haOpen = (period.haOpen ? period.haOpen : period.open + haClosePrev) / 2,
-    haHigh = Math.max(period.high, haOpen, haClose),
-    haLow = Math.min(period.low, haOpen, haClose)
+  const haClose = (period.open + period.high + period.low + period.close) / 4
+  const haClosePeriod = lookback !== undefined ? lookback : period
+  const haClosePrev = (haClosePeriod.open + haClosePeriod.high + haClosePeriod.low + haClosePeriod.close) / 4
+  const haOpen = (period.haOpen ? period.haOpen : period.open + haClosePrev) / 2
+  const haHigh = Math.max(period.high, haOpen, haClose)
+  const haLow = Math.min(period.low, haOpen, haClose)
   // save haOpen
   period.haOpen = haOpen
   return (haClose + haOpen + haHigh + haLow) / 4
 }
 
 // sample usage: let adjusted_lbks = s.lookback.map((period, i) => tv.src(period, s.options.src, s.lookback[i+1]))
-export const src = (src, period, lookback) => {
-  if (!period) throw 'helpers src(). period undefined'
+export const src = (srcStr, period, lookback) => {
+  if (!period) throw new Error('helpers src(). period undefined')
 
-  if (!src || src === 'close') {
+  if (!srcStr || srcStr === 'close') {
     return period.close
-  } else if (src === 'hl2') {
+  } else if (srcStr === 'hl2') {
     return hl2(period)
-  } else if (src === 'hlc3') {
+  } else if (srcStr === 'hlc3') {
     return hlc3(period)
-  } else if (src === 'ohlc4') {
+  } else if (srcStr === 'ohlc4') {
     return ohlc4(period)
-  } else if (src === 'HAhlc3') {
-    return HAhlc3(period, lookback)
-  } else if (src === 'HAohlc4') {
-    return HAohlc4(period, lookback)
-  } else throw src + ' not supported'
+  } else if (srcStr === 'HAhlc3') {
+    return hAhlc3(period, lookback)
+  } else if (srcStr === 'HAohlc4') {
+    return hAohlc4(period, lookback)
+  } else throw new Error(srcStr + ' not supported')
 }
 
-export const adjust_by_pct = (pct, n) => {
+export const adjustByPct = (pct, n) => {
   return n * (pct / 100 + 1)
 }
 
 export const pivot = (s, leftBars, rightBars) => {
-  let totalBars = leftBars + rightBars + 1,
-    periods = [s.period, ...s.lookback.slice(0, totalBars - 1)].reverse(),
-    lPeriods = periods.slice(0, leftBars),
-    rPeriods = periods.slice(leftBars + 1),
-    oPeriods = lPeriods.concat(rPeriods),
-    countH = oPeriods.reduce((p, c) => {
-      return p + (typeof c.high !== 'undefined' && periods[leftBars].high > c.high ? 1 : 0)
-    }, 0),
-    countL = oPeriods.reduce((p, c) => {
-      return p + (typeof c.low !== 'undefined' && periods[leftBars].low < c.low ? 1 : 0)
-    }, 0)
+  const totalBars = leftBars + rightBars + 1
+  const periods = [s.period, ...s.lookback.slice(0, totalBars - 1)].reverse()
+  const lPeriods = periods.slice(0, leftBars)
+  const rPeriods = periods.slice(leftBars + 1)
+  const oPeriods = lPeriods.concat(rPeriods)
+  const countH = oPeriods.reduce((p, c) => {
+    return p + (typeof c.high !== 'undefined' && periods[leftBars].high > c.high ? 1 : 0)
+  }, 0)
+  const countL = oPeriods.reduce((p, c) => {
+    return p + (typeof c.low !== 'undefined' && periods[leftBars].low < c.low ? 1 : 0)
+  }, 0)
   return {
-    high: countH == oPeriods.length ? periods[leftBars].high : null,
-    low: countL == oPeriods.length ? periods[leftBars].low : null,
+    high: countH === oPeriods.length ? periods[leftBars].high : null,
+    low: countL === oPeriods.length ? periods[leftBars].low : null,
   }
 }

@@ -1,13 +1,13 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { bollinger } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'bollinger',
   description: 'Buy when (Signal ≤ Lower Bollinger Band) and sell when (Signal ≥ Upper Bollinger Band).',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length, same as --period_length', String, '1h')
     this.option('period_length', 'period length, same as --period', String, '1h')
     this.option('bollinger_size', 'period size', Number, 20)
@@ -31,16 +31,16 @@ export default {
     )
   },
 
-  calculate: function(s) {
+  calculate(s) {
     // calculate Bollinger Bands
     bollinger(s, 'bollinger', s.options.bollinger_size)
   },
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     if (s.period.bollinger) {
       if (s.period.bollinger.upper && s.period.bollinger.lower) {
-        let upperBound = s.period.bollinger.upper[s.period.bollinger.upper.length - 1]
-        let lowerBound = s.period.bollinger.lower[s.period.bollinger.lower.length - 1]
+        const upperBound = s.period.bollinger.upper[s.period.bollinger.upper.length - 1]
+        const lowerBound = s.period.bollinger.lower[s.period.bollinger.lower.length - 1]
         if (s.period.close > (upperBound / 100) * (100 - s.options.bollinger_upper_bound_pct)) {
           s.signal = 'sell'
         } else if (s.period.close < (lowerBound / 100) * (100 + s.options.bollinger_lower_bound_pct)) {
@@ -53,13 +53,13 @@ export default {
     cb()
   },
 
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
     if (s.period.bollinger) {
       if (s.period.bollinger.upper && s.period.bollinger.lower) {
-        let upperBound = s.period.bollinger.upper[s.period.bollinger.upper.length - 1]
-        let lowerBound = s.period.bollinger.lower[s.period.bollinger.lower.length - 1]
-        var color = 'grey'
+        const upperBound = s.period.bollinger.upper[s.period.bollinger.upper.length - 1]
+        const lowerBound = s.period.bollinger.lower[s.period.bollinger.lower.length - 1]
+        let color = 'grey'
         if (s.period.close > (upperBound / 100) * (100 - s.options.bollinger_upper_bound_pct)) {
           color = 'green'
         } else if (s.period.close < (lowerBound / 100) * (100 + s.options.bollinger_lower_bound_pct)) {
@@ -96,19 +96,19 @@ export default {
 
   phenotypes: {
     // -- common
-    period_length: Phenotypes.RangePeriod(1, 120, 'm'),
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 5),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 5),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    period_length: phenotypes.rangePeriod(1, 120, 'm'),
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 5),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 5),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
     // -- strategy
-    bollinger_size: Phenotypes.Range(1, 40),
-    bollinger_time: Phenotypes.RangeFloat(1, 6),
-    bollinger_upper_bound_pct: Phenotypes.RangeFloat(-1, 30),
-    bollinger_lower_bound_pct: Phenotypes.RangeFloat(-1, 30),
+    bollinger_size: phenotypes.range0(1, 40),
+    bollinger_time: phenotypes.rangeFloat(1, 6),
+    bollinger_upper_bound_pct: phenotypes.rangeFloat(-1, 30),
+    bollinger_lower_bound_pct: phenotypes.rangeFloat(-1, 30),
   },
 }

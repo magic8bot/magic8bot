@@ -8,11 +8,11 @@ export class PeriodStore {
 
   constructor(private readonly period: string) {}
 
-  initPeriods(trades: TradeItem[]) {
+  public initPeriods(trades: TradeItem[]) {
     trades.forEach((trade) => this.addTrade(trade))
   }
 
-  addTrade(trade: TradeItem) {
+  public addTrade(trade: TradeItem) {
     const { size, price, time } = trade
     const bucket = timebucket(time)
       .resize(this.period)
@@ -28,13 +28,13 @@ export class PeriodStore {
     // this.periodEvents.emit('newTrade')
   }
 
-  newPeriod(bucket: number, { time, size, price }: TradeItem) {
+  public newPeriod(bucket: number, { time, size, price }: TradeItem) {
     this.periods.unshift({
-      time: bucket,
-      open: price,
+      close: price,
       high: price,
       low: price,
-      close: price,
+      open: price,
+      time: bucket,
       volume: size,
     })
 

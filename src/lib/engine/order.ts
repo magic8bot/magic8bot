@@ -5,9 +5,9 @@ import { Product } from '@m8bTypes'
 
 interface Balance {
   asset: number
-  asset_hold: number
+  assetHold: number
   currency: number
-  currency_hold: number
+  currencyHold: number
 }
 
 enum ORDER_STATUS {
@@ -33,7 +33,7 @@ export class Orders {
     private readonly share: number
   ) {}
 
-  async buy(isTaker: boolean = false) {
+  public async buy(isTaker = false) {
     const bid = await this.quote('buy')
     // @ts-ignore
     const quote = n(bid)
@@ -41,7 +41,7 @@ export class Orders {
       .format(this.product.increment, Math.floor)
   }
 
-  async sell() {
+  public async sell() {
     const bid = await this.quote('sell')
     // @ts-ignore
     const quote = n(bid)
@@ -50,8 +50,8 @@ export class Orders {
   }
 
   private async quote(type: OrderType) {
-    const { product_id } = this.selector
-    const { bid, ask } = await this.exchange.getQuote({ product_id })
+    const { productId } = this.selector
+    const { bid, ask } = await this.exchange.getQuote({ productId })
     return type === 'buy' ? bid : ask
   }
 
@@ -68,8 +68,8 @@ export class Orders {
   private getWalletTotal(type: OrderType, balance: Balance) {
     return type === 'buy'
       ? (isNaN(Number(balance.currency)) ? 0 : Number(balance.currency)) +
-          (isNaN(Number(balance.currency_hold)) ? 0 : Number(balance.currency_hold))
+          (isNaN(Number(balance.currencyHold)) ? 0 : Number(balance.currencyHold))
       : (isNaN(Number(balance.asset)) ? 0 : Number(balance.asset)) +
-          (isNaN(Number(balance.asset_hold)) ? 0 : Number(balance.asset_hold))
+          (isNaN(Number(balance.assetHold)) ? 0 : Number(balance.assetHold))
   }
 }

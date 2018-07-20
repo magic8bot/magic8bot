@@ -1,14 +1,14 @@
 const talib = require('talib')
 
 export const taTrix = (s, timeperiod) => {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     // create object for talib. only close is used for now but rest might come in handy
     if (!s.marketData) {
       s.marketData = { open: [], close: [], high: [], low: [], volume: [] }
     }
 
     if (s.lookback.length > s.marketData.close.length) {
-      for (var i = s.lookback.length - s.marketData.close.length - 1; i >= 0; i--) {
+      for (let i = s.lookback.length - s.marketData.close.length - 1; i >= 0; i--) {
         s.marketData.close.push(s.lookback[i].close)
       }
     }
@@ -18,20 +18,20 @@ export const taTrix = (s, timeperiod) => {
       return
     }
 
-    let tmpMarket = s.marketData.close.slice()
+    const tmpMarket = s.marketData.close.slice()
 
     // add current period
     tmpMarket.push(s.period.close)
 
     talib.execute(
       {
-        name: 'TRIX',
-        startIdx: 0,
         endIdx: tmpMarket.length - 1,
         inReal: tmpMarket,
+        name: 'TRIX',
         optInTimePeriod: timeperiod,
+        startIdx: 0,
       },
-      function(err, result) {
+      (err, result) => {
         if (err) {
           reject(err)
           return

@@ -16,9 +16,9 @@ const fromSnake = fromSplit('_')
 const fromKebab = fromSplit('-')
 
 const fromParts = (parts) => ({
-  toSnake: () => toSnake(parts),
   toCamel: () => toCamel(parts),
   toKebab: () => toKebab(parts),
+  toSnake: () => toSnake(parts),
 })
 
 const toJoin = (join: string) => (parts: string[]) => parts.join(join)

@@ -1,8 +1,7 @@
 import { ExchangeConf } from '@m8bTypes'
 import { ExchangeService, StrategyService, TradeService } from '@services'
 import { TradeStore } from '@stores'
-import { sleep } from '@util'
-import { objectifySelector } from '@util'
+import { sleep, objectifySelector } from '@util'
 
 export class Engine {
   private exchangeService: ExchangeService
@@ -25,17 +24,17 @@ export class Engine {
 
     options.strategies.forEach(({ strategyName, share, period, selector, ...strategyConf }) => {
       const selectorStr = `${exchangeName.toLowerCase()}.${selector}`
-      const { product_id } = objectifySelector(selectorStr)
+      const { productId } = objectifySelector(selectorStr)
 
       if (!this.backfillers.has(selectorStr)) this.backfillers.set(selectorStr, currencyPairDays[selector])
 
       this.tradeStore.addSelector(selectorStr)
-      this.tradeService.addSelector(selectorStr, product_id)
+      this.tradeService.addSelector(selectorStr, productId)
       this.strategies.set(selectorStr, new StrategyService(strategyName, period))
     })
   }
 
-  async init() {
+  public async init() {
     this.backfillers.forEach(async (days, selector) => {
       await this.backfill(selector, days)
 
@@ -45,7 +44,7 @@ export class Engine {
     })
   }
 
-  async backfill(selector: string, days: number) {
+  public async backfill(selector: string, days: number) {
     const historyScan = this.tradeService.getHistoryScan()
 
     const now = new Date().getTime()
@@ -54,8 +53,12 @@ export class Engine {
 
     // this.tradeEvents.emit('start')
     return historyScan === 'backward'
-      ? await this.backScan(selector, days, targetTime, baseTime)
-      : await this.forwardScan(selector, targetTime, now)
+      ? this.backScan(selector, days, targetTime, baseTime)
+      : this.forwardScan(selector, targetTime, now)
+  }
+
+  public async tick(selector: string, strategy: StrategyService) {
+    //
   }
 
   private async backScan(selector: string, days: number, targetTime: number, baseTime: number) {
@@ -69,7 +72,7 @@ export class Engine {
 
     if (oldestTrade > targetTime) {
       if (this.tradeService.getBackfillRateLimit()) await sleep(this.tradeService.getBackfillRateLimit())
-      return await this.backScan(selector, days, targetTime, baseTime)
+      return this.backScan(selector, days, targetTime, baseTime)
     }
 
     // this.tradeEvents.emit('done')
@@ -92,12 +95,10 @@ export class Engine {
 
     if (newestTime < now) {
       if (this.tradeService.getBackfillRateLimit()) await sleep(this.tradeService.getBackfillRateLimit())
-      return await this.forwardScan(selector, startTime, now, newestTime)
+      return this.forwardScan(selector, startTime, now, newestTime)
     }
 
     // this.tradeEvents.emit('done')
     return newestTime
   }
-
-  async tick(selector: string, strategy: StrategyService) {}
 }

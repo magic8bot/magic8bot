@@ -12,7 +12,7 @@ export class MongoLib {
   private markerCollection: Collection<Marker>
   private orderCollection: Collection<OrderCollection>
 
-  async connect({ username, password, authMechanism, host, port, replicaSet, db, connectionString }: MongoConf) {
+  public async connect({ username, password, authMechanism, host, port, replicaSet, db, connectionString }: MongoConf) {
     const conStr = connectionString
       ? connectionString
       : this.makeConnectionString(username, password, host, port, db, replicaSet, authMechanism)
@@ -25,7 +25,7 @@ export class MongoLib {
     this.connection = mongo.db(db)
   }
 
-  init() {
+  public init() {
     this.sessionCollection = this.connection.collection('sessions')
     this.optionCollection = this.connection.collection('options')
     this.tradeCollection = this.connection.collection('trades')

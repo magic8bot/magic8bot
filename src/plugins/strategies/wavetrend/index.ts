@@ -1,13 +1,13 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { wto, ema } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'wavetrend',
   description: 'Buy when (Signal < Oversold) and sell when (Signal > Overbought).',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length, same as --period_length', String, '1h')
     this.option('period_length', 'period length, same as --period', String, '1h')
     this.option('min_periods', 'min. number of history periods', Number, 21)
@@ -20,21 +20,21 @@ export default {
     this.option('wavetrend_trends', 'act on trends instead of limits', Boolean, false)
   },
 
-  calculate: function(s) {
+  calculate(s) {
     // calculate Wavetrend and EMA
     wto(s, 'wto', s.options.wavetrend_channel_length)
     ema(s, 'ema', s.options.wavetrend_channel_length)
   },
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     if (s.period.wto) {
       s.signal = null // hold
-      let prev_wto = s.lookback[0].wto
-      let wto = s.period.wto
-      let prev_hcl3 = s.lookback[0].hcl3
-      let hcl3 = s.period.hcl3
-      let prev_ema = s.lookback[0].ema
-      let ema = s.period.ema
+      const prev_wto = s.lookback[0].wto
+      const wto = s.period.wto
+      const prev_hcl3 = s.lookback[0].hcl3
+      const hcl3 = s.period.hcl3
+      const prev_ema = s.lookback[0].ema
+      const ema = s.period.ema
 
       if (!s.sell_signal_close) s.sell_signal_close = 0
       if (!s.buy_signal_close) s.buy_signal_close = 0
@@ -46,9 +46,9 @@ export default {
       if (s.options.wavetrend_trends === true) {
         if (wto > prev_wto) {
           if (s.trend === 'down' && s.buy_signal_close < s.period.close) {
-            //console.log('\n')
-            //console.log(s.period.hcl3, s.period.wto, s.lookback[0].wto, s.buy_signal_close)
-            //console.log('trend reversal, we should sell')
+            // console.log('\n')
+            // console.log(s.period.hcl3, s.period.wto, s.lookback[0].wto, s.buy_signal_close)
+            // console.log('trend reversal, we should sell')
             s.signal = 'sell'
             s.sell_signal_close = s.period.close
           }
@@ -56,9 +56,9 @@ export default {
         }
         if (wto < prev_wto) {
           if (s.trend === 'up' && s.sell_signal_close > s.period.close) {
-            //console.log('\n')
-            //console.log(s.period.hcl3, s.period.wto, s.lookback[0].wto, s.sell_signal_close)
-            //console.log('trend reversal, we should buy')
+            // console.log('\n')
+            // console.log(s.period.hcl3, s.period.wto, s.lookback[0].wto, s.sell_signal_close)
+            // console.log('trend reversal, we should buy')
             s.signal = 'buy'
             s.buy_signal_close = s.period.close
           }
@@ -68,9 +68,9 @@ export default {
       if (s.options.wavetrend_trends === false) {
         if (wto < s.options.wavetrend_overbought_2 && prev_wto < s.options.wavetrend_overbought_2) {
           s.sell_pct = 99
-          //console.log('\n')
-          //console.log(prev_wto, wto, prev_hcl3, hcl3, prev_ema, ema)
-          //console.log('trend reversal, we should sell')
+          // console.log('\n')
+          // console.log(prev_wto, wto, prev_hcl3, hcl3, prev_ema, ema)
+          // console.log('trend reversal, we should sell')
           if (prev_wto > wto && prev_hcl3 > hcl3 && prev_ema > ema) {
             if (s.trend === 'down' && s.buy_signal_close < s.period.close) {
               s.signal = 'sell'
@@ -80,9 +80,9 @@ export default {
           }
         } else if (wto > s.options.wavetrend_oversold_2 && prev_wto > s.options.wavetrend_oversold_2) {
           s.buy_pct = 99
-          //console.log('\n')
-          //console.log(prev_wto, wto, prev_hcl3, hcl3, prev_ema, ema)
-          //console.log('trend reversal, we should buy')
+          // console.log('\n')
+          // console.log(prev_wto, wto, prev_hcl3, hcl3, prev_ema, ema)
+          // console.log('trend reversal, we should buy')
           if (prev_wto < wto && prev_hcl3 < hcl3 && prev_ema < ema) {
             if (s.trend === 'up' && s.sell_signal_close > s.period.close) {
               s.signal = 'buy'
@@ -92,9 +92,9 @@ export default {
           }
         } else if (wto < s.options.wavetrend_overbought_1 && prev_wto < s.options.wavetrend_overbought_1) {
           s.sell_pct = 5
-          //console.log('\n')
-          //console.log(prev_wto, wto, prev_hcl3, hcl3, prev_ema, ema)
-          //console.log('trend reversal, we should sell')
+          // console.log('\n')
+          // console.log(prev_wto, wto, prev_hcl3, hcl3, prev_ema, ema)
+          // console.log('trend reversal, we should sell')
           if (prev_wto > wto && prev_hcl3 > hcl3 && prev_ema > ema) {
             if (s.trend === 'down' && s.buy_signal_close < s.period.close) {
               s.signal = 'sell'
@@ -104,9 +104,9 @@ export default {
           }
         } else if (wto > s.options.wavetrend_oversold_1 && prev_wto > s.options.wavetrend_oversold_1) {
           s.buy_pct = 5
-          //console.log('\n')
-          //console.log(prev_wto, wto, prev_hcl3, hcl3, prev_ema, ema)
-          //console.log('trend reversal, we should buy')
+          // console.log('\n')
+          // console.log(prev_wto, wto, prev_hcl3, hcl3, prev_ema, ema)
+          // console.log('trend reversal, we should buy')
           if (prev_wto < wto && prev_hcl3 < hcl3 && prev_ema < ema) {
             if (s.trend === 'up' && s.sell_signal_close > s.period.close) {
               s.signal = 'buy'
@@ -119,9 +119,9 @@ export default {
           s.buy_pct = 1
           if (wto > prev_wto) {
             if (s.trend === 'down' && s.buy_signal_close < s.period.close) {
-              //console.log('\n')
-              //console.log(s.period.hcl3, s.period.wto, s.lookback[0].wto, s.buy_signal_close)
-              //console.log('trend reversal, we should sell')
+              // console.log('\n')
+              // console.log(s.period.hcl3, s.period.wto, s.lookback[0].wto, s.buy_signal_close)
+              // console.log('trend reversal, we should sell')
               s.signal = 'sell'
               s.sell_signal_close = s.period.close
             }
@@ -129,9 +129,9 @@ export default {
           }
           if (wto < prev_wto) {
             if (s.trend === 'up' && s.sell_signal_close > s.period.close) {
-              //console.log('\n')
-              //console.log(s.period.hcl3, s.period.wto, s.lookback[0].wto, s.sell_signal_close)
-              //console.log('trend reversal, we should buy')
+              // console.log('\n')
+              // console.log(s.period.hcl3, s.period.wto, s.lookback[0].wto, s.sell_signal_close)
+              // console.log('trend reversal, we should buy')
               s.signal = 'buy'
               s.buy_signal_close = s.period.close
             }
@@ -143,10 +143,10 @@ export default {
     cb()
   },
 
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
     if (s.period.wto) {
-      var color = 'grey'
+      let color = 'grey'
       if (s.period.hcl3 > s.lookback[0].hcl3) {
         color = 'green'
       } else if (s.period.hcl3 < s.lookback[0].hcl3) {
@@ -163,23 +163,23 @@ export default {
 
   phenotypes: {
     // -- common
-    period_length: Phenotypes.RangePeriod(1, 120, 'm'),
-    min_periods: Phenotypes.Range(1, 200),
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 5),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 5),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    period_length: phenotypes.rangePeriod(1, 120, 'm'),
+    min_periods: phenotypes.range0(1, 200),
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 5),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 5),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
     // -- strategy
-    wavetrend_channel_length: Phenotypes.Range(1, 20),
-    wavetrend_average_length: Phenotypes.Range(1, 42),
-    wavetrend_overbought_1: Phenotypes.Range(1, 100),
-    wavetrend_overbought_2: Phenotypes.Range(1, 100),
-    wavetrend_oversold_1: Phenotypes.Range(-100, 0),
-    wavetrend_oversold_2: Phenotypes.Range(-100, 0),
-    wavetrend_trends: Phenotypes.ListOption([true, false]),
+    wavetrend_channel_length: phenotypes.range0(1, 20),
+    wavetrend_average_length: phenotypes.range0(1, 42),
+    wavetrend_overbought_1: phenotypes.range0(1, 100),
+    wavetrend_overbought_2: phenotypes.range0(1, 100),
+    wavetrend_oversold_1: phenotypes.range0(-100, 0),
+    wavetrend_oversold_2: phenotypes.range0(-100, 0),
+    wavetrend_trends: phenotypes.listOption([true, false]),
   },
 }

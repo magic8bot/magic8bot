@@ -1,7 +1,22 @@
 import { BucketSize } from './bucket-size'
 
 export class Bucket {
-  static regex = /^((?:\d+)?(?:[a-zA-Zµ]{1,2}))(\-?\d+)$/
+  public static regex = /^((?:\d+)?(?:[a-zA-Zµ]{1,2}))(\-?\d+)$/
+
+  public static fromString(bucketStr) {
+    const match = bucketStr.match(Bucket.regex)
+    if (!match) throw new Error('invalid bucket string: ' + bucketStr)
+
+    return new Bucket(match[1], match[2])
+  }
+
+  public static fromNumber(num: number | string) {
+    const str = String(num)
+    const spec = BucketSize.numberToSpec(str.slice(-2))
+    const value = str.substr(0, str.length - 2)
+
+    return new Bucket(spec, value)
+  }
 
   private size: BucketSize
   private value: number
@@ -11,38 +26,23 @@ export class Bucket {
     this.value = Number(value)
   }
 
-  static fromString(bucketStr) {
-    const match = bucketStr.match(Bucket.regex)
-    if (!match) throw new Error('invalid bucket string: ' + bucketStr)
-
-    return new Bucket(match[1], match[2])
-  }
-
-  static fromNumber(num: number | string) {
-    const str = String(num)
-    const spec = BucketSize.numberToSpec(str.slice(-2))
-    const value = str.substr(0, str.length - 2)
-
-    return new Bucket(spec, value)
-  }
-
-  toString() {
+  public toString() {
     return this.size.toString() + this.value
   }
 
-  toJSON() {
+  public toJSON() {
     return this.toString()
   }
 
-  toMilliseconds() {
+  public toMilliseconds() {
     return this.size.toMilliseconds() * this.value
   }
 
-  toDate() {
+  public toDate() {
     return new Date(this.toMilliseconds())
   }
 
-  resize(spec) {
+  public resize(spec) {
     const size = new BucketSize(spec)
     if (size.granularity === this.size.granularity && size.value === this.size.value) return this
 
@@ -50,27 +50,27 @@ export class Bucket {
     return new Bucket(size.spec, value)
   }
 
-  add(value) {
+  public add(value) {
     this.value += Math.floor(value)
     return this
   }
 
-  subtract(value) {
+  public subtract(value) {
     this.value -= Math.floor(value)
     return this
   }
 
-  multiply(value) {
+  public multiply(value) {
     this.value = Math.floor(this.value * value)
     return this
   }
 
-  divide(value) {
+  public divide(value) {
     this.value = Math.floor(this.value / value)
     return this
   }
 
-  toNumber() {
+  public toNumber() {
     return Number(String(this.value) + this.size.pack())
   }
 }

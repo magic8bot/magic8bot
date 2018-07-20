@@ -1,67 +1,67 @@
 import tulind from 'tulind'
 
-export const tiStochRsi = (s, key, rsi_period, k_periods, d_periods, optMarket) => {
-  return new Promise(function(resolve, reject) {
-    //dont calculate until we have enough data
+export const tiStochRsi = (s, key, rsiPeriod, kPeriods, dPeriods, optMarket) => {
+  return new Promise((resolve, reject) => {
+    // dont calculate until we have enough data
 
     let tmpMarket = optMarket
     if (!tmpMarket) {
       tmpMarket = s.lookback.slice(0, 1000).map((x) => x.close)
       tmpMarket.reverse()
-      //add current period
+      // add current period
       tmpMarket.push(s.period.close)
     } else {
       tmpMarket = tmpMarket.map((x) => x.close)
     }
 
-    if (tmpMarket.length >= rsi_period) {
-      //doublecheck length.
-      if (tmpMarket.length >= rsi_period) {
+    if (tmpMarket.length >= rsiPeriod) {
+      // doublecheck length.
+      if (tmpMarket.length >= rsiPeriod) {
         // extract int from string input for ma_type
 
-        tulind.indicators.rsi.indicator([tmpMarket], [rsi_period], function(err, result) {
+        tulind.indicators.rsi.indicator([tmpMarket], [rsiPeriod], (err, result) => {
           if (err) {
             console.log(err)
             reject(err)
             return
           }
-          let trsi = result[0]
+          const trsi = result[0]
           // 0 oldest -- end newest
           trsi.reverse()
-          let stochRSI = []
+          const stochRSI = []
 
-          for (let i = 0; i < k_periods + d_periods - 1; i++) {
-            let rsiForPeriod = trsi.slice(i, rsi_period + i)
-            let highestRSI = Math.max(...rsiForPeriod)
-            let lowestRSI = Math.min(...rsiForPeriod)
+          for (let i = 0; i < kPeriods + dPeriods - 1; i++) {
+            const rsiForPeriod = trsi.slice(i, rsiPeriod + i)
+            const highestRSI = Math.max(...rsiForPeriod)
+            const lowestRSI = Math.min(...rsiForPeriod)
 
-            if (highestRSI == lowestRSI) {
+            if (highestRSI === lowestRSI) {
               stochRSI.push(0)
             } else {
-              stochRSI.push((trsi[rsi_period - 1 + i] - lowestRSI) / (highestRSI - lowestRSI))
+              stochRSI.push((trsi[rsiPeriod - 1 + i] - lowestRSI) / (highestRSI - lowestRSI))
             }
           }
 
-          let percentK = []
-          for (let i = 0; i < k_periods; i++) {
-            let kData = stochRSI.slice(i, k_periods + i)
-            if (kData.length == k_periods) {
+          const percentK = []
+          for (let i = 0; i < kPeriods; i++) {
+            const kData = stochRSI.slice(i, kPeriods + i)
+            if (kData.length === kPeriods) {
               percentK.push(kData.reduce((a, b) => a + b, 0) / kData.length)
             }
           }
 
-          let percentD = []
-          for (let i = 0; i < d_periods; i++) {
-            let dData = stochRSI.slice(i, d_periods + i)
-            if (dData.length == d_periods) {
+          const percentD = []
+          for (let i = 0; i < dPeriods; i++) {
+            const dData = stochRSI.slice(i, dPeriods + i)
+            if (dData.length === dPeriods) {
               percentD.push(dData.reduce((a, b) => a + b, 0) / dData.length)
             }
           }
 
           resolve({
-            stochRSI: stochRSI,
-            stochk: percentK,
+            stochRSI,
             stochd: percentD,
+            stochk: percentK,
           })
         })
       } else {

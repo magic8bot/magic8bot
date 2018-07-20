@@ -2,9 +2,9 @@ import ccxt from 'ccxt'
 import path from 'path'
 
 export default (conf) => {
-  //let recoverableErrors = new RegExp(/(ESOCKETTIMEOUT|ESOCKETTIMEDOUT|ETIMEDOUT|ECONNRESET|ECONNREFUSED|ENOTFOUND|Invalid nonce|Rate limit exceeded|URL request error)/)
+  // let recoverableErrors = new RegExp(/(ESOCKETTIMEOUT|ESOCKETTIMEDOUT|ETIMEDOUT|ECONNRESET|ECONNREFUSED|ENOTFOUND|Invalid nonce|Rate limit exceeded|URL request error)/)
 
-  var public_client, authed_client
+  let public_client, authed_client
 
   function publicClient() {
     if (!public_client) public_client = new ccxt.hitbtc2({ apiKey: '', secret: '' })
@@ -26,20 +26,23 @@ export default (conf) => {
   }
 
   function retry(method, args, err) {
-    var timeout = 5000
+    let timeout = 5000
     if (method == 'getOrder') {
       // it can take up to 30 seconds for hitbtc to update with an order change.
-      if (err)
+      if (err) {
         if (err.message.match(/not found/)) {
           timeout = 7000
         }
+      }
     }
 
-    if (err)
-      if (err.message)
+    if (err) {
+      if (err.message) {
         if (err.message.match(/Rate limit exceeded/)) {
           timeout = 10000
         }
+      }
+    }
     setTimeout(function() {
       exchange[method].apply(exchange, args)
     }, timeout)
@@ -85,31 +88,31 @@ export default (conf) => {
   //   return true
   // }
 
-  var firstRun = true
-  var exchange = {
+  let firstRun = true
+  const exchange = {
     name: 'hitbtc',
     historyScan: 'forward',
     makerFee: -0.01,
     takerFee: 0.1,
 
-    getProducts: function() {
+    getProducts() {
       if (firstRun) {
         firstRun = false
-        var client = publicClient()
+        const client = publicClient()
         this.makerFee = client.fees.trading.maker * 100
         this.takerFee = client.fees.trading.taker * 100
       }
       return require('./products.json')
     },
 
-    getTrades: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = publicClient()
+    getTrades(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = publicClient()
       {
         client
           .fetchTrades(joinProduct(opts.product_id), opts.from)
           .then((result) => {
-            var trades = result.map(function(trade) {
+            const trades = result.map(function(trade) {
               return {
                 trade_id: trade.id,
                 time: trade.timestamp,
@@ -128,13 +131,13 @@ export default (conf) => {
       }
     },
 
-    getBalance: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    getBalance(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       client
         .fetchBalance()
         .then((result) => {
-          var balance: Record<string, any> = { asset: 0, currency: 0 }
+          const balance: Record<string, any> = { asset: 0, currency: 0 }
           Object.keys(result).forEach(function(key) {
             if (key === opts.currency) {
               balance.currency = result[key].free
@@ -152,9 +155,9 @@ export default (conf) => {
         })
     },
 
-    getQuote: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = publicClient()
+    getQuote(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = publicClient()
       client
         .fetchTicker(joinProduct(opts.product_id))
         .then((result) => {
@@ -165,9 +168,9 @@ export default (conf) => {
         })
     },
 
-    cancelOrder: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    cancelOrder(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       client
         .cancelOrder(opts.order_id, joinProduct(opts.product_id))
         .then((result) => {
@@ -178,9 +181,9 @@ export default (conf) => {
         })
     },
 
-    buy: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    buy(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       if (typeof opts.post_only === 'undefined') {
         opts.post_only = true
       }
@@ -194,7 +197,7 @@ export default (conf) => {
 
       opts.side = 'buy'
 
-      let callParams = {
+      const callParams = {
         symbol: joinProduct(opts.product_id),
         type: opts.type,
         side: 'buy',
@@ -209,7 +212,7 @@ export default (conf) => {
         })
         .catch(function(error) {
           if (error.message.match(/Insufficient funds/)) {
-            let order = {
+            const order = {
               status: 'rejected',
               reject_reason: 'balance',
             }
@@ -219,9 +222,9 @@ export default (conf) => {
         })
     },
 
-    sell: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    sell(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       if (typeof opts.post_only === 'undefined') {
         opts.post_only = true
       }
@@ -232,7 +235,7 @@ export default (conf) => {
         opts.type = 'limit'
       }
       opts.side = 'sell'
-      let callParams = {
+      const callParams = {
         symbol: joinProduct(opts.product_id),
         type: opts.type,
         side: 'sell',
@@ -243,7 +246,7 @@ export default (conf) => {
       client
         .createOrder(callParams.symbol, callParams.type, callParams.side, callParams.quantity, callParams.price)
         .then((result) => {
-          let order = {
+          const order = {
             id: result ? result.id : null,
             status: 'open',
             price: opts.price,
@@ -258,7 +261,7 @@ export default (conf) => {
         })
         .catch(function(error) {
           if (error.message.match(/Insufficient funds/)) {
-            let order = {
+            const order = {
               status: 'rejected',
               reject_reason: 'balance',
             }
@@ -268,14 +271,14 @@ export default (conf) => {
         })
     },
 
-    getOrder: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    getOrder(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
 
       client
         .fetchOrder(opts.order_id, joinProduct(opts.product_id), { wait: 100000 })
         .then((result) => {
-          let r = result
+          const r = result
           if (result.status === 'canceled') {
             // order was cancelled. recall from cache
 
@@ -302,7 +305,7 @@ export default (conf) => {
         })
     },
 
-    getCursor: function(trade) {
+    getCursor(trade) {
       return trade.time || trade
     },
   }

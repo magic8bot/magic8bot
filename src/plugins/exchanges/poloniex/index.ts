@@ -5,7 +5,7 @@ import moment from 'moment'
 import n from 'numbro'
 
 export default (conf) => {
-  var public_client, authed_client
+  let public_client, authed_client
 
   function publicClient(/*product_id*/) {
     if (!public_client) public_client = new Poloniex()
@@ -32,22 +32,22 @@ export default (conf) => {
     }, 1)
   }
 
-  var orders = {}
+  const orders = {}
 
-  var exchange = {
+  const exchange = {
     name: 'poloniex',
     historyScan: 'backward',
     makerFee: 0.15,
     takerFee: 0.25,
 
-    getProducts: function() {
+    getProducts() {
       return require('./products.json')
     },
 
-    getTrades: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = publicClient()
-      var args: Record<string, any> = {
+    getTrades(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = publicClient()
+      const args: Record<string, any> = {
         currencyPair: joinProduct(opts.product_id),
       }
       if (opts.from) {
@@ -74,7 +74,7 @@ export default (conf) => {
           console.error(body)
           return retry('getTrades', func_args)
         }
-        var trades = body.map(function(trade) {
+        const trades = body.map(function(trade) {
           return {
             trade_id: trade.tradeID,
             time: moment.utc(trade.date).valueOf(),
@@ -87,12 +87,12 @@ export default (conf) => {
       })
     },
 
-    getBalance: function(opts, cb) {
-      var args = [].slice.call(arguments)
-      var client = authedClient()
+    getBalance(opts, cb) {
+      const args = [].slice.call(arguments)
+      const client = authedClient()
       client.returnCompleteBalances(function(err, body) {
         if (err) return cb(err)
-        var balance: Record<string, any> = { asset: 0, currency: 0 }
+        const balance: Record<string, any> = { asset: 0, currency: 0 }
         if (typeof body === 'string') {
           return retry('getBalance', args)
         }
@@ -117,9 +117,9 @@ export default (conf) => {
       })
     },
 
-    getOrderBook: function(opts, cb) {
-      var client = publicClient()
-      var params = {
+    getOrderBook(opts, cb) {
+      const client = publicClient()
+      const params = {
         currencyPair: joinProduct(opts.product_id),
         depth: 10,
       }
@@ -141,10 +141,10 @@ export default (conf) => {
       })
     },
 
-    getQuote: function(opts, cb) {
-      var args = [].slice.call(arguments)
-      var client = publicClient()
-      var product_id = joinProduct(opts.product_id)
+    getQuote(opts, cb) {
+      const args = [].slice.call(arguments)
+      const client = publicClient()
+      const product_id = joinProduct(opts.product_id)
       client.getTicker(function(err, body) {
         if (err) return cb(err)
         if (typeof body === 'string') {
@@ -155,7 +155,7 @@ export default (conf) => {
           console.error(body)
           return retry('getQuote', args)
         }
-        var quote = body[product_id]
+        const quote = body[product_id]
         if (!quote) return cb(new Error('no quote for ' + product_id))
         if (quote.isFrozen == '1') console.error('\nwarning: product ' + product_id + ' is frozen')
         cb(null, {
@@ -165,9 +165,9 @@ export default (conf) => {
       })
     },
 
-    cancelOrder: function(opts, cb) {
-      var args = [].slice.call(arguments)
-      var client = authedClient()
+    cancelOrder(opts, cb) {
+      const args = [].slice.call(arguments)
+      const client = authedClient()
       client._private('cancelOrder', { orderNumber: opts.order_id }, function(err, result) {
         if (typeof result === 'string') {
           return retry('cancelOrder', args)
@@ -183,10 +183,10 @@ export default (conf) => {
       })
     },
 
-    trade: function(type, opts, cb) {
-      var args = [].slice.call(arguments)
-      var client = authedClient()
-      var params = {
+    trade(type, opts, cb) {
+      const args = [].slice.call(arguments)
+      const client = authedClient()
+      const params = {
         currencyPair: joinProduct(opts.product_id),
         rate: opts.price,
         amount: opts.size,
@@ -196,7 +196,7 @@ export default (conf) => {
         if (typeof result === 'string') {
           return retry('trade', args)
         }
-        var order: Record<string, any> = {
+        const order: Record<string, any> = {
           id: result ? result.orderNumber : null,
           status: 'open',
           price: opts.price,
@@ -226,20 +226,20 @@ export default (conf) => {
       })
     },
 
-    buy: function(opts, cb) {
+    buy(opts, cb) {
       exchange.trade('buy', opts, cb)
     },
 
-    sell: function(opts, cb) {
+    sell(opts, cb) {
       exchange.trade('sell', opts, cb)
     },
 
-    getOrder: function(opts, cb) {
-      var args = [].slice.call(arguments)
-      var order = orders['~' + opts.order_id]
+    getOrder(opts, cb) {
+      const args = [].slice.call(arguments)
+      const order = orders['~' + opts.order_id]
       if (!order) return cb(new Error('order not found in cache'))
-      var client = authedClient()
-      var params = {
+      const client = authedClient()
+      const params = {
         currencyPair: joinProduct(opts.product_id),
       }
       client._private('returnOpenOrders', params, function(err, body) {
@@ -247,10 +247,10 @@ export default (conf) => {
         if (typeof body === 'string' || !body) {
           return retry('getOrder', args)
         }
-        var active = false
+        let active = false
         if (!body.forEach) {
           console.error('\nreturnOpenOrders odd result in checking state of order, trying again')
-          //console.error(body)
+          // console.error(body)
           return retry('getOrder', args)
         } else {
           body.forEach(function(api_order) {
@@ -282,7 +282,7 @@ export default (conf) => {
     },
 
     // return the property used for range querying.
-    getCursor: function(trade) {
+    getCursor(trade) {
       return Math.floor((trade.time || trade) / 1000)
     },
   }

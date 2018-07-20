@@ -4,15 +4,15 @@ import z from 'zero-fill'
 import n from 'numbro'
 import stats from 'stats-lite'
 import { ema } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
-var oldgrowth = 1
+let oldgrowth = 1
 
 export default {
   name: 'trendline',
   description: 'Calculate a trendline and trade when trend is positive vs negative.',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length', String, '30s')
     this.option('periodLength', 'period length', String, '30s')
     this.option('lastpoints', 'Number of trades for short trend average', Number, 100)
@@ -29,13 +29,13 @@ export default {
     this.option('markdown_buy_pct', 'test', Number, 0)
   },
 
-  calculate: function() {},
+  calculate() {},
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     ema(s, 'trendline', s.options.trendline)
-    var tl1 = []
-    var tls = []
-    var tll = []
+    const tl1 = []
+    const tls = []
+    const tll = []
     if (s.lookback[s.options.avgpoints + 2000]) {
       for (let i = 0; i < s.options.avgpoints + 1000; i++) {
         tl1.push(s.lookback[i].close)
@@ -47,15 +47,15 @@ export default {
         tll.push(s.lookback[i].close)
       }
 
-      var chart = tl1
+      const chart = tl1
 
-      var growth = trend(chart, {
+      const growth = trend(chart, {
         lastPoints: s.options.lastpoints,
         avgPoints: s.options.avgpoints,
         avgMinimum: 0,
         reversed: true,
       })
-      var growth2 = trend(chart, {
+      const growth2 = trend(chart, {
         lastPoints: s.options.lastpoints2,
         avgPoints: s.options.avgpoints2,
         avgMinimum: 0,
@@ -81,12 +81,12 @@ export default {
     if (s.growth === true && s.growth2 === true) {
       s.signal = 'buy'
     } else if (s.growth === false || s.growth2 === false || s.accel === false) {
-      //s.signal = 'sell'
+      // s.signal = 'sell'
     }
     cb()
   },
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
     cols.push(' ')
     cols.push(z(8, n(s.stats).format('0.00000000'), ' ')[s.growth === true ? 'green' : 'red'])
     cols.push(' ')
@@ -106,20 +106,20 @@ export default {
 
   phenotypes: {
     // -- common
-    period_length: Phenotypes.RangePeriod(1, 400, 'm'),
-    min_periods: Phenotypes.Range(1, 200),
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 5),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 5),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    period_length: phenotypes.rangePeriod(1, 400, 'm'),
+    min_periods: phenotypes.range0(1, 200),
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 5),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 5),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
     // -- strategy
-    lastpoints: Phenotypes.Range(20, 500),
-    avgpoints: Phenotypes.Range(300, 3000),
-    lastpoints2: Phenotypes.Range(5, 300),
-    avgpoints2: Phenotypes.Range(50, 1000),
+    lastpoints: phenotypes.range0(20, 500),
+    avgpoints: phenotypes.range0(300, 3000),
+    lastpoints2: phenotypes.range0(5, 300),
+    avgpoints2: phenotypes.range0(50, 1000),
   },
 }

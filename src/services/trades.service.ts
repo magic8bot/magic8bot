@@ -1,11 +1,5 @@
 import { MarkerStore } from '@stores'
-import { ExchangeService } from './exchange.service'
-
-interface TradeOpts {
-  product_id: string
-  to?: number
-  from?: number
-}
+import { ExchangeService, ProductOpts } from './exchange.service'
 
 export class TradeService {
   private markerStore: MarkerStore
@@ -15,30 +9,49 @@ export class TradeService {
     this.markerStore = new MarkerStore()
   }
 
-  async getTrades(opts: TradeOpts) {
-    return await this.exchange.getTrades(opts)
+  public async getTrades(opts: ProductOpts) {
+    return this.exchange.getTrades(opts)
   }
 
-  addSelector(selector: string, productId: string) {
+  public addSelector(selector: string, productId: string) {
     if (this.selectorMap.has(selector)) return
 
     this.markerStore.newMarker(selector)
     this.selectorMap.set(selector, productId)
   }
 
-  async backfill(selector: string, start?: number) {
+  public async backfill(selector: string, start?: number) {
     const { historyScan } = this.exchange
     if (historyScan === 'backward') {
-      return await this.scanBack(selector)
+      return this.scanBack(selector)
     } else {
-      return await this.scanForward(selector, start)
+      return this.scanForward(selector, start)
     }
+  }
+
+  public async getNextBackMarker(selector: string) {
+    const { from } = this.markerStore.getMarker(selector)
+    if (!from) return from
+
+    const nextMarker = await this.markerStore.findInRange(selector, from - 1)
+    if (!nextMarker) return from
+
+    this.markerStore.setMarker(selector, nextMarker)
+    return this.getNextBackMarker(selector)
+  }
+
+  public getHistoryScan() {
+    return this.exchange.historyScan
+  }
+
+  public getBackfillRateLimit() {
+    return this.exchange.backfillRateLimit
   }
 
   private async scanBack(selector: string) {
     const to = await this.getNextBackMarker(selector)
-    const product_id = this.selectorMap.get(selector)
-    const trades = await this.getTrades({ to, product_id })
+    const productId = this.selectorMap.get(selector)
+    const trades = await this.getTrades({ to, productId })
 
     trades.sort((a, b) => {
       const aC = this.exchange.getCursor(a)
@@ -61,22 +74,11 @@ export class TradeService {
     return trades
   }
 
-  async getNextBackMarker(selector: string) {
-    const { from } = this.markerStore.getMarker(selector)
-    if (!from) return from
-
-    const nextMarker = await this.markerStore.findInRange(selector, from - 1)
-    if (!nextMarker) return from
-
-    this.markerStore.setMarker(selector, nextMarker)
-    return await this.getNextBackMarker(selector)
-  }
-
   private async scanForward(selector: string, newestTime: number) {
     const from = await this.getNextForwardMarker(selector, newestTime)
-    const product_id = this.selectorMap.get(selector)
+    const productId = this.selectorMap.get(selector)
 
-    const trades = await this.getTrades({ from, product_id })
+    const trades = await this.getTrades({ from, productId })
 
     trades.sort((a, b) => {
       const aC = this.exchange.getCursor(a)
@@ -103,16 +105,8 @@ export class TradeService {
 
   private async getNextForwardMarker(selector: string, newestTime: number) {
     const nextMarker = await this.markerStore.findInRange(selector, newestTime)
-    if (nextMarker) return await this.getNextForwardMarker(selector, nextMarker.to + 1)
+    if (nextMarker) return this.getNextForwardMarker(selector, nextMarker.to + 1)
 
     return newestTime
-  }
-
-  getHistoryScan() {
-    return this.exchange.historyScan
-  }
-
-  getBackfillRateLimit() {
-    return this.exchange.backfillRateLimit
   }
 }

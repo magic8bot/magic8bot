@@ -1,31 +1,31 @@
 import { getMaTypeFromString } from '@util'
 const talib = require('talib')
 
-export const taBollinger = (s, key, rsi_periods, DevUp, DevDn, d_ma_type) => {
-  return new Promise(function(resolve, reject) {
-    //dont calculate until we have enough data
-    if (s.lookback.length >= rsi_periods) {
-      let tmpMarket = s.lookback.slice(0, 1000).map((x) => x.close)
+export const taBollinger = (s, key, rsiPeriods, devUp, devDn, dMaType) => {
+  return new Promise((resolve, reject) => {
+    // dont calculate until we have enough data
+    if (s.lookback.length >= rsiPeriods) {
+      const tmpMarket = s.lookback.slice(0, 1000).map((x) => x.close)
       tmpMarket.reverse()
-      //add current period
+      // add current period
       tmpMarket.push(s.period.close)
 
-      //doublecheck length.
-      if (tmpMarket.length >= rsi_periods) {
+      // doublecheck length.
+      if (tmpMarket.length >= rsiPeriods) {
         // extract int from string input for ma_type
-        let optInMAType = getMaTypeFromString(d_ma_type)
+        const optInMAType = getMaTypeFromString(dMaType)
         talib.execute(
           {
-            name: 'BBANDS',
-            startIdx: tmpMarket.length - 1,
             endIdx: tmpMarket.length - 1,
             inReal: tmpMarket,
-            optInTimePeriod: rsi_periods, //RSI 14 default
-            optInNbDevUp: DevUp, // "Deviation multiplier for upper band" Real Default 2
-            optInNbDevDn: DevDn, //"Deviation multiplier for lower band" Real Default 2
-            optInMAType: optInMAType, // "Type of Moving Average" default 0
+            name: 'BBANDS',
+            optInMAType, // "Type of Moving Average" default 0
+            optInNbDevDn: devDn, // "Deviation multiplier for lower band" Real Default 2
+            optInNbDevUp: devUp, // "Deviation multiplier for upper band" Real Default 2
+            optInTimePeriod: rsiPeriods, // RSI 14 default
+            startIdx: tmpMarket.length - 1,
           },
-          function(err, result) {
+          (err, result) => {
             if (err) {
               console.log(err)
               reject(err)
@@ -33,9 +33,9 @@ export const taBollinger = (s, key, rsi_periods, DevUp, DevDn, d_ma_type) => {
             }
 
             resolve({
-              outRealUpperBand: result.result.outRealUpperBand,
-              outRealMiddleBand: result.result.outRealMiddleBand,
               outRealLowerBand: result.result.outRealLowerBand,
+              outRealMiddleBand: result.result.outRealMiddleBand,
+              outRealUpperBand: result.result.outRealUpperBand,
             })
           }
         )

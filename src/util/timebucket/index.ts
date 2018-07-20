@@ -7,7 +7,7 @@ export const timebucket = (...args) => {
   let bucketStr
   let date = false
 
-  args.forEach(function(arg, idx) {
+  args.forEach((arg, idx) => {
     if (typeof arg === 'string') {
       if (arg.match(Bucket.regex)) {
         bucketStr = arg

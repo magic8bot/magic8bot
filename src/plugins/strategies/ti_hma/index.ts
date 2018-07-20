@@ -1,13 +1,13 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { rsi, tiHma } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'ti_hma',
   description: 'HMA - Hull Moving Average',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length eg 10m', String, '15m')
     this.option('min_periods', 'min. number of history periods', Number, 52)
     this.option('trend_hma', 'number of periods for trend hma', Number, 36)
@@ -15,7 +15,7 @@ export default {
     this.option('overbought_rsi', 'sold when RSI exceeds this value', Number, 70)
   },
 
-  calculate: function(s) {
+  calculate(s) {
     if (s.options.overbought_rsi) {
       // sync RSI display with overbought RSI periods
       s.options.rsi_periods = s.options.overbought_rsi_periods
@@ -30,7 +30,7 @@ export default {
     }
   },
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     if (!s.in_preroll && typeof s.period.overbought_rsi === 'number') {
       if (s.overbought) {
         s.overbought = false
@@ -41,7 +41,7 @@ export default {
 
     tiHma(s, s.options.min_periods, s.options.trend_hma)
       .then(function(signal) {
-        s.period['trend_hma'] = signal
+        s.period.trend_hma = signal
 
         // percentage change
         if (s.period.trend_hma && s.lookback[0] && s.lookback[0].trend_hma) {
@@ -71,11 +71,11 @@ export default {
       })
   },
 
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
 
     if (typeof s.period.trend_hma === 'number') {
-      var color = 'grey'
+      let color = 'grey'
 
       if (s.period.trend_hma_rate > 0) {
         color = 'green'
@@ -91,18 +91,18 @@ export default {
   },
 
   phenotypes: {
-    period_length: Phenotypes.RangePeriod(5, 120, 'm'),
-    min_periods: Phenotypes.Range(20, 104),
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 5),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 5),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    period_length: phenotypes.rangePeriod(5, 120, 'm'),
+    min_periods: phenotypes.range0(20, 104),
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 5),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 5),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
-    trend_hma: Phenotypes.Range(6, 72),
-    overbought_rsi_periods: Phenotypes.Range(1, 50),
-    overbought_rsi: Phenotypes.Range(20, 100),
+    trend_hma: phenotypes.range0(6, 72),
+    overbought_rsi_periods: phenotypes.range0(1, 50),
+    overbought_rsi: phenotypes.range0(20, 100),
   },
 }

@@ -1,9 +1,9 @@
 import request from 'request'
 
 export const textbelt = (config) => {
-  var textbelt = {
-    pushMessage: function(title, message) {
-      var postData = { number: config.phone, message: title + ': ' + message, key: config.key }
+  const textbelt = {
+    pushMessage(title, message) {
+      const postData = { number: config.phone, message: title + ': ' + message, key: config.key }
 
       function callback(error) {
         if (error) {
@@ -11,7 +11,7 @@ export const textbelt = (config) => {
         }
       }
 
-      var options = {
+      const options = {
         method: 'POST',
         url: 'https://textbelt.com/text',
         json: postData,

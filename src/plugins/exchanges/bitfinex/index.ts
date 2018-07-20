@@ -4,23 +4,23 @@ import path from 'path'
 import n from 'numbro'
 
 export default (conf) => {
-  var s = { options: minimist(process.argv) }
-  var so = s.options
+  const s = { options: minimist(process.argv) }
+  const so = s.options
 
-  var ws_connecting = false
-  var ws_connected = false
-  var ws_timeout = 60000
-  var ws_retry = 10000
+  let ws_connecting = false
+  let ws_connected = false
+  const ws_timeout = 60000
+  const ws_retry = 10000
 
-  var pair, public_client, ws_client
+  let pair, public_client, ws_client
 
-  var ws_trades = []
-  var ws_balance = []
-  var ws_orders = []
-  var ws_ticker: Record<string, any> = {}
-  var ws_hb = []
-  var ws_walletCalcDone
-  var heartbeat_interval
+  const ws_trades = []
+  const ws_balance = []
+  const ws_orders = []
+  let ws_ticker: Record<string, any> = {}
+  const ws_hb = []
+  let ws_walletCalcDone
+  let heartbeat_interval
 
   function publicClient() {
     if (!public_client) public_client = new BFX(null, null, { version: 2, transform: true }).rest
@@ -35,7 +35,7 @@ export default (conf) => {
     }
 
     trades.forEach(function(trade) {
-      var newTrade = {
+      const newTrade = {
         trade_id: Number(trade.ID),
         time: Number(trade.MTS),
         size: Math.abs(trade.AMOUNT),
@@ -65,13 +65,14 @@ export default (conf) => {
   }
 
   function wsUpdateOrder(ws_order) {
-    var cid = ws_order[2]
+    const cid = ws_order[2]
 
     // https://bitfinex.readme.io/v2/reference#ws-auth-orders
-    var order = ws_orders['~' + cid]
+    const order = ws_orders['~' + cid]
     if (!order) {
-      if (so.debug)
+      if (so.debug) {
         console.warn(('\nWarning: Order ' + cid + ' not found in cache for wsUpdateOrder (manual order?).').red)
+      }
       return
     }
 
@@ -99,11 +100,12 @@ export default (conf) => {
   }
 
   function wsUpdateOrderCancel(ws_order) {
-    var cid = ws_order[2]
+    const cid = ws_order[2]
 
     if (!ws_orders['~' + cid]) {
-      if (so.debug)
+      if (so.debug) {
         console.warn(('\nWarning: Order ' + cid + ' not found in cache for wsUpdateOrderCancel (manual order?).').red)
+      }
       return
     }
 
@@ -121,11 +123,12 @@ export default (conf) => {
 
   function wsUpdateReqOrder(error) {
     if (error[6] === 'ERROR' && error[7].match(/^Invalid order: not enough .* balance for/)) {
-      var cid = error[4][2]
+      const cid = error[4][2]
 
       if (!ws_orders['~' + cid]) {
-        if (so.debug)
+        if (so.debug) {
           console.warn(('\nWarning: Order ' + cid + ' not found in cache for wsUpdateReqOrder (manual order?).').red)
+        }
         return
       }
 
@@ -136,8 +139,9 @@ export default (conf) => {
       cid = error[4][2]
 
       if (!ws_orders['~' + cid]) {
-        if (so.debug)
+        if (so.debug) {
           console.warn(('\nWarning: Order ' + cid + ' not found in cache for wsUpdateReqOrder (manual order?).').red)
+        }
         return
       }
 
@@ -183,7 +187,7 @@ export default (conf) => {
 
       heartbeat_interval = setInterval(function() {
         if (ws_hb[event.chanId]) {
-          var timeoutThreshold = Number(Date.now()) - ws_timeout
+          const timeoutThreshold = Number(Date.now()) - ws_timeout
           if (timeoutThreshold > ws_hb[event.chanId]) {
             console.warn(
               (
@@ -216,11 +220,12 @@ export default (conf) => {
     ws_connected = false
 
     if (e.event == 'auth' && e.status == 'FAILED') {
-      var errorMessage = ('\nWebSockets Warning: Authentication ' + e.status + ' (Reason: "' + e.msg + '").').red
-      if (e.msg == 'apikey: invalid')
+      let errorMessage = ('\nWebSockets Warning: Authentication ' + e.status + ' (Reason: "' + e.msg + '").').red
+      if (e.msg == 'apikey: invalid') {
         errorMessage =
           errorMessage +
           '\nEither your API key is invalid or you tried reconnecting to quickly. Wait and/or check your API keys.'
+      }
       console.warn(errorMessage)
       ws_client.close()
     } else {
@@ -295,21 +300,21 @@ export default (conf) => {
 
     // current positions in request
     // we need it for clear
-    let assets = []
+    const assets = []
 
     positions
       .filter(function(position) {
         return position.length > 2
       })
       .forEach(function(position) {
-        let asset = assetPositionMarginAssetExtract(position)
+        const asset = assetPositionMarginAssetExtract(position)
         if (!ws_balance[asset]) {
           ws_balance[asset] = {}
         }
 
         assets.push(asset)
 
-        let action = position[1].toLowerCase()
+        const action = position[1].toLowerCase()
 
         if (action === 'active') {
           ws_balance[asset].balance = position[2]
@@ -323,7 +328,7 @@ export default (conf) => {
       })
 
     // clear non open positions; which are not existing anymore
-    for (let key in ws_balance) {
+    for (const key in ws_balance) {
       if (assets.indexOf(key) < 0 && ws_balance[key]) {
         ws_balance[key].balance = 0
         ws_balance[key].available = 0
@@ -352,8 +357,8 @@ export default (conf) => {
   }
 
   function encodeQueryData(data) {
-    let ret = []
-    for (let d in data) ret.push(encodeURIComponent(d) + '=' + encodeURIComponent(data[d]))
+    const ret = []
+    for (const d in data) ret.push(encodeURIComponent(d) + '=' + encodeURIComponent(data[d]))
     return ret.join('&')
   }
 
@@ -381,12 +386,12 @@ export default (conf) => {
       return
     }
 
-    let pair = symbol[1].substring(1)
+    const pair = symbol[1].substring(1)
 
     // not nice but values are not splitted
     // "tBTCUSD" extract => "USD"
     // "tDASHUSD" extract => "USD"
-    let currency = symbol[1].substring(symbol[1].length - 3)
+    const currency = symbol[1].substring(symbol[1].length - 3)
 
     // which array index to use to get available balance? :)
     ws_balance[currency].available = symbol[2][0]
@@ -446,27 +451,27 @@ export default (conf) => {
     }
   }
 
-  var exchange = {
+  const exchange = {
     name: 'bitfinex',
     historyScan: 'backward',
     historyScanUsesTime: true,
     makerFee: 0.1,
     takerFee: 0.2,
 
-    getProducts: function() {
+    getProducts() {
       return require('./products.json')
     },
 
-    getTrades: function(opts, cb) {
+    getTrades(opts, cb) {
       if (!pair) {
         pair = joinProduct(opts.product_id)
       }
 
       // Backfilling using the REST API
       if (opts.to || opts.to === null) {
-        var client = publicClient()
-        var args: Record<string, any> = {}
-        args.sort = -1 //backward
+        const client = publicClient()
+        const args: Record<string, any> = {}
+        args.sort = -1 // backward
         args.limit = 1000
         if (opts.from) {
           args.start = opts.from
@@ -477,11 +482,11 @@ export default (conf) => {
         } else if (args.end && !args.start) {
           args.start = args.end - 500000
         }
-        var query = encodeQueryData(args)
-        var tpair = 't' + joinProduct(opts.product_id)
+        const query = encodeQueryData(args)
+        const tpair = 't' + joinProduct(opts.product_id)
         client.makePublicRequest('trades/' + tpair + '/hist?' + query, function(err, body) {
           if (err) return retry('getTrades', opts, cb)
-          var trades = body.map(function(trade) {
+          const trades = body.map(function(trade) {
             return {
               trade_id: trade.ID,
               time: trade.MTS,
@@ -500,14 +505,14 @@ export default (conf) => {
         if (typeof ws_trades === 'undefined') {
           return retry('getTrades', opts, cb)
         }
-        var trades = ws_trades.filter(function(trade) {
+        const trades = ws_trades.filter(function(trade) {
           return trade.time >= opts.from
         })
         cb(null, trades)
       }
     },
 
-    getBalance: function(opts, cb) {
+    getBalance(opts, cb) {
       if (!pair) {
         pair = joinProduct(opts.asset + '-' + opts.currency)
       }
@@ -543,7 +548,7 @@ export default (conf) => {
       ) {
         return waitForCalc('getBalance', opts, cb)
       } else {
-        let balance: Record<string, any> = {}
+        const balance: Record<string, any> = {}
 
         balance.currency =
           ws_balance[opts.currency] && ws_balance[opts.currency].balance
@@ -574,15 +579,15 @@ export default (conf) => {
       }
     },
 
-    getQuote: function(opts, cb) {
+    getQuote(opts, cb) {
       cb(null, { bid: String(ws_ticker.BID), ask: String(ws_ticker.ASK) })
     },
 
-    cancelOrder: function(opts, cb) {
-      var order = ws_orders['~' + opts.order_id]
+    cancelOrder(opts, cb) {
+      const order = ws_orders['~' + opts.order_id]
       ws_orders['~' + opts.order_id].reject_reason = 'magic8bot cancel'
 
-      var ws_cancel_order = [
+      const ws_cancel_order = [
         0,
         'oc',
         null,
@@ -608,22 +613,22 @@ export default (conf) => {
       cb()
     },
 
-    trade: function(action, opts, cb) {
+    trade(action, opts, cb) {
       if (!pair) {
         pair = joinProduct(opts.product_id)
       }
-      var symbol = 't' + pair
+      const symbol = 't' + pair
 
       if (!ws_client) {
         wsClient()
       }
 
-      var cid = Math.round(new Date().getTime() * Math.random())
-      var amount = action === 'buy' ? opts.size : opts.size * -1
-      var price = opts.price
+      const cid = Math.round(new Date().getTime() * Math.random())
+      const amount = action === 'buy' ? opts.size : opts.size * -1
+      const price = opts.price
 
       // only exchange need a prefix; no needed for margin
-      let walletName = conf.bitfinex.wallet.toUpperCase() === 'EXCHANGE' ? 'EXCHANGE ' : ''
+      const walletName = conf.bitfinex.wallet.toUpperCase() === 'EXCHANGE' ? 'EXCHANGE ' : ''
 
       if (opts.order_type === 'maker' && typeof opts.type === 'undefined') {
         opts.type = walletName + 'LIMIT'
@@ -635,10 +640,10 @@ export default (conf) => {
         opts.post_only = true
       }
 
-      var type = opts.type
-      var is_postonly = opts.post_only
+      const type = opts.type
+      const is_postonly = opts.post_only
 
-      var order: Record<string, any> = {
+      const order: Record<string, any> = {
         id: cid,
         bitfinex_id: null,
         status: 'open',
@@ -650,16 +655,16 @@ export default (conf) => {
         ordertype: opts.order_type,
       }
 
-      var ws_order = [
+      const ws_order = [
         0,
         'on',
         null,
         {
-          cid: cid,
-          type: type,
-          symbol: symbol,
+          cid,
+          type,
+          symbol,
           amount: String(amount),
-          price: price,
+          price,
           hidden: 0,
           postonly: is_postonly ? 1 : 0,
         },
@@ -685,16 +690,16 @@ export default (conf) => {
       return cb(null, order)
     },
 
-    buy: function(opts, cb) {
+    buy(opts, cb) {
       exchange.trade('buy', opts, cb)
     },
 
-    sell: function(opts, cb) {
+    sell(opts, cb) {
       exchange.trade('sell', opts, cb)
     },
 
-    getOrder: function(opts, cb) {
-      var order = ws_orders['~' + opts.order_id]
+    getOrder(opts, cb) {
+      const order = ws_orders['~' + opts.order_id]
 
       if (!order) {
         return cb(new Error('order id ' + opts.order_id + ' not found'))
@@ -715,7 +720,7 @@ export default (conf) => {
     },
 
     // return the property used for range querying.
-    getCursor: function(trade) {
+    getCursor(trade) {
       return trade.time || trade
     },
   }

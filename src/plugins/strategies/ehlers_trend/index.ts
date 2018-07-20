@@ -1,6 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 import { crossover, crossunder, nz } from '../../../util/helpers'
 import * as tv from '../../../util/helpers'
 
@@ -8,7 +8,7 @@ export default {
   name: 'Ehlers_Trend',
   description: 'Ehlers Instantaneous Trend',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length, same as --period_length', String, '30m')
     this.option('period_length', 'period length, same as --period', String, '30m')
 
@@ -16,9 +16,9 @@ export default {
     this.option('price_source', '', String, 'HAohlc4')
   },
 
-  calculate: function() {},
+  calculate() {},
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     if (s.lookback.length > s.options.min_periods) {
       if (!s.options.price_source || s.options.price_source === 'close') {
         s.period.src = s.period.close
@@ -29,12 +29,12 @@ export default {
       } else if (s.options.price_source === 'ohlc4') {
         s.period.src = tv.ohlc4(s)
       } else if (s.options.price_source === 'HAhlc3') {
-        s.period.src = tv.HAhlc3(s)
+        s.period.src = tv.hAhlc3(s)
       } else if (s.options.price_source === 'HAohlc4') {
-        s.period.src = tv.HAohlc4(s)
+        s.period.src = tv.hAohlc4(s)
       }
 
-      let a = s.options.alpha
+      const a = s.options.alpha
       if (s.lookback.length < 7) {
         s.period.trend = (s.period.src + 2 * nz(s.lookback[0].src) + nz(s.lookback[1].src)) / 4
       } else {
@@ -55,8 +55,8 @@ export default {
     cb()
   },
 
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
     let color = 'cyan'
     if (s.period.trend > s.period.trigger) {
       color = 'red'
@@ -70,14 +70,14 @@ export default {
 
   phenotypes: {
     // -- common
-    period_length: Phenotypes.RangePeriod(15, 120, 'm'),
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 3),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 3),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    period_length: phenotypes.rangePeriod(15, 120, 'm'),
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 3),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 3),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
-    //Strategy Specific
-    alpha: Phenotypes.RangeFactor(0.01, 0.2, 0.01),
+    // Strategy Specific
+    alpha: phenotypes.rangeFactor(0.01, 0.2, 0.01),
   },
 }

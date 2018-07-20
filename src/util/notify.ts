@@ -1,18 +1,18 @@
 export const notify = (conf) => {
-  var active_notifiers = []
-  for (var notifier in conf.notifiers) {
+  const activeNotifiers = []
+  for (const notifier in conf.notifiers) {
     if (conf.notifiers[notifier].on) {
-      active_notifiers.push(require(`../plugins/notifiers/${notifier}`).default(conf.notifiers[notifier]))
+      activeNotifiers.push(require(`../plugins/notifiers/${notifier}`).default(conf.notifiers[notifier]))
     }
   }
 
   return {
-    pushMessage: function(title, message) {
+    pushMessage(title, message) {
       if (conf.debug) {
         console.log(`${title}: ${message}`)
       }
 
-      active_notifiers.forEach((notifier) => {
+      activeNotifiers.forEach((notifier) => {
         if (conf.debug) {
           console.log(`Sending push message via ${notifier}`)
         }

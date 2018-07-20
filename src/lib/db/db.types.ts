@@ -13,7 +13,7 @@ export interface TradeItem {
 }
 
 export type TradeCollection = TradeItem & {
-  selector: string
+  selector: string,
 }
 
 export interface PeriodItem {
@@ -50,7 +50,7 @@ export interface OrderItem {
 
 export type OrderCollection = OrderItem & {
   sessionId: string
-  selector: string
+  selector: string,
 }
 
 export interface Options {
@@ -93,6 +93,6 @@ export interface Options {
     product_id: string
     asset: string
     currency: string
-    normalized: string
+    normalized: string,
   }
 }

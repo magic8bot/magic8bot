@@ -1,26 +1,26 @@
 import tulind from 'tulind'
 
-export const tiStoch = (s, key, k_periods, sk_periods, d_periods, optMarket?) => {
-  return new Promise(function(resolve, reject) {
-    if (s.lookback.length >= Math.max(k_periods, d_periods, sk_periods)) {
-      //dont calculate until we have enough data
+export const tiStoch = (s, key, kPeriods, skPeriods, dPeriods, optMarket?) => {
+  return new Promise((resolve, reject) => {
+    if (s.lookback.length >= Math.max(kPeriods, dPeriods, skPeriods)) {
+      // dont calculate until we have enough data
       let tmpMarket = optMarket
       if (!tmpMarket) {
         tmpMarket = s.lookback.slice(0, 1000)
         tmpMarket.reverse()
-        //add current period
+        // add current period
         tmpMarket.push(s.period)
       }
 
-      let tmpMarketHigh = tmpMarket.map((x) => x.high)
-      let tmpMarketClose = tmpMarket.map((x) => x.close)
-      let tmpMarketLow = tmpMarket.map((x) => x.low)
+      const tmpMarketHigh = tmpMarket.map((x) => x.high)
+      const tmpMarketClose = tmpMarket.map((x) => x.close)
+      const tmpMarketLow = tmpMarket.map((x) => x.low)
       // addCurrentPeriod
 
       tulind.indicators.stoch.indicator(
         [tmpMarketHigh, tmpMarketLow, tmpMarketClose],
-        [k_periods, sk_periods, d_periods],
-        function(err, result) {
+        [kPeriods, skPeriods, dPeriods],
+        (err, result) => {
           if (err) {
             console.log(err)
             reject(err)
@@ -28,8 +28,8 @@ export const tiStoch = (s, key, k_periods, sk_periods, d_periods, optMarket?) =>
           }
 
           resolve({
-            k: result[0],
             d: result[1],
+            k: result[0],
           })
         }
       )

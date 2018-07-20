@@ -5,17 +5,17 @@ export class OrderStore {
 
   constructor(private readonly sessionId: string, private readonly selector: string) {}
 
-  async newOrder(order: OrderItem) {
+  public async newOrder(order: OrderItem) {
     this.orders.push(order)
 
     await dbDriver.order.save({
       ...order,
-      sessionId: this.sessionId,
       selector: this.selector,
+      sessionId: this.sessionId,
     })
   }
 
-  async loadOrders() {
+  public async loadOrders() {
     const { sessionId, selector } = this
     this.orders = await dbDriver.order
       .find({ sessionId, selector })

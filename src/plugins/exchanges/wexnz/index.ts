@@ -7,7 +7,7 @@
 import WEXNZ from 'wexnz'
 
 export default (conf) => {
-  var public_client, authed_client
+  let public_client, authed_client
 
   function publicClient() {
     if (!public_client) {
@@ -56,24 +56,24 @@ export default (conf) => {
     }, 10000)
   }
 
-  var orders = {}
+  const orders = {}
 
-  var exchange = {
+  const exchange = {
     name: 'wexnz',
     historyScan: 'backward',
     makerFee: 0.2,
     takerFee: 0.2,
     backfillRateLimit: 5000,
 
-    getProducts: function() {
+    getProducts() {
       return require('./products.json')
     },
 
-    getTrades: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = publicClient()
-      var pair = joinProduct(opts.product_id)
-      var args: Record<string, any> = {}
+    getTrades(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = publicClient()
+      const pair = joinProduct(opts.product_id)
+      const args: Record<string, any> = {}
       if (opts.from) {
         // move cursor into the future
         args.before = opts.from
@@ -81,13 +81,13 @@ export default (conf) => {
         // move cursor into the past
         args.after = opts.to
       }
-      client.trades({ pair: pair, count: 100000000 }, function(err, body) {
+      client.trades({ pair, count: 100000000 }, function(err, body) {
         if (err) return retry('getTrades', func_args, err)
-        var trades = body.map(function(trade) {
+        const trades = body.map(function(trade) {
           return {
             trade_id: trade.tid,
             time: trade.date * 1000,
-            //time: new Date(trade.date).getTime(),
+            // time: new Date(trade.date).getTime(),
             size: trade.amount,
             price: trade.price,
             side: trade.trade_type,
@@ -97,22 +97,22 @@ export default (conf) => {
       })
     },
 
-    getBalance: function(opts, cb) {
-      var args = {
+    getBalance(opts, cb) {
+      const args = {
         currency: opts.currency.toLowerCase(),
         asset: opts.asset.toLowerCase(),
         wait: 10,
       }
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       client.getInfo(function(err, body) {
         body = statusErr(err, body)
         if (err) {
           return retry('getBalance', func_args, err)
         }
         if (body.success) {
-          var balance: Record<string, any> = { asset: 0, currency: 0 }
-          var funds = body.return.funds
+          const balance: Record<string, any> = { asset: 0, currency: 0 }
+          const funds = body.return.funds
           balance.currency = funds[args.currency]
           balance.asset = funds[args.asset]
           balance.currency_hold = 0
@@ -122,19 +122,19 @@ export default (conf) => {
       })
     },
 
-    getQuote: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = publicClient()
-      var pair = joinProduct(opts.product_id).toLowerCase()
-      client.ticker({ pair: pair }, function(err, body) {
+    getQuote(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = publicClient()
+      const pair = joinProduct(opts.product_id).toLowerCase()
+      client.ticker({ pair }, function(err, body) {
         if (err) return retry('getQuote', func_args, err)
         cb(null, { bid: body.ticker.buy, ask: body.ticker.sell })
       })
     },
 
-    cancelOrder: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    cancelOrder(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       client.cancelOrder(opts.order_id, function(err, resp, body) {
         body = statusErr(err, body)
         // Fix me - Check return codes
@@ -144,10 +144,10 @@ export default (conf) => {
       })
     },
 
-    trade: function(type, opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
-      var pair = joinProduct(opts.product_id)
+    trade(type, opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
+      const pair = joinProduct(opts.product_id)
       /* WEXNZ has no order type?
       if (typeof opts.post_only === 'undefined') {
         opts.post_only = true
@@ -159,11 +159,11 @@ export default (conf) => {
       }
       */
       delete opts.order_type
-      client.trade({ pair: pair, type: type, rate: opts.price, amount: opts.size }, function(err, body) {
+      client.trade({ pair, type, rate: opts.price, amount: opts.size }, function(err, body) {
         body = statusErr(err, body)
         // Fix me - Check return codes from API
         if (body && body.message === 'Insufficient funds') {
-          var order = {
+          const order = {
             status: 'rejected',
             reject_reason: 'balance',
           }
@@ -172,27 +172,27 @@ export default (conf) => {
         if (err) return retry(type, func_args, err)
         orders['~' + body.id] = body
         cb(null, body)
-        //else console.log(err)
+        // else console.log(err)
       })
     },
 
-    buy: function(opts, cb) {
+    buy(opts, cb) {
       exchange.trade('buy', opts, cb)
     },
 
-    sell: function(opts, cb) {
+    sell(opts, cb) {
       exchange.trade('sell', opts, cb)
     },
 
-    getOrder: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    getOrder(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       // Fix me - Check return result
-      var orderInfo = {
-        //from: opts.order_id,
+      const orderInfo = {
+        // from: opts.order_id,
         count: 1,
         from_id: opts.order_id,
-        //end_id: opts.order_id,
+        // end_id: opts.order_id,
         pair: opts.product_id,
       }
       client.activeOrders(orderInfo, function(err, resp, body) {
@@ -212,7 +212,7 @@ export default (conf) => {
     },
 
     // return the property used for range querying.
-    getCursor: function(trade) {
+    getCursor(trade) {
       return trade.trade_id
     },
   }

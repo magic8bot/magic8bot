@@ -10,8 +10,8 @@ interface Error {
 }
 
 export default (conf) => {
-  var so = minimist(process.argv)
-  var public_client = {},
+  const so = minimist(process.argv)
+  let public_client = {},
     authed_client,
     websocket_client = {},
     websocket_cache = {}
@@ -26,8 +26,8 @@ export default (conf) => {
 
   function websocketClient(product_id) {
     if (!websocket_client[product_id]) {
-      var auth = null
-      var client_state: Record<string, any> = {}
+      let auth = null
+      const client_state: Record<string, any> = {}
       if (conf.gdax.key && conf.gdax.key !== 'YOUR-API-KEY') {
         auth = {
           key: conf.gdax.key,
@@ -36,7 +36,7 @@ export default (conf) => {
         }
       }
 
-      var channels = ['matches', 'ticker']
+      const channels = ['matches', 'ticker']
 
       // subscribe to user channels which need fully auth data
       if (auth) {
@@ -149,7 +149,7 @@ export default (conf) => {
 
   function statusErr(resp, body) {
     if (resp.statusCode !== 200) {
-      var err = new Error('non-200 status: ' + resp.statusCode) as Error
+      const err = new Error('non-200 status: ' + resp.statusCode) as Error
       err.code = 'HTTP_STATUS'
       err.body = body
       return err
@@ -181,7 +181,7 @@ export default (conf) => {
   }
 
   function handleOrderDone(update, product_id) {
-    let cached_order = websocket_cache[product_id].orders['~' + update.order_id]
+    const cached_order = websocket_cache[product_id].orders['~' + update.order_id]
     if (cached_order) {
       /*
       order canceled by user or on platform: which must be retried see "reason":
@@ -216,7 +216,7 @@ export default (conf) => {
       // get order "reason":
       //  - "canceled" by user or platform
       //  - "filled" order successfully placed and filled
-      let reason = update.reason
+      const reason = update.reason
 
       cached_order.status = 'done'
 
@@ -234,14 +234,14 @@ export default (conf) => {
   }
 
   function handleOrderChange(update, product_id) {
-    var cached_order = websocket_cache[product_id].orders['~' + update.order_id]
+    const cached_order = websocket_cache[product_id].orders['~' + update.order_id]
     if (cached_order && update.new_size) {
       cached_order.size = update.new_size
     }
   }
 
   function handleOrderMatch(update, product_id) {
-    var cached_order =
+    const cached_order =
       websocket_cache[product_id].orders['~' + update.maker_order_id] ||
       websocket_cache[product_id].orders['~' + update.taker_order_id]
     if (cached_order) {
@@ -251,7 +251,7 @@ export default (conf) => {
   }
 
   function handleTrade(trade, product_id) {
-    var cache = websocket_cache[product_id]
+    const cache = websocket_cache[product_id]
     cache.trades.push(trade)
     cache.trade_ids.push(trade.trade_id)
   }
@@ -260,23 +260,23 @@ export default (conf) => {
     websocket_cache[product_id].ticker = ticker
   }
 
-  var orders = {}
+  const orders = {}
 
-  var exchange = {
+  const exchange = {
     name: 'gdax',
     historyScan: 'backward',
     makerFee: 0,
     takerFee: 0.3,
     backfillRateLimit: 335,
 
-    getProducts: function() {
+    getProducts() {
       return require('./products.json')
     },
 
-    getTrades: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = publicClient(opts.product_id)
-      var args: Record<string, any> = {}
+    getTrades(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = publicClient(opts.product_id)
+      const args: Record<string, any> = {}
       if (opts.from) {
         // move cursor into the future
         args.before = opts.from
@@ -285,15 +285,15 @@ export default (conf) => {
         args.after = opts.to
       }
       // check for locally cached trades from the websocket feed
-      var cache = websocket_cache[opts.product_id]
-      var max_trade_id = cache.trade_ids.reduce(function(a, b) {
+      const cache = websocket_cache[opts.product_id]
+      const max_trade_id = cache.trade_ids.reduce(function(a, b) {
         return Math.max(a, b)
       }, -1)
       if (opts.from && max_trade_id >= opts.from) {
-        var fromIndex = cache.trades.findIndex((value) => {
+        const fromIndex = cache.trades.findIndex((value) => {
           return value.trade_id == opts.from
         })
-        var newTrades = cache.trades.slice(fromIndex + 1)
+        let newTrades = cache.trades.slice(fromIndex + 1)
         newTrades = newTrades.map(function(trade) {
           return {
             trade_id: trade.trade_id,
@@ -314,7 +314,7 @@ export default (conf) => {
       client.getProductTrades(opts.product_id, args, function(err, resp, body) {
         if (!err) err = statusErr(resp, body)
         if (err) return retry('getTrades', func_args, err)
-        var trades = body.map(function(trade) {
+        const trades = body.map(function(trade) {
           return {
             trade_id: trade.trade_id,
             time: new Date(trade.time).getTime(),
@@ -328,9 +328,9 @@ export default (conf) => {
       })
     },
 
-    getBalance: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    getBalance(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
 
       if (so.debug) {
         console.log('getaccounts call')
@@ -339,7 +339,7 @@ export default (conf) => {
       client.getAccounts(function(err, resp, body) {
         if (!err) err = statusErr(resp, body)
         if (err) return retry('getBalance', func_args, err)
-        var balance: Record<string, any> = { asset: 0, currency: 0 }
+        const balance: Record<string, any> = { asset: 0, currency: 0 }
         body.forEach(function(account) {
           if (account.currency === opts.currency) {
             balance.currency = account.balance
@@ -353,17 +353,17 @@ export default (conf) => {
       })
     },
 
-    getQuote: function(opts, cb) {
+    getQuote(opts, cb) {
       // check websocket cache first
       if (websocket_cache[opts.product_id]) {
-        var ticker = websocket_cache[opts.product_id].ticker
+        const ticker = websocket_cache[opts.product_id].ticker
         if (ticker.best_ask && ticker.best_bid) {
           cb(null, { bid: ticker.best_bid, ask: ticker.best_ask })
           return
         }
       }
-      var func_args = [].slice.call(arguments)
-      var client = publicClient(opts.product_id)
+      const func_args = [].slice.call(arguments)
+      const client = publicClient(opts.product_id)
       if (so.debug) console.log('getproductticker call')
       client.getProductTicker(opts.product_id, function(err, resp, body) {
         if (!err) err = statusErr(resp, body)
@@ -373,9 +373,9 @@ export default (conf) => {
       })
     },
 
-    cancelOrder: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    cancelOrder(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
 
       if (so.debug) {
         console.log('cancelorder call')
@@ -398,9 +398,9 @@ export default (conf) => {
       })
     },
 
-    buy: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    buy(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       if (typeof opts.post_only === 'undefined') {
         opts.post_only = true
       }
@@ -439,9 +439,9 @@ export default (conf) => {
       })
     },
 
-    sell: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    sell(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
 
       if (typeof opts.post_only === 'undefined') {
         opts.post_only = true
@@ -482,9 +482,9 @@ export default (conf) => {
       })
     },
 
-    getOrder: function(opts, cb) {
+    getOrder(opts, cb) {
       if (websocket_cache[opts.product_id] && websocket_cache[opts.product_id].orders['~' + opts.order_id]) {
-        let order_cache = websocket_cache[opts.product_id].orders['~' + opts.order_id]
+        const order_cache = websocket_cache[opts.product_id].orders['~' + opts.order_id]
 
         if (so.debug) {
           console.log('getOrder websocket cache', order_cache)
@@ -494,8 +494,8 @@ export default (conf) => {
         return
       }
 
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
 
       if (so.debug) {
         console.log('getorder call')
@@ -522,7 +522,7 @@ export default (conf) => {
     },
 
     // return the property used for range querying.
-    getCursor: function(trade) {
+    getCursor(trade) {
       return trade.trade_id
     },
   }

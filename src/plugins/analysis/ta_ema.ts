@@ -1,48 +1,48 @@
 const talib = require('talib')
 
 export const taEma = (s, length) => {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     // create object for talib. only close is used for now but rest might come in handy
     if (!s.marketData) {
       s.marketData = { open: [], close: [], high: [], low: [], volume: [] }
     }
 
     if (s.lookback.length > s.marketData.close.length) {
-      for (var i = s.lookback.length - s.marketData.close.length - 1; i >= 0; i--) {
+      for (let i = s.lookback.length - s.marketData.close.length - 1; i >= 0; i--) {
         s.marketData.close.push(s.lookback[i].close)
       }
 
-      //dont calculate until we have enough data
+      // dont calculate until we have enough data
       if (s.marketData.close.length >= length) {
-        //fillup marketData for talib.
-        //this might need improvment for performance.
-        //for (var i = 0; i < length; i++) {
+        // fillup marketData for talib.
+        // this might need improvment for performance.
+        // for (var i = 0; i < length; i++) {
         //  s.marketData.close.push(s.lookback[i].close);
-        //}
-        //fillup marketData for talib.
-        let tmpMarket = s.marketData.close.slice()
+        // }
+        // fillup marketData for talib.
+        const tmpMarket = s.marketData.close.slice()
 
-        //add current period
+        // add current period
         tmpMarket.push(s.period.close)
 
-        //doublecheck length.
+        // doublecheck length.
         if (tmpMarket.length >= length) {
           talib.execute(
             {
-              name: 'EMA',
-              startIdx: 0,
               endIdx: tmpMarket.length - 1,
               inReal: tmpMarket,
+              name: 'EMA',
               optInTimePeriod: length,
+              startIdx: 0,
             },
-            function(err, result) {
+            (err, result) => {
               if (err) {
                 console.log(err)
                 reject(err)
                 return
               }
 
-              //Result format: (note: outReal can have multiple items in the array)
+              // Result format: (note: outReal can have multiple items in the array)
               // {
               //   begIndex: 8,
               //   nbElement: 1,

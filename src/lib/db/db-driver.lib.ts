@@ -6,7 +6,7 @@ type DbType = 'mongo' // | 'pg' | 'sqlite' | 'mysql'
 class DbDriver {
   private db: MongoLib
 
-  connect(dbType: DbType, dbConfig: MongoConf) {
+  public connect(dbType: DbType, dbConfig: MongoConf) {
     if (dbType === 'mongo') this.db = new MongoLib()
     else throw new Error(`${dbType} not yet supported.`)
 

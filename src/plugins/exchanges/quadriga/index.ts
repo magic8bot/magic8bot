@@ -7,14 +7,14 @@ import moment from 'moment'
 import n from 'numbro'
 
 export default (conf) => {
-  var s = {
+  const s = {
     options: minimist(process.argv),
   }
-  var so = s.options
+  const so = s.options
 
-  var shownWarnings = false
+  let shownWarnings = false
 
-  var public_client, authed_client
+  let public_client, authed_client
 
   function publicClient() {
     if (!public_client) public_client = new QuadrigaCX('1', '', '')
@@ -56,26 +56,26 @@ export default (conf) => {
     if (so.debug) console.log(msg)
   }
 
-  var orders = {}
+  const orders = {}
 
-  var exchange = {
+  const exchange = {
     name: 'quadriga',
     historyScan: 'backward',
     makerFee: 0.5,
     takerFee: 0.5,
 
-    getProducts: function() {
+    getProducts() {
       return require('./products.json')
     },
 
-    getTrades: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var args = {
+    getTrades(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const args = {
         book: joinProduct(opts.product_id),
         time: 'hour',
       }
 
-      var client = publicClient()
+      const client = publicClient()
       client.api('transactions', args, function(err, body) {
         if (!shownWarnings) {
           console.log('please note: the quadriga api does not support backfilling.')
@@ -86,7 +86,7 @@ export default (conf) => {
         if (err) return retry('getTrades', func_args, err)
         if (body.error) return retry('getTrades', func_args, body.error)
 
-        var trades = body
+        const trades = body
           .filter((t) => {
             return typeof opts.from === 'undefined' ? true : moment.unix(t.date).valueOf() > opts.from
           })
@@ -105,17 +105,17 @@ export default (conf) => {
       })
     },
 
-    getBalance: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    getBalance(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       client.api('balance', function(err, wallet) {
         if (err) return retry('getBalance', func_args, err)
         if (wallet.error) return retry('getBalance', func_args, wallet.error)
 
-        var currency = opts.currency.toLowerCase()
-        var asset = opts.asset.toLowerCase()
+        const currency = opts.currency.toLowerCase()
+        const asset = opts.asset.toLowerCase()
 
-        var balance: Record<string, any> = {
+        const balance: Record<string, any> = {
           asset: 0,
           currency: 0,
         }
@@ -140,19 +140,19 @@ export default (conf) => {
       })
     },
 
-    getQuote: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
+    getQuote(opts, cb) {
+      const func_args = [].slice.call(arguments)
 
-      var params = {
+      const params = {
         book: joinProduct(opts.product_id),
       }
 
-      var client = publicClient()
+      const client = publicClient()
       client.api('ticker', params, function(err, quote) {
         if (err) return retry('getQuote', func_args, err)
         if (quote.error) return retry('getQuote', func_args, quote.error)
 
-        var r = {
+        const r = {
           bid: String(quote.bid),
           ask: String(quote.ask),
         }
@@ -161,15 +161,15 @@ export default (conf) => {
       })
     },
 
-    cancelOrder: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var params = {
+    cancelOrder(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const params = {
         id: opts.order_id,
       }
 
       debugOut(`Cancelling order ${opts.order_id}`)
 
-      var client = authedClient()
+      const client = authedClient()
       client.api('cancel_order', params, function(err, body) {
         if (err) return retry('cancelOrder', func_args, err)
         if (body.error) return retry('cancelOrder', func_args, body.error)
@@ -177,8 +177,8 @@ export default (conf) => {
       })
     },
 
-    buy: function(opts, cb) {
-      var params: Record<string, any> = {
+    buy(opts, cb) {
+      const params: Record<string, any> = {
         amount: opts.size,
         book: joinProduct(opts.product_id),
       }
@@ -189,9 +189,9 @@ export default (conf) => {
 
       debugOut(`Requesting ${opts.order_type} buy for ${opts.size} assets`)
 
-      var client = authedClient()
+      const client = authedClient()
       client.api('buy', params, function(err, body) {
-        var order: Record<string, any> = {
+        const order: Record<string, any> = {
           id: null,
           status: 'open',
           price: Number(opts.price),
@@ -209,10 +209,10 @@ export default (conf) => {
           order.done_at = new Date().getTime()
 
           if (body.orders_matched) {
-            var asset_total = 0
-            var price_total = 0.0
-            var order_count = body.orders_matched.length
-            for (var idx = 0; idx < order_count; idx++) {
+            let asset_total = 0
+            let price_total = 0.0
+            const order_count = body.orders_matched.length
+            for (let idx = 0; idx < order_count; idx++) {
               asset_total = asset_total + Number(body.orders_matched[idx].amount)
               price_total =
                 price_total + Number(body.orders_matched[idx].amount) * Number(body.orders_matched[idx].price)
@@ -234,8 +234,8 @@ export default (conf) => {
       })
     },
 
-    sell: function(opts, cb) {
-      var params: Record<string, any> = {
+    sell(opts, cb) {
+      const params: Record<string, any> = {
         amount: opts.size,
         book: joinProduct(opts.product_id),
       }
@@ -246,9 +246,9 @@ export default (conf) => {
 
       debugOut(`Requesting ${opts.order_type} sell for ${opts.size} assets`)
 
-      var client = authedClient()
+      const client = authedClient()
       client.api('sell', params, function(err, body) {
-        var order: Record<string, any> = {
+        const order: Record<string, any> = {
           id: null,
           status: 'open',
           price: Number(opts.price),
@@ -266,10 +266,10 @@ export default (conf) => {
           order.done_at = new Date().getTime()
 
           if (body.orders_matched) {
-            var asset_total = 0
-            var price_total = 0.0
-            var order_count = body.orders_matched.length
-            for (var idx = 0; idx < order_count; idx++) {
+            let asset_total = 0
+            let price_total = 0.0
+            const order_count = body.orders_matched.length
+            for (let idx = 0; idx < order_count; idx++) {
               asset_total = asset_total + Number(body.orders_matched[idx].amount)
               price_total =
                 price_total + Number(body.orders_matched[idx].amount) * Number(body.orders_matched[idx].price)
@@ -291,13 +291,13 @@ export default (conf) => {
       })
     },
 
-    getOrder: function(opts, cb) {
-      var order = orders['~' + opts.order_id]
-      var params = {
+    getOrder(opts, cb) {
+      const order = orders['~' + opts.order_id]
+      const params = {
         id: opts.order_id,
       }
 
-      var client = authedClient()
+      const client = authedClient()
       client.api('lookup_order', params, function(err, body) {
         if (err) return cb(err)
         if (body.error) return cb(body.error)
@@ -320,7 +320,7 @@ export default (conf) => {
     },
 
     // return the property used for range querying.
-    getCursor: function(trade) {
+    getCursor(trade) {
       return trade.time || trade
     },
   }

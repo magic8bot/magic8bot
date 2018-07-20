@@ -30,27 +30,27 @@ export class BalanceService {
     this.balanceCollection = collectionServiceInstance.getBalances()
   }
 
-  next({ currency, asset, close, orig_capital, orig_price, time = null }) {
+  public next({ currency, asset, close, orig_capital, orig_price, time = null }) {
     const d = timebucket().resize(this.balanceSnapshotPeriod)
     const id = `${this.selector}-${d.toString()}`
     const balance = {
-      id,
       _id: id,
+      asset,
+      buy_hold: close * (orig_capital / orig_price),
+      consolidated: n(asset)
+        .multiply(close)
+        .add(currency)
+        .value(),
+      currency,
+      id,
+      price: close,
+      start_capital: orig_capital,
+      start_price: orig_price,
       time: time
         ? time
         : timebucket()
             .resize(this.balanceSnapshotPeriod)
             .toMilliseconds(),
-      currency: currency,
-      asset: asset,
-      price: close,
-      start_capital: orig_capital,
-      start_price: orig_price,
-      consolidated: n(asset)
-        .multiply(close)
-        .add(currency)
-        .value(),
-      buy_hold: close * (orig_capital / orig_price),
     } as Balance
 
     balance.profit = (balance.consolidated - orig_capital) / orig_capital

@@ -11,18 +11,18 @@ export class ProgressBar {
     this.dst.append(this.line)
   }
 
-  update = (progress: number) => {
+  public update = (progress: number) => {
     this.progress = progress < 0 ? 0 : progress
     this.bar.setProgress(this.progress * 100)
     const percent = ('   ' + Math.round((this.progress || 0) * 100) + '%').slice(-4)
     this.end.setContent(`{cyan-fg}]{/cyan-fg} ${percent}`)
   }
 
-  done = () => {
+  public done = () => {
     this.bar.setProgress(100)
   }
 
-  clear = () => {
+  public clear = () => {
     this.dst.remove(this.line)
   }
 
@@ -38,8 +38,8 @@ export class ProgressBar {
     this.bar = blessed.progressbar({
       ...barBaseOpts,
       left: this.title.length + 3,
-      width: `100%-${this.title.length + 10}`,
       style: { bar: { fg: 'blue' } },
+      width: `100%-${this.title.length + 10}`,
     })
 
     this.end = blessed.box({ ...baseOpts, left: '100%-7', width: 7 })

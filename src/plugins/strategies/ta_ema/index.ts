@@ -1,13 +1,13 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { taEma, rsi, stddev } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'ta_ema',
   description: 'Buy when (EMA - last(EMA) > 0) and sell when (EMA - last(EMA) < 0). Optional buy on low RSI.',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length, same as --period_length', String, '10m')
     this.option('period_length', 'period length, same as --period', String, '10m')
     this.option('min_periods', 'min. number of history periods', Number, 52)
@@ -22,15 +22,16 @@ export default {
     this.option('oversold_rsi', 'buy when RSI reaches this value', Number, 30)
   },
 
-  calculate: function(s) {
+  calculate(s) {
     if (s.options.oversold_rsi) {
       // sync RSI display with oversold RSI periods
       s.options.rsi_periods = s.options.oversold_rsi_periods
       rsi(s, 'oversold_rsi', s.options.oversold_rsi_periods)
       if (!s.in_preroll && s.period.oversold_rsi <= s.options.oversold_rsi && !s.oversold && !s.cancel_down) {
         s.oversold = true
-        if (s.options.mode !== 'sim' || s.options.verbose)
+        if (s.options.mode !== 'sim' || s.options.verbose) {
           console.log(('\noversold at ' + s.period.oversold_rsi + ' RSI, preparing to buy\n').cyan)
+        }
       }
     }
     if (s.options.neutral_rate === 'auto') {
@@ -40,7 +41,7 @@ export default {
     }
   },
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     if (!s.in_preroll && typeof s.period.oversold_rsi === 'number') {
       if (s.oversold) {
         s.oversold = false
@@ -83,10 +84,10 @@ export default {
     cb()
   },
 
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
     if (typeof s.period.trend_ema_stddev === 'number') {
-      var color = 'grey'
+      let color = 'grey'
       if (s.period.trend_ema_rate > s.period.trend_ema_stddev) {
         color = 'green'
       } else if (s.period.trend_ema_rate < s.period.trend_ema_stddev * -1) {
@@ -108,19 +109,19 @@ export default {
 
   phenotypes: {
     // -- common
-    period_length: Phenotypes.RangePeriod(1, 120, 'm'),
-    min_periods: Phenotypes.Range(1, 100),
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 5),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 5),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    period_length: phenotypes.rangePeriod(1, 120, 'm'),
+    min_periods: phenotypes.range0(1, 100),
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 5),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 5),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
     // -- strategy
-    trend_ema: Phenotypes.Range(1, 40),
-    oversold_rsi_periods: Phenotypes.Range(5, 50),
-    oversold_rsi: Phenotypes.Range(20, 100),
+    trend_ema: phenotypes.range0(1, 40),
+    oversold_rsi_periods: phenotypes.range0(5, 50),
+    oversold_rsi: phenotypes.range0(20, 100),
   },
 }

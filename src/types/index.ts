@@ -121,7 +121,7 @@ export interface Ordertype {
   options: string[]
 }
 
-export interface IMinperiods {
+export interface Minperiods {
   type: string
   min: number
   max: number
@@ -136,21 +136,21 @@ export interface Periodlength {
 
 export interface Phenotypes {
   period_length: Periodlength
-  min_periods: IMinperiods
-  markdown_buy_pct: IMinperiods
-  markup_sell_pct: IMinperiods
+  min_periods: Minperiods
+  markdown_buy_pct: Minperiods
+  markup_sell_pct: Minperiods
   order_type: Ordertype
-  sell_stop_pct: IMinperiods
-  buy_stop_pct: IMinperiods
-  profit_stop_enable_pct: IMinperiods
-  profit_stop_pct: IMinperiods
-  ema_short_period: IMinperiods
-  ema_long_period: IMinperiods
-  signal_period: IMinperiods
-  up_trend_threshold: IMinperiods
-  down_trend_threshold: IMinperiods
-  overbought_rsi_periods: IMinperiods
-  overbought_rsi: IMinperiods
+  sell_stop_pct: Minperiods
+  buy_stop_pct: Minperiods
+  profit_stop_enable_pct: Minperiods
+  profit_stop_pct: Minperiods
+  ema_short_period: Minperiods
+  ema_long_period: Minperiods
+  signal_period: Minperiods
+  up_trend_threshold: Minperiods
+  down_trend_threshold: Minperiods
+  overbought_rsi_periods: Minperiods
+  overbought_rsi: Minperiods
 }
 
 export interface Trade {

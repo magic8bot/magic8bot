@@ -1,43 +1,43 @@
 import { getMaTypeFromString } from '@util'
 const talib = require('talib')
 
-export const taMacdExt = (s, slow_period, fast_period, signal_period, fast_ma_type, slow_ma_type, signal_ma_type) => {
-  return new Promise(function(resolve, reject) {
+export const taMacdExt = (s, slowPeriod, fastPeriod, signalPeriod, fastMaType, slowMaType, signalMaType) => {
+  return new Promise((resolve, reject) => {
     // create object for talib. only close is used for now but rest might come in handy
     if (!s.marketData) {
       s.marketData = { open: [], close: [], high: [], low: [], volume: [] }
     }
 
     if (s.lookback.length > s.marketData.close.length) {
-      for (var i = s.lookback.length - s.marketData.close.length - 1; i >= 0; i--) {
+      for (let i = s.lookback.length - s.marketData.close.length - 1; i >= 0; i--) {
         s.marketData.close.push(s.lookback[i].close)
       }
     }
 
-    var periods_necessary = slow_period + signal_period - 1
+    const periodsNNecessary = slowPeriod + signalPeriod - 1
     // Dont calculate until we have enough data
 
-    if (s.marketData.close.length >= periods_necessary) {
-      //fillup marketData for talib.
-      var tmpMarket = s.marketData.close.slice()
+    if (s.marketData.close.length >= periodsNNecessary) {
+      // fillup marketData for talib.
+      const tmpMarket = s.marketData.close.slice()
 
-      //add current period
+      // add current period
       tmpMarket.push(s.period.close)
 
       talib.execute(
         {
-          name: 'MACDEXT',
-          startIdx: 0,
           endIdx: tmpMarket.length - 1,
           inReal: tmpMarket,
-          optInFastPeriod: fast_period,
-          optInSlowPeriod: slow_period,
-          optInSignalPeriod: signal_period,
-          optInFastMAType: getMaTypeFromString(fast_ma_type),
-          optInSlowMAType: getMaTypeFromString(slow_ma_type),
-          optInSignalMAType: getMaTypeFromString(signal_ma_type),
+          name: 'MACDEXT',
+          optInFastMAType: getMaTypeFromString(fastMaType),
+          optInFastPeriod: fastPeriod,
+          optInSignalMAType: getMaTypeFromString(signalMaType),
+          optInSignalPeriod: signalPeriod,
+          optInSlowMAType: getMaTypeFromString(slowMaType),
+          optInSlowPeriod: slowPeriod,
+          startIdx: 0,
         },
-        function(err, result) {
+        (err, result) => {
           if (err) {
             reject(err)
             return

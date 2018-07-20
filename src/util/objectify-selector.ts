@@ -1,26 +1,26 @@
 import { normalizeSelector } from './normalize-selector'
 
 export interface Selector {
-  exchange_id: string
-  product_id: string
+  exchangeId: string
+  productId: string
   asset: string
   currency: string
   normalized: string
 }
 
 export const objectifySelector = (selector): Selector => {
-  var rtn
+  let rtn
 
-  if (typeof selector == 'string') {
-    var s = normalizeSelector(selector)
+  if (typeof selector === 'string') {
+    const s = normalizeSelector(selector)
 
-    var e_id = s.split('.')[0]
-    var p_id = s.split('.')[1]
-    var asset = p_id.split('-')[0]
-    var currency = p_id.split('-')[1]
+    const exchangeId = s.split('.')[0]
+    const productId = s.split('.')[1]
+    const asset = productId.split('-')[0]
+    const currency = productId.split('-')[1]
 
-    rtn = { exchange_id: e_id, product_id: p_id, asset: asset, currency: currency, normalized: s }
-  } else if (typeof selector == 'object') {
+    rtn = { exchangeId, productId, asset, currency, normalized: s }
+  } else if (typeof selector === 'object') {
     rtn = selector
   }
 

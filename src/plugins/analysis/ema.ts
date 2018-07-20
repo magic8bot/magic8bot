@@ -1,15 +1,15 @@
-export const ema = (s, key, length, source_key?) => {
-  if (!source_key) source_key = 'close'
+export const ema = (s, key, length, sourceKey?) => {
+  if (!sourceKey) sourceKey = 'close'
   if (s.lookback.length >= length) {
-    var prev_ema = s.lookback[0][key]
-    if (typeof prev_ema === 'undefined' || isNaN(prev_ema)) {
-      var sum = 0
-      s.lookback.slice(0, length).forEach(function(period) {
-        sum += period[source_key]
+    let prevEma = s.lookback[0][key]
+    if (typeof prevEma === 'undefined' || isNaN(prevEma)) {
+      let sum = 0
+      s.lookback.slice(0, length).forEach((period) => {
+        sum += period[sourceKey]
       })
-      prev_ema = sum / length
+      prevEma = sum / length
     }
-    var multiplier = 2 / (length + 1)
-    s.period[key] = (s.period[source_key] - prev_ema) * multiplier + prev_ema
+    const multiplier = 2 / (length + 1)
+    s.period[key] = (s.period[sourceKey] - prevEma) * multiplier + prevEma
   }
 }

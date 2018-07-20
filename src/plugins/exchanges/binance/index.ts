@@ -5,33 +5,34 @@ import path from 'path'
 import _ from 'lodash'
 
 export default (conf) => {
-  var public_client, authed_client
+  let publicClientCon
+  let authedClientCon
   let firstRun = true
   let allowGetMarketCall = true
 
   function publicClient() {
-    if (!public_client) public_client = new ccxt.binance({ apiKey: '', secret: '' })
-    return public_client
+    if (!publicClientCon) publicClientCon = new ccxt.binance({ apiKey: '', secret: '' })
+    return publicClientCon
   }
 
   function authedClient() {
-    if (!authed_client) {
+    if (!authedClientCon) {
       if (!conf.binance || !conf.binance.key || conf.binance.key === 'YOUR-API-KEY') {
         throw new Error('please configure your Binance credentials in ' + path.resolve(__dirname, 'conf.js'))
       }
-      authed_client = new ccxt.binance({ apiKey: conf.binance.key, secret: conf.binance.secret })
+      authedClientCon = new ccxt.binance({ apiKey: conf.binance.key, secret: conf.binance.secret })
     }
-    return authed_client
+    return authedClientCon
   }
 
   /**
    * Convert BNB-BTC to BNB/BTC
    *
-   * @param product_id BNB-BTC
+   * @param productId BNB-BTC
    * @returns {string}
    */
-  function joinProduct(product_id) {
-    let split = product_id.split('-')
+  function joinProduct(productId) {
+    const split = productId.split('-')
     return split[0] + '/' + split[1]
   }
 
@@ -41,30 +42,30 @@ export default (conf) => {
       if (err) console.error(err)
       console.error(args.slice(0, -1))
     }
-    setTimeout(function() {
+    setTimeout(() => {
       exchange[method].apply(exchange, args)
     }, 20000)
   }
 
-  var orders = {}
+  const orders = {}
 
-  var exchange = {
-    name: 'binance',
+  const exchange = {
     historyScan: 'forward',
     historyScanUsesTime: true,
     makerFee: 0.1,
+    name: 'binance',
     takerFee: 0.1,
 
-    getProducts: function() {
+    getProducts() {
       return require('./products.json')
     },
 
-    getTrades: function(opts, cb) {
-      var func_args = [].slice.call(arguments),
-        trades = [],
-        maxTime = 0
-      var client = publicClient()
-      var args: Record<string, any> = {}
+    getTrades(opts, cb) {
+      const funcArgs = [].slice.call(arguments)
+      let trades = []
+      let maxTime = 0
+      const client = publicClient()
+      const args: Record<string, any> = {}
       if (opts.from) args.startTime = opts.from
       if (opts.to) args.endTime = opts.to
       if (args.startTime && !args.endTime) {
@@ -74,7 +75,7 @@ export default (conf) => {
         // subtract 12 hours
         args.startTime = parseInt(args.endTime, 10) - 3600000
       }
-      if (allowGetMarketCall != true) {
+      if (allowGetMarketCall !== true) {
         cb(null, [])
         return null
       }
@@ -82,60 +83,60 @@ export default (conf) => {
         client
           .fetchOHLCV(joinProduct(opts.product_id), args.timeframe, opts.from)
           .then((result) => {
-            var lastVal = 0
-            trades = result.map(function(trade) {
-              let buySell = parseFloat(trade[4]) > lastVal ? 'buy' : 'sell'
+            let lastVal = 0
+            trades = result.map((trade) => {
+              const buySell = parseFloat(trade[4]) > lastVal ? 'buy' : 'sell'
               lastVal = parseFloat(trade[4])
               if (Number(trade[0]) > maxTime) maxTime = Number(trade[0])
               return {
-                trade_id: trade[0] + '' + (trade[5] + '').slice(-2) + (trade[4] + '').slice(-2),
-                time: trade[0],
-                size: parseFloat(trade[5]),
                 price: parseFloat(trade[4]),
                 side: buySell,
+                size: parseFloat(trade[5]),
+                time: trade[0],
+                trade_id: trade[0] + '' + (trade[5] + '').slice(-2) + (trade[4] + '').slice(-2),
               }
             })
             cb(null, trades)
           })
-          .catch(function(error) {
+          .catch((error) => {
             firstRun = false
             allowGetMarketCall = false
             setTimeout(() => {
               allowGetMarketCall = true
             }, 5000)
             console.error('[OHLCV] An error occurred', error)
-            return retry('getTrades', func_args, error)
+            return retry('getTrades', funcArgs, error)
           })
       } else {
         client
           .fetchTrades(joinProduct(opts.product_id), undefined, undefined, args)
           .then((result) => {
-            var trades = result.map(function(trade) {
+            const newTrades = result.map((trade) => {
               return {
-                trade_id: trade.id,
-                time: trade.timestamp,
-                size: parseFloat(trade.amount),
                 price: parseFloat(trade.price),
                 side: trade.side,
+                size: parseFloat(trade.amount),
+                time: trade.timestamp,
+                trade_id: trade.id,
               }
             })
-            cb(null, trades)
+            cb(null, newTrades)
           })
-          .catch(function(error) {
+          .catch((error) => {
             console.error('An error occurred', error)
-            return retry('getTrades', func_args)
+            return retry('getTrades', funcArgs)
           })
       }
     },
 
-    getBalance: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    getBalance(opts, cb) {
+      const funcArgs = [].slice.call(arguments)
+      const client = authedClient()
       client
         .fetchBalance()
         .then((result) => {
-          var balance: Record<string, any> = { asset: 0, currency: 0 }
-          Object.keys(result).forEach(function(key) {
+          const balance: Record<string, any> = { asset: 0, currency: 0 }
+          Object.keys(result).forEach((key) => {
             if (key === opts.currency) {
               balance.currency = result[key].free + result[key].used
               balance.currency_hold = result[key].used
@@ -147,49 +148,49 @@ export default (conf) => {
           })
           cb(null, balance)
         })
-        .catch(function(error) {
+        .catch((error) => {
           console.error('An error occurred', error)
-          return retry('getBalance', func_args)
+          return retry('getBalance', funcArgs)
         })
     },
 
-    getQuote: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = publicClient()
+    getQuote(opts, cb) {
+      const funcArgs = [].slice.call(arguments)
+      const client = publicClient()
       client
         .fetchTicker(joinProduct(opts.product_id))
         .then((result) => {
           cb(null, { bid: result.bid, ask: result.ask })
         })
-        .catch(function(error) {
+        .catch((error) => {
           console.error('An error occurred', error)
-          return retry('getQuote', func_args)
+          return retry('getQuote', funcArgs)
         })
     },
 
-    getDepth: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = publicClient()
+    getDepth(opts, cb) {
+      const funcArgs = [].slice.call(arguments)
+      const client = publicClient()
       client
         .fetchOrderBook(joinProduct(opts.product_id), { limit: opts.limit })
         .then((result) => {
           cb(null, result)
         })
-        .catch(function(error) {
+        .catch((error) => {
           console.error('An error ocurred', error)
-          return retry('getDepth', func_args)
+          return retry('getDepth', funcArgs)
         })
     },
 
-    cancelOrder: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    cancelOrder(opts, cb) {
+      const funcArgs = [].slice.call(arguments)
+      const client = authedClient()
       client.cancelOrder(opts.order_id, joinProduct(opts.product_id)).then(
-        function(body) {
+        (body) => {
           if (body && (body.message === 'Order already done' || body.message === 'order not found')) return cb()
           cb(null)
         },
-        function(err) {
+        (err) => {
           // match error against string:
           // "binance {"code":-2011,"msg":"UNKNOWN_ORDER"}"
 
@@ -201,7 +202,7 @@ export default (conf) => {
             } else {
               // retry is allowed for this error
 
-              return retry('cancelOrder', func_args, err)
+              return retry('cancelOrder', funcArgs, err)
             }
           }
 
@@ -210,14 +211,14 @@ export default (conf) => {
       )
     },
 
-    buy: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    buy(opts, cb) {
+      const funcArgs = [].slice.call(arguments)
+      const client = authedClient()
       if (typeof opts.post_only === 'undefined') {
         opts.post_only = true
       }
       opts.type = 'limit'
-      var args: Record<string, any> = {}
+      const args: Record<string, any> = {}
       if (opts.order_type === 'taker') {
         delete opts.price
         delete opts.post_only
@@ -227,7 +228,7 @@ export default (conf) => {
       }
       opts.side = 'buy'
       delete opts.order_type
-      var order = {}
+      let order = {}
       client
         .createOrder(
           joinProduct(opts.product_id),
@@ -240,25 +241,25 @@ export default (conf) => {
         .then((result) => {
           if (result && result.message === 'Insufficient funds') {
             order = {
-              status: 'rejected',
               reject_reason: 'balance',
+              status: 'rejected',
             }
             return cb(null, order)
           }
           order = {
-            id: result ? result.id : null,
-            status: 'open',
-            price: opts.price,
-            size: this.roundToNearest(opts.size, opts),
-            post_only: !!opts.post_only,
             created_at: new Date().getTime(),
             filled_size: '0',
+            id: result ? result.id : null,
             ordertype: opts.order_type,
+            post_only: !!opts.post_only,
+            price: opts.price,
+            size: this.roundToNearest(opts.size, opts),
+            status: 'open',
           }
           orders['~' + result.id] = order
           cb(null, order)
         })
-        .catch(function(error) {
+        .catch((error) => {
           console.error('An error occurred', error)
 
           // decide if this error is allowed for a retry:
@@ -267,23 +268,23 @@ export default (conf) => {
 
           if (error.message.match(new RegExp(/-1013|MIN_NOTIONAL|-2010/))) {
             return cb(null, {
-              status: 'rejected',
               reject_reason: 'balance',
+              status: 'rejected',
             })
           }
 
-          return retry('buy', func_args)
+          return retry('buy', funcArgs)
         })
     },
 
-    sell: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    sell(opts, cb) {
+      const funcArgs = [].slice.call(arguments)
+      const client = authedClient()
       if (typeof opts.post_only === 'undefined') {
         opts.post_only = true
       }
       opts.type = 'limit'
-      var args: Record<string, any> = {}
+      const args: Record<string, any> = {}
       if (opts.order_type === 'taker') {
         delete opts.price
         delete opts.post_only
@@ -293,7 +294,7 @@ export default (conf) => {
       }
       opts.side = 'sell'
       delete opts.order_type
-      var order = {}
+      let order = {}
       client
         .createOrder(
           joinProduct(opts.product_id),
@@ -306,25 +307,25 @@ export default (conf) => {
         .then((result) => {
           if (result && result.message === 'Insufficient funds') {
             order = {
-              status: 'rejected',
               reject_reason: 'balance',
+              status: 'rejected',
             }
             return cb(null, order)
           }
           order = {
-            id: result ? result.id : null,
-            status: 'open',
-            price: opts.price,
-            size: this.roundToNearest(opts.size, opts),
-            post_only: !!opts.post_only,
             created_at: new Date().getTime(),
             filled_size: '0',
+            id: result ? result.id : null,
             ordertype: opts.order_type,
+            post_only: !!opts.post_only,
+            price: opts.price,
+            size: this.roundToNearest(opts.size, opts),
+            status: 'open',
           }
           orders['~' + result.id] = order
           cb(null, order)
         })
-        .catch(function(error) {
+        .catch((error) => {
           console.error('An error occurred', error)
 
           // decide if this error is allowed for a retry:
@@ -333,17 +334,17 @@ export default (conf) => {
 
           if (error.message.match(new RegExp(/-1013|MIN_NOTIONAL|-2010/))) {
             return cb(null, {
-              status: 'rejected',
               reject_reason: 'balance',
+              status: 'rejected',
             })
           }
 
-          return retry('sell', func_args)
+          return retry('sell', funcArgs)
         })
     },
 
-    roundToNearest: function(numToRound, opts) {
-      var numToRoundTo = _.find(this.getProducts(), {
+    roundToNearest(numToRound, opts) {
+      let numToRoundTo = _.find(this.getProducts(), {
         asset: opts.product_id.split('-')[0],
         currency: opts.product_id.split('-')[1],
         // @ts-ignore
@@ -353,12 +354,12 @@ export default (conf) => {
       return Math.floor(numToRound * numToRoundTo) / numToRoundTo
     },
 
-    getOrder: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
-      var order = orders['~' + opts.order_id]
+    getOrder(opts, cb) {
+      const funcArgs = [].slice.call(arguments)
+      const client = authedClient()
+      const order = orders['~' + opts.order_id]
       client.fetchOrder(opts.order_id, joinProduct(opts.product_id)).then(
-        function(body) {
+        (body) => {
           if (body.status !== 'open' && body.status !== 'canceled') {
             order.status = 'done'
             order.done_at = new Date().getTime()
@@ -367,13 +368,13 @@ export default (conf) => {
           }
           cb(null, order)
         },
-        function(err) {
-          return retry('getOrder', func_args, err)
+        (err) => {
+          return retry('getOrder', funcArgs, err)
         }
       )
     },
 
-    getCursor: function(trade) {
+    getCursor(trade) {
       return trade.time || trade
     },
   }

@@ -5,14 +5,14 @@ import minimist from 'minimist'
 import _ from 'lodash'
 
 export default (conf) => {
-  let s = {
+  const s = {
     options: minimist(process.argv),
   }
-  let so = s.options
+  const so = s.options
 
   let public_client, authed_client, ws_client, ws_authed, ws_subscribed, amount_format
-  let ws_trades = []
-  let orders = {}
+  const ws_trades = []
+  const orders = {}
 
   function publicClient() {
     if (!public_client) {
@@ -43,9 +43,9 @@ export default (conf) => {
   }
 
   function refreshFees(args) {
-    let skew = 5000 // in ms
-    let now = new Date()
-    let nowUTC = new Date(
+    const skew = 5000 // in ms
+    const now = new Date()
+    const nowUTC = new Date(
       now.getUTCFullYear(),
       now.getUTCMonth(),
       now.getUTCDate(),
@@ -54,7 +54,7 @@ export default (conf) => {
       now.getUTCSeconds()
     ).getTime()
 
-    let midnightUTC = new Date(
+    const midnightUTC = new Date(
       now.getUTCFullYear(),
       now.getUTCMonth(),
       now.getUTCDate(),
@@ -63,7 +63,7 @@ export default (conf) => {
       now.getUTCSeconds()
     ).setHours(24, 0, 0, 0)
 
-    let countdown = midnightUTC - nowUTC + skew
+    const countdown = midnightUTC - nowUTC + skew
     // if (debug.on) {
     //   let hours = Math.round((countdown / (1000 * 60 * 60)) % 24)
     //   let minutes = Math.round((countdown / (1000 * 60)) % 60)
@@ -71,7 +71,7 @@ export default (conf) => {
     //   debug.msg('Refreshing fees in ' + hours + ' hours ' + minutes + ' minutes ' + seconds + ' seconds')
     // }
     setTimeout(function() {
-      exchange['setFees'].apply(exchange, args)
+      exchange.setFees.apply(exchange, args)
     }, countdown)
   }
 
@@ -280,7 +280,7 @@ export default (conf) => {
     })
   }
 
-  let exchange = {
+  const exchange = {
     name: 'cexio',
     historyScan: 'forward',
     backfillRateLimit: 0,
@@ -289,22 +289,22 @@ export default (conf) => {
     dynamicFees: true,
     makerBuy100Workaround: true,
 
-    getProducts: function() {
+    getProducts() {
       return require('./products.json')
     },
 
-    getTrades: function(opts, cb) {
-      let func_args = [].slice.call(arguments)
+    getTrades(opts, cb) {
+      const func_args = [].slice.call(arguments)
       if (so._[2] === 'backfill') {
         // Backfill using REST
-        let client = publicClient()
-        let pair = joinProduct(opts.product_id)
+        const client = publicClient()
+        const pair = joinProduct(opts.product_id)
         client.trade_history(pair, opts.from, function(err, body) {
           if (err || (typeof body === 'string' && body.match(/error/))) {
             // debug.msg(('getTrades ' + (err ? err : body)).red)
             return retry('getTrades', func_args)
           }
-          let trades = body.map(function(trade) {
+          const trades = body.map(function(trade) {
             return {
               trade_id: Number(trade.tid),
               time: Number(trade.date) * 1000,
@@ -317,13 +317,13 @@ export default (conf) => {
         })
       } else {
         // WebSocket once Live
-        if (!ws_subscribed)
+        if (!ws_subscribed) {
           wsTrades(opts.product_id)
             .then(function(data: any[]) {
               ws_subscribed = true
               amount_format = opts.product_id.split('-')[0] === 'ETH' ? 1000000 : 100000000 // trade amount is an unformatted integer
               data.forEach(function(trade) {
-                let t = trade.split(':')
+                const t = trade.split(':')
                 ws_trades.push({
                   trade_id: Number(t[4]),
                   time: Number(t[1]),
@@ -341,6 +341,7 @@ export default (conf) => {
               // debug.msg(('getTrades ' + err).red)
               return retry('getTrades', func_args)
             })
+        }
         _.remove(ws_trades, function(t) {
           return t.trade_id <= opts.from
         })
@@ -348,11 +349,11 @@ export default (conf) => {
       }
     },
 
-    getBalance: function(opts, cb) {
-      let func_args = [].slice.call(arguments)
+    getBalance(opts, cb) {
+      const func_args = [].slice.call(arguments)
       wsBalance()
         .then(function(data: Record<string, any>) {
-          let ws_balance = {
+          const ws_balance = {
             currency: n(data.balance[opts.currency]).format('0.00000000'),
             asset: n(data.balance[opts.asset]).format('0.00000000'),
             currency_hold: n(data.obalance[opts.currency]).format('0.00000000'),
@@ -366,11 +367,11 @@ export default (conf) => {
         })
     },
 
-    getQuote: function(opts, cb) {
-      let func_args = [].slice.call(arguments)
+    getQuote(opts, cb) {
+      const func_args = [].slice.call(arguments)
       wsQuote(opts.product_id)
         .then(function(data: Record<string, any>) {
-          let ws_ticker = {
+          const ws_ticker = {
             ask: data.ask,
             bid: data.bid,
           }
@@ -382,8 +383,8 @@ export default (conf) => {
         })
     },
 
-    cancelOrder: function(opts, cb) {
-      let func_args = [].slice.call(arguments)
+    cancelOrder(opts, cb) {
+      const func_args = [].slice.call(arguments)
       wsCancelOrder(opts.order_id)
         .then(function() {
           cb()
@@ -394,8 +395,8 @@ export default (conf) => {
         })
     },
 
-    trade: function(action, opts, cb) {
-      let func_args = [].slice.call(arguments)
+    trade(action, opts, cb) {
+      const func_args = [].slice.call(arguments)
       if (opts.order_type === 'taker') {
         // Looks like WebSocket doesn't support taker/market orders (yet?)
         delete opts.price
@@ -405,12 +406,12 @@ export default (conf) => {
             .multiply(opts.orig_price)
             .value() // CEXIO estimates asset size and uses free currency to performe margin buy
         }
-        let client = authedClient()
+        const client = authedClient()
         client.place_order(joinProduct(opts.product_id), action, opts.size, opts.price, 'market', function(err, body) {
           if (err || (typeof body === 'string' && body.match(/error/))) {
             // debug.msg(('trade ' + (err ? err : body)).red)
             if (body === 'error: Error: Place order error: Insufficient funds.') {
-              let order = {
+              const order = {
                 status: 'rejected',
                 reject_reason: 'balance',
               }
@@ -419,7 +420,7 @@ export default (conf) => {
               return retry('trade', func_args)
             }
           } else {
-            let order = {
+            const order = {
               id: body.id,
               status: 'open',
               price: opts.price,
@@ -441,7 +442,7 @@ export default (conf) => {
           price: opts.price,
         })
           .then(function(data: Record<string, any>) {
-            let order = {
+            const order = {
               id: data.id,
               status: 'open',
               price: data.price,
@@ -461,17 +462,17 @@ export default (conf) => {
       }
     },
 
-    buy: function(opts, cb) {
+    buy(opts, cb) {
       exchange.trade('buy', opts, cb)
     },
 
-    sell: function(opts, cb) {
+    sell(opts, cb) {
       exchange.trade('sell', opts, cb)
     },
 
-    getOrder: function(opts, cb) {
-      let func_args = [].slice.call(arguments)
-      let order = orders['~' + opts.order_id]
+    getOrder(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const order = orders['~' + opts.order_id]
       wsGetOrder(opts.order_id)
         .then(function(data: Record<string, any>) {
           if (data.status === 'c') {
@@ -492,17 +493,17 @@ export default (conf) => {
         })
     },
 
-    setFees: function(opts) {
-      let func_args = [].slice.call(arguments)
-      let client = authedClient()
+    setFees(opts) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       client.get_my_fee(function(err, body) {
         if (err || (typeof body === 'string' && body.match(/error/))) {
           // debug.msg(('setFees ' + (err ? err : body) + ' - using fixed fees!').red)
           return retry('setFees', func_args)
         } else {
-          let pair = opts.asset + ':' + opts.currency
-          let makerFee = (parseFloat(body[pair].buyMaker) + parseFloat(body[pair].sellMaker)) / 2
-          let takerFee = (parseFloat(body[pair].buy) + parseFloat(body[pair].sell)) / 2
+          const pair = opts.asset + ':' + opts.currency
+          const makerFee = (parseFloat(body[pair].buyMaker) + parseFloat(body[pair].sellMaker)) / 2
+          const takerFee = (parseFloat(body[pair].buy) + parseFloat(body[pair].sell)) / 2
           if (exchange.makerFee != makerFee) {
             // debug.msg('Maker fee changed: ' + exchange.makerFee + '% -> ' + makerFee + '%')
             exchange.makerFee = makerFee
@@ -517,7 +518,7 @@ export default (conf) => {
     },
 
     // return the property used for range querying.
-    getCursor: function(trade) {
+    getCursor(trade) {
       return trade.trade_id
     },
   }

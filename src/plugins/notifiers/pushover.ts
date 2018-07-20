@@ -1,13 +1,13 @@
 import request from 'request'
 
 export const pushover = (config) => {
-  var pushover = {
-    pushMessage: function(title, message) {
-      var postData = {
+  const pushover = {
+    pushMessage(title, message) {
+      const postData = {
         token: config.token,
         user: config.user,
         tite: title,
-        message: message,
+        message,
         priority: config.priority,
       }
 
@@ -17,7 +17,7 @@ export const pushover = (config) => {
         }
       }
 
-      var options = {
+      const options = {
         method: 'POST',
         url: 'https://api.pushover.net/1/messages.json',
         json: postData,

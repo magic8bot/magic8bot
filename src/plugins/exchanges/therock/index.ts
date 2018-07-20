@@ -2,7 +2,7 @@ import ccxt from 'ccxt'
 import path from 'path'
 
 export default (conf) => {
-  var public_client, authed_client
+  let public_client, authed_client
 
   function publicClient() {
     if (!public_client) public_client = new ccxt.therock({ apiKey: '', secret: '' })
@@ -33,22 +33,22 @@ export default (conf) => {
     }, 20000)
   }
 
-  var orders = {}
+  const orders = {}
 
-  var exchange = {
+  const exchange = {
     name: 'therock',
     historyScan: 'forward',
     makerFee: 0.3,
     takerFee: 0.2,
 
-    getProducts: function() {
+    getProducts() {
       return require('./products.json')
     },
 
-    getTradesTheRock: function(args, cb, trades = []) {
-      let _this = this
-      let client = publicClient()
-      let market = client.market(args.id)
+    getTradesTheRock(args, cb, trades = []) {
+      const _this = this
+      const client = publicClient()
+      const market = client.market(args.id)
 
       try {
         client
@@ -59,10 +59,10 @@ export default (conf) => {
             args
           )
           .then(function(response) {
-            trades = trades.concat(response['trades'])
+            trades = trades.concat(response.trades)
 
-            if (response['trades'].length > 0 && response['meta'].current.page < response['meta'].next.page) {
-              args['page'] = response['meta'].next.page
+            if (response.trades.length > 0 && response.meta.current.page < response.meta.next.page) {
+              args.page = response.meta.next.page
               return _this.getTradesTheRock(args, cb, trades)
             }
 
@@ -78,8 +78,8 @@ export default (conf) => {
       }
     },
 
-    getTrades: function(opts, cb) {
-      var args: Record<string, any> = {
+    getTrades(opts, cb) {
+      const args: Record<string, any> = {
         id: joinProduct(opts.product_id),
         per_page: 200,
         page: 1,
@@ -92,7 +92,7 @@ export default (conf) => {
       }
 
       this.getTradesTheRock(args, function(result) {
-        var trades = result.map(function(trade) {
+        const trades = result.map(function(trade) {
           return {
             trade_id: trade.id,
             time: trade.timestamp,
@@ -105,13 +105,13 @@ export default (conf) => {
       })
     },
 
-    getBalance: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    getBalance(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       client
         .fetchBalance()
         .then((result) => {
-          var balance: Record<string, any> = { asset: 0, currency: 0 }
+          const balance: Record<string, any> = { asset: 0, currency: 0 }
           Object.keys(result).forEach(function(key) {
             if (key === opts.currency) {
               balance.currency = result[key].free
@@ -130,9 +130,9 @@ export default (conf) => {
         })
     },
 
-    getQuote: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = publicClient()
+    getQuote(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = publicClient()
       client
         .fetchTicker({ id: joinProduct(opts.product_id) })
         .then((result) => {
@@ -144,9 +144,9 @@ export default (conf) => {
         })
     },
 
-    cancelOrder: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    cancelOrder(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       client.cancelOrder(opts.order_id, function(err, resp, body) {
         if (body && (body.message === 'Order already done' || body.message === 'order not found')) return cb()
 
@@ -155,9 +155,9 @@ export default (conf) => {
       })
     },
 
-    buy: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    buy(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       if (typeof opts.post_only === 'undefined') {
         opts.post_only = true
       }
@@ -172,7 +172,7 @@ export default (conf) => {
         .createOrder(opts.market, opts.type, opts.side, opts.amount, opts.price, opts)
         .then((result) => {
           if (result && result.message === 'Insufficient funds') {
-            var order = {
+            const order = {
               status: 'rejected',
               reject_reason: 'balance',
             }
@@ -188,9 +188,9 @@ export default (conf) => {
         })
     },
 
-    sell: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    sell(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       if (typeof opts.post_only === 'undefined') {
         opts.post_only = true
       }
@@ -205,7 +205,7 @@ export default (conf) => {
         .createOrder(opts.market, opts.type, opts.side, opts.amount, opts.price, opts)
         .then((result) => {
           if (result && result.message === 'Insufficient funds') {
-            var order = {
+            const order = {
               status: 'rejected',
               reject_reason: 'balance',
             }
@@ -221,9 +221,9 @@ export default (conf) => {
         })
     },
 
-    getOrder: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    getOrder(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       client.getOrder(opts.order_id, function(err, resp, body) {
         if (err) return retry('getOrder', func_args)
         if (resp.statusCode === 404) {
@@ -236,7 +236,7 @@ export default (conf) => {
       })
     },
 
-    getCursor: function(trade) {
+    getCursor(trade) {
       return trade.time || trade
     },
   }

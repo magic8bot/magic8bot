@@ -3,15 +3,14 @@ import semver from 'semver'
 import { magic8bot } from './conf'
 
 import { Conf } from '@m8bTypes'
-import { dbDriver } from './lib'
 
-import { Core } from './lib'
+import { Core, dbDriver } from '@lib'
 // import { window } from './output'
 
 const checkSharePercent = ({ exchanges }: Conf) => {
   exchanges.forEach(({ exchangeName, options: { strategies } }) => {
-    const share = strategies.reduce((acc, { share }) => (acc += share), 0)
-    if (share > 1) throw new Error(`Exchange ${exchangeName} over 100% share at ${share} --- ctrl+c to exit`)
+    const totalShare = strategies.reduce((acc, { share }) => (acc += share), 0)
+    if (totalShare > 1) throw new Error(`Exchange ${exchangeName} over 100% share at ${totalShare} --- ctrl+c to exit`)
   })
 }
 

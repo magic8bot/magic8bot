@@ -1,13 +1,13 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { rsi, taUltosc } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'ta_ultosc',
   description: 'ULTOSC - Ultimate Oscillator with rsi oversold',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length eg 5m', String, '5m')
     this.option('min_periods', 'min. number of history periods', Number, 52)
     this.option(
@@ -23,7 +23,7 @@ export default {
     this.option('overbought_rsi', 'sold when RSI exceeds this value', Number, 90)
   },
 
-  calculate: function(s) {
+  calculate(s) {
     if (s.options.overbought_rsi) {
       // sync RSI display with overbought RSI periods
       s.options.rsi_periods = s.options.overbought_rsi_periods
@@ -38,7 +38,7 @@ export default {
     }
   },
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     if (!s.in_preroll && typeof s.period.overbought_rsi === 'number') {
       if (s.overbought) {
         s.overbought = false
@@ -49,11 +49,11 @@ export default {
 
     taUltosc(s, s.options.min_periods, s.options.timeperiod1, s.options.timeperiod2, s.options.timeperiod3)
       .then(function(signal) {
-        s.period['ultosc'] = signal
+        s.period.ultosc = signal
 
-        let t = s.signales || {}
+        const t = s.signales || {}
 
-        var signals = {
+        const signals = {
           bottom: t.bottom || 0, // 30 line
           top: t.top || 0, // 70 line
         }
@@ -115,11 +115,11 @@ export default {
       })
   },
 
-  onReport: function(s) {
-    let cols = []
+  onReport(s) {
+    const cols = []
 
     if (typeof s.period.ultosc === 'number') {
-      let signal = z(8, n(s.period.ultosc).format('0.0000'), ' ')
+      const signal = z(8, n(s.period.ultosc).format('0.0000'), ' ')
 
       if (s.period.ultosc <= 30) {
         cols.push(signal.red)
@@ -136,21 +136,21 @@ export default {
   },
 
   phenotypes: {
-    period_length: Phenotypes.RangePeriod(1, 120, 'm'),
-    min_periods: Phenotypes.Range(1, 104),
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 5),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 5),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    period_length: phenotypes.rangePeriod(1, 120, 'm'),
+    min_periods: phenotypes.range0(1, 104),
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 5),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 5),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
-    signal: Phenotypes.ListOption(['simple', 'low', 'trend']),
-    timeperiod1: Phenotypes.Range(1, 50),
-    timeperiod2: Phenotypes.Range(1, 50),
-    timeperiod3: Phenotypes.Range(1, 50),
-    overbought_rsi_periods: Phenotypes.Range(1, 50),
-    overbought_rsi: Phenotypes.Range(20, 100),
+    signal: phenotypes.listOption(['simple', 'low', 'trend']),
+    timeperiod1: phenotypes.range0(1, 50),
+    timeperiod2: phenotypes.range0(1, 50),
+    timeperiod3: phenotypes.range0(1, 50),
+    overbought_rsi_periods: phenotypes.range0(1, 50),
+    overbought_rsi: phenotypes.range0(20, 100),
   },
 }

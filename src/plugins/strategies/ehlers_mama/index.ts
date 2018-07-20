@@ -24,15 +24,15 @@ Travis      ETH = 0xdA963A127BeCB08227583d11f912F400D5347060 , BTC = 3KKHdBJpEGx
 
 import z from 'zero-fill'
 import n from 'numbro'
-import { Phenotypes } from '@util'
-import { crossover, crossunder, nz, iff } from '../../../util/helpers'
+import { phenotypes } from '@util'
+import { crossover, crossunder, nz, iff } from '@util'
 import * as tv from '../../../util/helpers'
 
 export default {
-  name: 'Ehlers MAMA',
   description: 'Ehlers MESA Adaptive Moving Average',
+  name: 'Ehlers MAMA',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length eg 10m', String, '60m')
     this.option('min_periods', 'min. number of history periods', Number, 6)
 
@@ -42,27 +42,29 @@ export default {
     this.option('price_source', '', String, 'HAohlc4')
   },
 
-  calculate: function() {},
+  calculate() {
+    //
+  },
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     if (!s.mama) {
       s.mama = {
-        src: [],
-        sp: [],
         dt: [],
-        q1: [],
+        fama: [],
         i1: [],
         i2: [],
-        q2: [],
-        re: [],
         im: [],
+        mama: [],
         p: [],
         p1: [],
         p3: [],
-        spp: [],
         phase: [],
-        mama: [],
-        fama: [],
+        q1: [],
+        q2: [],
+        re: [],
+        sp: [],
+        spp: [],
+        src: [],
       }
     }
 
@@ -76,10 +78,10 @@ export default {
       } else if (s.options.price_source === 'ohlc4') {
         s.mama.src.unshift(tv.ohlc4(s.period))
       } else if (s.options.price_source === 'HAohlc4') {
-        s.mama.src.unshift(tv.HAohlc4(s))
+        s.mama.src.unshift(tv.hAohlc4(s))
       }
 
-      //s.mama.src.unshift((s.period.high + s.period.low) / 2)
+      // s.mama.src.unshift((s.period.high + s.period.low) / 2)
       s.mama.sp.unshift((4 * s.mama.src[0] + 3 * s.mama.src[1] + 2 * s.mama.src[2] + s.mama.src[3]) / 10.0)
       s.mama.dt.unshift(
         (0.0962 * s.mama.sp[0] + 0.5769 * nz(s.mama.sp[2]) - 0.5769 * nz(s.mama.sp[4]) - 0.0962 * nz(s.mama.sp[6])) *
@@ -90,24 +92,24 @@ export default {
           (0.075 * nz(s.mama.p[0]) + 0.54)
       )
       s.mama.i1.unshift(nz(s.mama.dt[3]))
-      let jI =
+      const jI =
         (0.0962 * s.mama.i1[0] + 0.5769 * nz(s.mama.i1[2]) - 0.5769 * nz(s.mama.i1[4]) - 0.0962 * nz(s.mama.i1[6])) *
         (0.075 * nz(s.mama.p[0]) + 0.54)
-      let jq =
+      const jq =
         (0.0962 * s.mama.q1[0] + 0.5769 * nz(s.mama.q1[2]) - 0.5769 * nz(s.mama.q1[4]) - 0.0962 * nz(s.mama.q1[6])) *
         (0.075 * nz(s.mama.p[0]) + 0.54)
-      let i2_ = s.mama.i1[0] - jq
-      let q2_ = s.mama.q1[0] + jI
+      const i2_ = s.mama.i1[0] - jq
+      const q2_ = s.mama.q1[0] + jI
       s.mama.i2.unshift(0.2 * i2_ + 0.8 * nz(s.mama.i2[0]))
       s.mama.q2.unshift(0.2 * q2_ + 0.8 * nz(s.mama.q2[0]))
-      let re_ = s.mama.i2[0] * nz(s.mama.i2[1]) + s.mama.q2[0] * nz(s.mama.q2[1])
-      let im_ = s.mama.i2[0] * nz(s.mama.q2[1]) - s.mama.q2[0] * nz(s.mama.i2[1])
+      const re_ = s.mama.i2[0] * nz(s.mama.i2[1]) + s.mama.q2[0] * nz(s.mama.q2[1])
+      const im_ = s.mama.i2[0] * nz(s.mama.q2[1]) - s.mama.q2[0] * nz(s.mama.i2[1])
       s.mama.re.unshift(0.2 * re_ + 0.8 * nz(s.mama.re[0]))
       s.mama.im.unshift(0.2 * im_ + 0.8 * nz(s.mama.im[0]))
       s.mama.p1.unshift(
         iff(s.mama.im[0] != 0 && s.mama.re[0] != 0, 360 / Math.atan(s.mama.im[0] / s.mama.re[0]), nz(s.mama.p[0]))
       )
-      let p2 = iff(
+      const p2 = iff(
         s.mama.p1[0] > 1.5 * nz(s.mama.p1[1]),
         1.5 * nz(s.mama.p1[1]),
         iff(s.mama.p1[0] < 0.67 * nz(s.mama.p1[1]), 0.67 * nz(s.mama.p1[1]), s.mama.p1[0])
@@ -116,10 +118,10 @@ export default {
       s.mama.p.unshift(0.2 * s.mama.p3[0] + 0.8 * nz(s.mama.p3[1]))
       s.mama.spp.unshift(0.33 * s.mama.p[0] + 0.67 * nz(s.mama.spp[0]))
       s.mama.phase.unshift(Math.atan(s.mama.q1[0] / s.mama.i1[0]))
-      let dphase_ = nz(s.mama.phase[1]) - s.mama.phase[0]
-      let dphase = iff(dphase_ < 1, 1, dphase_)
-      let alpha_ = s.options.mama_fastlimit / dphase
-      let alpha = iff(
+      const dphase_ = nz(s.mama.phase[1]) - s.mama.phase[0]
+      const dphase = iff(dphase_ < 1, 1, dphase_)
+      const alpha_ = s.options.mama_fastlimit / dphase
+      const alpha = iff(
         alpha_ < s.options.mama_slowlimit,
         s.options.mama_slowlimit,
         iff(alpha_ > s.options.mama_fastlimit, s.options.mama_fastlimit, alpha_)
@@ -133,10 +135,11 @@ export default {
       }
       s.period.fama = s.mama.fama[0]
 
-      if (s.mama.src.length > 7)
+      if (s.mama.src.length > 7) {
         Object.keys(s.mama).forEach((k) => {
           s.mama[k].pop()
         })
+      }
 
       if (!s.in_preroll) {
         if (crossover(s, 'mama', 'fama')) s.signal = 'buy'
@@ -147,10 +150,10 @@ export default {
     cb()
   },
 
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
     let color = 'cyan'
-    let FamaMamaDelta = ((s.period.mama - s.period.fama) / s.period.mama) * 100
+    const FamaMamaDelta = ((s.period.mama - s.period.fama) / s.period.mama) * 100
 
     if (s.period.fama < s.period.mama) {
       color = 'green'
@@ -167,20 +170,20 @@ export default {
   },
 
   phenotypes: {
-    //General Options
-    period_length: Phenotypes.RangePeriod(5, 240, 'm'),
-    min_periods: Phenotypes.Range(10, 10),
-    markdown_buy_pct: Phenotypes.RangeFloat(0, 0),
-    markup_sell_pct: Phenotypes.RangeFloat(0, 0),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 10),
+    // General Options
+    period_length: phenotypes.rangePeriod(5, 240, 'm'),
+    min_periods: phenotypes.range0(10, 10),
+    markdown_buy_pct: phenotypes.rangeFloat(0, 0),
+    markup_sell_pct: phenotypes.rangeFloat(0, 0),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range0(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 10),
 
-    //Strategy Specific
-    mama_fastlimit: Phenotypes.RangeFactor(0.1, 0.9, 0.1),
-    mama_slow_limit: Phenotypes.RangeFactor(0.01, 0.09, 0.01),
-    price_source: Phenotypes.ListOption(['hl2', 'hlc3', 'ohlc4', 'HAohlc4']),
+    // Strategy Specific
+    mama_fastlimit: phenotypes.rangeFactor(0.1, 0.9, 0.1),
+    mama_slow_limit: phenotypes.rangeFactor(0.01, 0.09, 0.01),
+    price_source: phenotypes.listOption(['hl2', 'hlc3', 'ohlc4', 'HAohlc4']),
   },
 }

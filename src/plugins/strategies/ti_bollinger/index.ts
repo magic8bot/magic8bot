@@ -1,13 +1,13 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { tiBollinger } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'ti_bollinger',
   description: 'Buy when (Signal ≤ Lower Bollinger Band) and sell when (Signal ≥ Upper Bollinger Band).',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length, same as --period_length', String, '5m')
     this.option('period_length', 'period length, same as --period', String, '5m')
     this.option('bollinger_size', 'period size', Number, 14)
@@ -31,23 +31,23 @@ export default {
     )
   },
 
-  calculate: function(s) {
+  calculate(s) {
     if (s.in_preroll) return
   },
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     tiBollinger(s, 'tulip_bollinger', s.options.bollinger_size, s.options.bollinger_time)
       .then(function(result: Record<string, any>) {
         if (!result) cb()
-        let bollinger = {
+        const bollinger = {
           LowerBand: result.LowerBand[result.LowerBand.length - 1],
           MiddleBand: result.MiddleBand[result.MiddleBand.length - 1],
           UpperBand: result.UpperBand[result.UpperBand.length - 1],
         }
         s.period.report = bollinger
         if (bollinger.UpperBand) {
-          let upperBound = (bollinger.UpperBand / 100) * (100 - s.options.bollinger_upper_bound_pct)
-          let lowerBound = (bollinger.LowerBand / 100) * (100 + s.options.bollinger_lower_bound_pct)
+          const upperBound = (bollinger.UpperBand / 100) * (100 - s.options.bollinger_upper_bound_pct)
+          const lowerBound = (bollinger.LowerBand / 100) * (100 + s.options.bollinger_lower_bound_pct)
           s.signal = null // hold
           if (s.period.close < lowerBound) {
             s.signal = 'buy'
@@ -64,13 +64,13 @@ export default {
       })
   },
 
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
     if (s.period.report) {
       if (s.period.report.UpperBand && s.period.report.LowerBand) {
-        let upperBound = s.period.report.UpperBand
-        let lowerBound = s.period.report.LowerBand
-        var color = 'grey'
+        const upperBound = s.period.report.UpperBand
+        const lowerBound = s.period.report.LowerBand
+        let color = 'grey'
         if (s.period.close > (upperBound / 100) * (100 - s.options.bollinger_upper_bound_pct)) {
           color = 'green'
         } else if (s.period.close < (lowerBound / 100) * (100 + s.options.bollinger_lower_bound_pct)) {
@@ -104,20 +104,20 @@ export default {
 
   phenotypes: {
     // -- common
-    period_length: Phenotypes.RangePeriod(1, 120, 'm'),
-    markdown_buy_pct: Phenotypes.RangeFactor(-1.0, 5.0, 0.1),
-    markup_sell_pct: Phenotypes.RangeFactor(-1.0, 5.0, 0.1),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.RangeFactor(0.0, 50.0, 0.01),
-    buy_stop_pct: Phenotypes.RangeFactor(0.0, 50.0, 0.01),
-    profit_stop_enable_pct: Phenotypes.RangeFactor(0.0, 5.0, 0.1),
-    profit_stop_pct: Phenotypes.RangeFactor(0.0, 20.0, 0.1),
-    rsi_periods: Phenotypes.Range(6, 16),
+    period_length: phenotypes.rangePeriod(1, 120, 'm'),
+    markdown_buy_pct: phenotypes.rangeFactor(-1.0, 5.0, 0.1),
+    markup_sell_pct: phenotypes.rangeFactor(-1.0, 5.0, 0.1),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.rangeFactor(0.0, 50.0, 0.01),
+    buy_stop_pct: phenotypes.rangeFactor(0.0, 50.0, 0.01),
+    profit_stop_enable_pct: phenotypes.rangeFactor(0.0, 5.0, 0.1),
+    profit_stop_pct: phenotypes.rangeFactor(0.0, 20.0, 0.1),
+    rsi_periods: phenotypes.range0(6, 16),
 
     // -- strategy
-    bollinger_size: Phenotypes.RangeFactor(1, 30, 1),
-    bollinger_time: Phenotypes.RangeFactor(1.0, 14.0, 0.1),
-    bollinger_upper_bound_pct: Phenotypes.RangeFactor(0.0, 100.0, 0.1),
-    bollinger_lower_bound_pct: Phenotypes.RangeFactor(0.0, 100.0, 0.1),
+    bollinger_size: phenotypes.rangeFactor(1, 30, 1),
+    bollinger_time: phenotypes.rangeFactor(1.0, 14.0, 0.1),
+    bollinger_upper_bound_pct: phenotypes.rangeFactor(0.0, 100.0, 0.1),
+    bollinger_lower_bound_pct: phenotypes.rangeFactor(0.0, 100.0, 0.1),
   },
 }

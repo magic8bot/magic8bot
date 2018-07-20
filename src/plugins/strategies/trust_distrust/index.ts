@@ -1,13 +1,13 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'trust_distrust',
   description:
     'Sell when price higher than $sell_min% and highest point - $sell_threshold% is reached. Buy when lowest price point + $buy_threshold% reached.',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length, same as --period_length', String, '30m')
     this.option('period_length', 'period length, same as --period', String, '30m')
     this.option('min_periods', 'min. number of history periods', Number, 52)
@@ -34,7 +34,7 @@ export default {
     this.option('greed', 'sell if we reach this much profit (0 to be greedy and either win or lose)', Number, 0)
   },
 
-  calculate: function(s) {
+  calculate(s) {
     if (typeof s.trust_distrust_start_greed === 'undefined') {
       s.trust_distrust_start_greed = s.period.high
     }
@@ -65,7 +65,7 @@ export default {
     }
   },
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     if (s.greedy) {
       s.signal = s.trust_distrust_last_action
       return cb()
@@ -150,9 +150,9 @@ export default {
     return cb()
   },
 
-  onReport: function(s) {
-    var cols = []
-    var color = 'grey'
+  onReport(s) {
+    const cols = []
+    let color = 'grey'
     if (s.period.high > s.trust_distrust_start) {
       color = 'green'
     } else if (s.period.high < s.trust_distrust_lowest) {
@@ -165,22 +165,22 @@ export default {
 
   phenotypes: {
     // -- common
-    period_length: Phenotypes.RangePeriod(1, 120, 'm'),
-    min_periods: Phenotypes.Range(1, 100),
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 5),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 5),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    period_length: phenotypes.rangePeriod(1, 120, 'm'),
+    min_periods: phenotypes.range0(1, 100),
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 5),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 5),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
     // -- strategy
-    sell_threshold: Phenotypes.Range(1, 100),
-    sell_threshold_max: Phenotypes.Range0(1, 100),
-    sell_min: Phenotypes.Range(1, 100),
-    buy_threshold: Phenotypes.Range(1, 100),
-    buy_threshold_max: Phenotypes.Range0(1, 100),
-    greed: Phenotypes.Range(1, 100),
+    sell_threshold: phenotypes.range0(1, 100),
+    sell_threshold_max: phenotypes.range1(1, 100),
+    sell_min: phenotypes.range0(1, 100),
+    buy_threshold: phenotypes.range0(1, 100),
+    buy_threshold_max: phenotypes.range1(1, 100),
+    greed: phenotypes.range0(1, 100),
   },
 }

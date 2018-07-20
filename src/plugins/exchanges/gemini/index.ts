@@ -5,18 +5,19 @@ import minimist from 'minimist'
 import n from 'numbro'
 
 export default (conf) => {
-  var s = {
+  const s = {
     options: minimist(process.argv),
   }
-  var so = s.options
+  const so = s.options
 
-  var public_client, authed_client
+  let public_client, authed_client
 
   function publicClient() {
-    if (!public_client)
+    if (!public_client) {
       public_client = new GeminiAPI.default({
         sandbox: conf.gemini.sandbox || false,
       })
+    }
     return public_client
   }
 
@@ -61,30 +62,30 @@ export default (conf) => {
     if (so.debug) console.log(msg)
   }
 
-  var orders = {}
+  const orders = {}
 
-  var exchange = {
+  const exchange = {
     name: 'gemini',
     historyScan: 'forward',
     makerFee: 0.1,
     takerFee: 0.1,
 
-    getProducts: function() {
+    getProducts() {
       return require('./products.json')
     },
 
-    getTrades: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var args = {
+    getTrades(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const args = {
         limit_trades: 1000,
         since: opts.from,
       }
 
-      var client = publicClient()
+      const client = publicClient()
       client
         .getTradeHistory(joinProduct(opts.product_id), args)
         .then((body) => {
-          var trades = body
+          const trades = body
             .filter((t) => {
               return t.type !== 'auction'
             })
@@ -103,17 +104,17 @@ export default (conf) => {
         .catch((error) => retry('getTrades', func_args, error))
     },
 
-    getBalance: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
+    getBalance(opts, cb) {
+      const func_args = [].slice.call(arguments)
 
-      var client = authedClient()
+      const client = authedClient()
       client
         .getMyAvailableBalances()
         .then((body) => {
-          var asset = body.find((x) => x.currency.toLowerCase() === opts.asset.toLowerCase())
-          var currency = body.find((x) => x.currency.toLowerCase() === opts.currency.toLowerCase())
+          const asset = body.find((x) => x.currency.toLowerCase() === opts.asset.toLowerCase())
+          const currency = body.find((x) => x.currency.toLowerCase() === opts.currency.toLowerCase())
 
-          var balance = {
+          const balance = {
             asset: n(asset.amount).format('0.00000'),
             asset_hold: n(asset.amount)
               .subtract(asset.available)
@@ -133,14 +134,14 @@ export default (conf) => {
         .catch((error) => retry('getBalance', func_args, error))
     },
 
-    getQuote: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
+    getQuote(opts, cb) {
+      const func_args = [].slice.call(arguments)
 
-      var client = publicClient()
+      const client = publicClient()
       client
         .getTicker(joinProduct(opts.product_id))
         .then((body) => {
-          var r = {
+          const r = {
             bid: String(body.bid),
             ask: String(body.ask),
           }
@@ -150,23 +151,23 @@ export default (conf) => {
         .catch((error) => retry('getQuote', func_args, error))
     },
 
-    cancelOrder: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var params = {
+    cancelOrder(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const params = {
         order_id: opts.order_id,
       }
 
       debugOut(`Cancelling order ${opts.order_id}`)
 
-      var client = authedClient()
+      const client = authedClient()
       client
         .cancelOrder(params)
         .then(cb())
         .catch((error) => retry('cancelOrder', func_args, error))
     },
 
-    buy: function(opts, cb) {
-      var params = {
+    buy(opts, cb) {
+      const params = {
         symbol: joinProduct(opts.product_id),
         amount: n(opts.size).format('0.00000'),
         price: n(opts.price).format('0.00'),
@@ -183,11 +184,11 @@ export default (conf) => {
 
       debugOut(`Requesting ${opts.order_type} buy for ${opts.size} assets`)
 
-      var client = authedClient()
+      const client = authedClient()
       client
         .newOrder(params)
         .then((body) => {
-          var order: Record<string, any> = {
+          const order: Record<string, any> = {
             id: body.order_id,
             status: 'open',
             price: Number(opts.price),
@@ -199,7 +200,7 @@ export default (conf) => {
           }
 
           if (opts.post_only && body.is_cancelled) {
-            ;(order.status = 'rejected'), (order.reject_reason = 'post only')
+            ; (order.status = 'rejected'), (order.reject_reason = 'post only')
           }
 
           debugOut(`    Purchase ID: ${body.id}`)
@@ -210,8 +211,8 @@ export default (conf) => {
         .catch((error) => cb(error))
     },
 
-    sell: function(opts, cb) {
-      var params = {
+    sell(opts, cb) {
+      const params = {
         symbol: joinProduct(opts.product_id),
         amount: n(opts.size).format('0.00000'),
         price: n(opts.price).format('0.00'),
@@ -228,11 +229,11 @@ export default (conf) => {
 
       debugOut(`Requesting ${opts.order_type} sell for ${opts.size} assets`)
 
-      var client = authedClient()
+      const client = authedClient()
       client
         .newOrder(params)
         .then((body) => {
-          var order: Record<string, any> = {
+          const order: Record<string, any> = {
             id: body.order_id,
             status: 'open',
             price: Number(opts.price),
@@ -244,7 +245,7 @@ export default (conf) => {
           }
 
           if (opts.post_only && body.is_cancelled) {
-            ;(order.status = 'rejected'), (order.reject_reason = 'post only')
+            ; (order.status = 'rejected'), (order.reject_reason = 'post only')
           }
 
           debugOut(`    Purchase ID: ${body.id}`)
@@ -255,13 +256,13 @@ export default (conf) => {
         .catch((error) => cb(error))
     },
 
-    getOrder: function(opts, cb) {
-      var order = orders['~' + opts.order_id]
-      var params = {
+    getOrder(opts, cb) {
+      const order = orders['~' + opts.order_id]
+      const params = {
         order_id: opts.order_id,
       }
 
-      var client = authedClient()
+      const client = authedClient()
       client
         .getMyOrderStatus(params)
         .then((body) => {
@@ -289,7 +290,7 @@ export default (conf) => {
     },
 
     // return the property used for range querying.
-    getCursor: function(trade) {
+    getCursor(trade) {
       return trade.time || trade
     },
   }

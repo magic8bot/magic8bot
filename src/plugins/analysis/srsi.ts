@@ -1,20 +1,20 @@
 import mathjs from 'mathjs'
 import { rsi } from './rsi'
 
-export const srsi = (s, key, rsi_periods, k_periods, d_periods) => {
-  let samplesRequiredForStochRSI = rsi_periods + k_periods + 1
+export const srsi = (s, key, rsiPeriods, kPeriods, dPeriods) => {
+  const samplesRequiredForStochRSI = rsiPeriods + kPeriods + 1
 
   if (s.lookback.length >= samplesRequiredForStochRSI - 1) {
-    let RSI = []
+    const RSI = []
 
     if (typeof s.period.rsi !== 'undefined') {
       RSI.push(s.period.rsi)
     } else {
-      rsi(s, 'rsi', rsi_periods)
+      rsi(s, 'rsi', rsiPeriods)
       RSI.push(s.period.rsi)
     }
 
-    s.lookback.slice(0, samplesRequiredForStochRSI - 1).forEach(function(period) {
+    s.lookback.slice(0, samplesRequiredForStochRSI - 1).forEach((period) => {
       if (period.rsi) {
         RSI.push(period.rsi)
       }
@@ -23,40 +23,41 @@ export const srsi = (s, key, rsi_periods, k_periods, d_periods) => {
     RSI.reverse()
 
     if (RSI.length >= samplesRequiredForStochRSI) {
-      let stochRSI = []
-      for (let i = 0; i < k_periods + d_periods - 1; i++) {
-        let rsiForPeriod = RSI.slice(i, rsi_periods + i)
-        let highestRSI = Math.max(...rsiForPeriod)
-        let lowestRSI = Math.min(...rsiForPeriod)
-        if (highestRSI == lowestRSI) {
+      const stochRSI = []
+      for (let i = 0; i < kPeriods + dPeriods - 1; i++) {
+        const rsiForPeriod = RSI.slice(i, rsiPeriods + i)
+        const highestRSI = Math.max(...rsiForPeriod)
+        const lowestRSI = Math.min(...rsiForPeriod)
+        if (highestRSI === lowestRSI) {
           stochRSI.push(0)
         } else {
-          stochRSI.push(((RSI[rsi_periods - 1 + i] - lowestRSI) / (highestRSI - lowestRSI)) * 100)
+          stochRSI.push(((RSI[rsiPeriods - 1 + i] - lowestRSI) / (highestRSI - lowestRSI)) * 100)
         }
       }
 
       stochRSI.reverse()
 
-      let percentK = []
-      for (let i = 0; i < k_periods; i++) {
-        let kData = stochRSI.slice(i, k_periods + i)
-        if (kData.length == k_periods) {
+      const percentK = []
+      for (let i = 0; i < kPeriods; i++) {
+        const kData = stochRSI.slice(i, kPeriods + i)
+        if (kData.length === kPeriods) {
           percentK.push(mathjs.mean(kData))
         }
       }
 
-      let percentD = []
-      for (let i = 0; i < d_periods; i++) {
-        let dData = percentK.slice(i, d_periods + i)
-        if (dData.length == d_periods) {
+      const percentD = []
+      for (let i = 0; i < dPeriods; i++) {
+        const dData = percentK.slice(i, dPeriods + i)
+        if (dData.length === dPeriods) {
           percentD.push(mathjs.mean(dData))
         }
       }
 
-      s.period[key + '_K'] = percentK[0] == 0 ? 0 : mathjs.round(percentK[0], 2)
-      s.period[key + '_D'] = percentD[0] == 0 ? 0 : mathjs.round(percentD[0], 2)
+      s.period[key + '_K'] = percentK[0] === 0 ? 0 : mathjs.round(percentK[0], 2)
+      s.period[key + '_D'] = percentD[0] === 0 ? 0 : mathjs.round(percentD[0], 2)
 
-      //console.log('lib.srsi: For RSI', RSI[RSI.length - 1], '-', '%K is', s.period[key + '_K'], ', %D is', s.period[key + '_D'], ', period info', s.period);
+      // console.log('lib.srsi: For RSI', RSI[RSI.length - 1],
+      // '-', '%K is', s.period[key + '_K'], ', %D is', s.period[key + '_D'], ', period info', s.period);
     }
   }
 }

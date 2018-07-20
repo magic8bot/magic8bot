@@ -1,7 +1,7 @@
 import { loadStrategy } from '@plugins'
 import { PeriodStore } from '@stores'
 
-interface IStrategy {
+interface Strategy {
   name: string
   description: string
   getOptions: () => void
@@ -18,15 +18,15 @@ interface LocalState {
 }
 
 export class StrategyService {
-  private readonly strategy: IStrategy
+  private readonly strategy: Strategy
   private readonly periodStore: PeriodStore
 
   private lastSignal: 'buy' | 'sell' = null
 
   private localState: LocalState = {
-    period: {},
     lookback: [],
     options: {},
+    period: {},
     signal: null,
   }
 
@@ -43,11 +43,11 @@ export class StrategyService {
     return this.strategy.description
   }
 
-  getOptions() {
+  public getOptions() {
     return this.strategy.getOptions()
   }
 
-  async calculate() {
+  public async calculate() {
     this.strategy.calculate(this.localState)
 
     // this will calculate signal on every update
@@ -58,13 +58,13 @@ export class StrategyService {
     }
   }
 
-  onPeriod() {
+  public onPeriod() {
     this.localState.lookback.unshift(this.localState.period)
     this.localState.period = this.periodStore.periods[0]
     this.localState.signal = null
   }
 
-  async onReport() {
+  public async onReport() {
     return this.strategy.onReport(this.localState)
   }
 }

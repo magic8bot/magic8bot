@@ -2,15 +2,15 @@
 
 const talib = require('talib')
 
-export const taWillr = (s, min_periods, timeperiod) => {
-  return new Promise(function(resolve, reject) {
+export const taWillr = (s, minPeriods, timeperiod) => {
+  return new Promise((resolve, reject) => {
     // create object for talib. only close is used for now but rest might come in handy
     if (!s.marketData) {
       s.marketData = { open: [], close: [], high: [], low: [], volume: [] }
     }
 
     if (s.lookback.length > s.marketData.close.length) {
-      for (var i = s.lookback.length - s.marketData.close.length - 1; i >= 0; i--) {
+      for (let i = s.lookback.length - s.marketData.close.length - 1; i >= 0; i--) {
         s.marketData.high.push(s.lookback[i].high)
         s.marketData.low.push(s.lookback[i].low)
         s.marketData.close.push(s.lookback[i].close)
@@ -18,34 +18,34 @@ export const taWillr = (s, min_periods, timeperiod) => {
       }
     }
 
-    if (s.marketData.close.length < min_periods) {
+    if (s.marketData.close.length < minPeriods) {
       resolve()
       return
     }
 
-    let tmpHigh = s.marketData.high.slice()
+    const tmpHigh = s.marketData.high.slice()
     tmpHigh.push(s.period.high)
 
-    let tmpLow = s.marketData.low.slice()
+    const tmpLow = s.marketData.low.slice()
     tmpLow.push(s.period.low)
 
-    let tmpClose = s.marketData.close.slice()
+    const tmpClose = s.marketData.close.slice()
     tmpClose.push(s.period.close)
 
-    let tmpVolume = s.marketData.volume.slice()
+    const tmpVolume = s.marketData.volume.slice()
     tmpVolume.push(s.period.volume)
 
     talib.execute(
       {
-        name: 'WILLR',
-        startIdx: 0,
+        close: tmpClose,
         endIdx: tmpHigh.length - 1,
         high: tmpHigh,
         low: tmpLow,
-        close: tmpClose,
+        name: 'WILLR',
         optInTimePeriod: timeperiod || 14,
+        startIdx: 0,
       },
-      function(err, result) {
+      (err, result) => {
         if (err) {
           console.log(err)
           reject(err)

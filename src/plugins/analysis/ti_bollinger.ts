@@ -1,24 +1,24 @@
 import tulind from 'tulind'
 
-export const tiBollinger = (s, key, rsi_periods, StdDev, optMarket?) => {
-  return new Promise(function(resolve, reject) {
-    //dont calculate until we have enough data
+export const tiBollinger = (s, key, rsiPeriods, stdDev, optMarket?) => {
+  return new Promise((resolve, reject) => {
+    // dont calculate until we have enough data
 
     let tmpMarket = optMarket
     if (!tmpMarket) {
       tmpMarket = s.lookback.slice(0, 1000).map((x) => x.close)
       tmpMarket.reverse()
-      //add current period
+      // add current period
       tmpMarket.push(s.period.close)
     } else {
       tmpMarket = tmpMarket.map((x) => x.close)
     }
-    if (tmpMarket.length >= rsi_periods) {
-      //doublecheck length.
-      if (tmpMarket.length >= rsi_periods) {
+    if (tmpMarket.length >= rsiPeriods) {
+      // doublecheck length.
+      if (tmpMarket.length >= rsiPeriods) {
         // extract int from string input for ma_type
 
-        tulind.indicators.bbands.indicator([tmpMarket], [rsi_periods, StdDev], function(err, result) {
+        tulind.indicators.bbands.indicator([tmpMarket], [rsiPeriods, stdDev], (err, result) => {
           if (err) {
             console.log(err)
             reject(err)

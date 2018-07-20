@@ -1,7 +1,9 @@
-export const momentum = (s, key, source_key, length) => {
-  if (s.lookback == null || s.lookback.length < length || s.period == null || s.period[source_key] == null) {
-    s.period[key] = 0
-  } else {
-    s.period[key] = s.period[source_key] - s.lookback[length - 1][source_key]
-  }
+export const momentum = (s, key, sourceKey, length) => {
+  s.period[key] =
+    s.lookback === undefined ||
+    s.lookback.length < length ||
+    s.period === undefined ||
+    s.period[sourceKey] === undefined
+      ? 0
+      : (s.period[key] = s.period[sourceKey] - s.lookback[length - 1][sourceKey])
 }

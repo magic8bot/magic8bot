@@ -1,4 +1,4 @@
 export const normalizeSelector = (selector) => {
-  var parts = selector.split('.')
+  const parts = selector.split('.')
   return parts[0].toLowerCase() + '.' + (parts[1] || '').toUpperCase()
 }

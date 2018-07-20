@@ -6,17 +6,17 @@ import moment from 'moment'
 import n from 'numbro'
 
 export default (conf) => {
-  var s = {
+  const s = {
     options: minimist(process.argv),
   }
-  var so = s.options
+  const so = s.options
 
-  var public_client, authed_client
+  let public_client, authed_client
   // var recoverableErrors = new RegExp(/(ESOCKETTIMEDOUT|ETIMEDOUT|ECONNRESET|ECONNREFUSED|ENOTFOUND|API:Invalid nonce|API:Rate limit exceeded|between Cloudflare and the origin web server)/)
-  var recoverableErrors = new RegExp(
+  const recoverableErrors = new RegExp(
     /(ESOCKETTIMEDOUT|ETIMEDOUT|ECONNRESET|ECONNREFUSED|ENOTFOUND|API:Invalid nonce|between Cloudflare and the origin web server|The web server reported a gateway time-out|The web server reported a bad gateway|525: SSL handshake failed|Service:Unavailable|api.kraken.com \| 522:)/
   )
-  var silencedRecoverableErrors = new RegExp(/(ESOCKETTIMEDOUT|ETIMEDOUT)/)
+  const silencedRecoverableErrors = new RegExp(/(ESOCKETTIMEDOUT|ETIMEDOUT)/)
 
   function publicClient() {
     if (!public_client) {
@@ -38,10 +38,10 @@ export default (conf) => {
   // This is to deal with a silly bug where kraken doesn't use a consistent definition for currency
   // with certain assets they will mix the use of 'Z' and 'X' prefixes
   function joinProductFormatted(product_id) {
-    var asset = product_id.split('-')[0]
-    var currency = product_id.split('-')[1]
+    const asset = product_id.split('-')[0]
+    let currency = product_id.split('-')[1]
 
-    var assetsToFix = ['BCH', 'DASH', 'EOS', 'GNO']
+    const assetsToFix = ['BCH', 'DASH', 'EOS', 'GNO']
     if (assetsToFix.indexOf(asset) >= 0 && currency.length > 3) {
       currency = currency.substring(1)
     }
@@ -83,9 +83,9 @@ export default (conf) => {
     }, timeout)
   }
 
-  var orders = {}
+  const orders = {}
 
-  var exchange = {
+  const exchange = {
     name: 'kraken',
     historyScan: 'forward',
     makerFee: 0.16,
@@ -93,14 +93,14 @@ export default (conf) => {
     // The limit for the public API is not documented, 1750 ms between getTrades in backfilling seems to do the trick to omit warning messages.
     backfillRateLimit: 3500,
 
-    getProducts: function() {
+    getProducts() {
       return require('./products.json')
     },
 
-    getTrades: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = publicClient()
-      var args: Record<string, any> = {
+    getTrades(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = publicClient()
+      const args: Record<string, any> = {
         pair: joinProductFormatted(opts.product_id),
       }
       if (opts.from) {
@@ -120,9 +120,9 @@ export default (conf) => {
           return cb(data.error.join(','))
         }
 
-        var trades = []
+        const trades = []
         Object.keys(data.result[args.pair]).forEach(function(i) {
-          var trade = data.result[args.pair][i]
+          const trade = data.result[args.pair][i]
           // @ts-ignore
           if (!opts.from || Number(opts.from) < moment.unix(trade[2].valueOf())) {
             trades.push({
@@ -139,11 +139,11 @@ export default (conf) => {
       })
     },
 
-    getBalance: function(opts, cb) {
-      var args = [].slice.call(arguments)
-      var client = authedClient()
+    getBalance(opts, cb) {
+      const args = [].slice.call(arguments)
+      const client = authedClient()
       client.api('Balance', null, function(error, data) {
-        var balance = {
+        const balance = {
           asset: '0',
           asset_hold: '0',
           currency: '0',
@@ -177,14 +177,14 @@ export default (conf) => {
       })
     },
 
-    getQuote: function(opts, cb) {
-      var args = [].slice.call(arguments)
-      var client = publicClient()
-      var pair = joinProductFormatted(opts.product_id)
+    getQuote(opts, cb) {
+      const args = [].slice.call(arguments)
+      const client = publicClient()
+      const pair = joinProductFormatted(opts.product_id)
       client.api(
         'Ticker',
         {
-          pair: pair,
+          pair,
         },
         function(error, data) {
           if (error) {
@@ -206,9 +206,9 @@ export default (conf) => {
       )
     },
 
-    cancelOrder: function(opts, cb) {
-      var args = [].slice.call(arguments)
-      var client = authedClient()
+    cancelOrder(opts, cb) {
+      const args = [].slice.call(arguments)
+      const client = authedClient()
       client.api(
         'CancelOrder',
         {
@@ -235,12 +235,12 @@ export default (conf) => {
       )
     },
 
-    trade: function(type, opts, cb) {
-      var args = [].slice.call(arguments)
-      var client = authedClient()
-      var params: Record<string, any> = {
+    trade(type, opts, cb) {
+      const args = [].slice.call(arguments)
+      const client = authedClient()
+      const params: Record<string, any> = {
         pair: joinProductFormatted(opts.product_id),
-        type: type,
+        type,
         ordertype: opts.order_type === 'taker' ? 'market' : 'limit',
         volume: opts.size,
         trading_agreement: conf.kraken.tosagree,
@@ -260,7 +260,7 @@ export default (conf) => {
           return retry('trade', args, error)
         }
 
-        var order: Record<string, any> = {
+        const order: Record<string, any> = {
           id: data && data.result ? data.result.txid[0] : null,
           status: 'open',
           price: opts.price,
@@ -306,20 +306,20 @@ export default (conf) => {
       })
     },
 
-    buy: function(opts, cb) {
+    buy(opts, cb) {
       exchange.trade('buy', opts, cb)
     },
 
-    sell: function(opts, cb) {
+    sell(opts, cb) {
       exchange.trade('sell', opts, cb)
     },
 
-    getOrder: function(opts, cb) {
-      var args = [].slice.call(arguments)
-      var order = orders['~' + opts.order_id]
+    getOrder(opts, cb) {
+      const args = [].slice.call(arguments)
+      const order = orders['~' + opts.order_id]
       if (!order) return cb(new Error('order not found in cache'))
-      var client = authedClient()
-      var params = {
+      const client = authedClient()
+      const params = {
         txid: opts.order_id,
       }
       client.api('QueryOrders', params, function(error, data) {
@@ -334,7 +334,7 @@ export default (conf) => {
         if (data.error.length) {
           return cb(data.error.join(','))
         }
-        var orderData = data.result[params.txid]
+        const orderData = data.result[params.txid]
         if (so.debug) {
           console.log('\nfunction: QueryOrders')
           console.log(orderData)
@@ -368,7 +368,7 @@ export default (conf) => {
     },
 
     // return the property used for range querying.
-    getCursor: function(trade) {
+    getCursor(trade) {
       return trade.time || trade
     },
   }

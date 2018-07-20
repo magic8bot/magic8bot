@@ -1,25 +1,25 @@
 import tulind from 'tulind'
 
-export const tiRsi = (s, key, rsi_period, optMarket) => {
-  return new Promise(function(resolve, reject) {
-    //dont calculate until we have enough data
+export const tiRsi = (s, key, rsiPeriod, optMarket) => {
+  return new Promise((resolve, reject) => {
+    // dont calculate until we have enough data
 
     let tmpMarket = optMarket
     if (!tmpMarket) {
       tmpMarket = s.lookback.slice(0, 1000).map((x) => x.close)
       tmpMarket.reverse()
-      //add current period
+      // add current period
       tmpMarket.push(s.period.close)
     } else {
       tmpMarket = tmpMarket.map((x) => x.close)
     }
 
-    if (tmpMarket.length >= rsi_period) {
-      //doublecheck length.
-      if (tmpMarket.length >= rsi_period) {
+    if (tmpMarket.length >= rsiPeriod) {
+      // doublecheck length.
+      if (tmpMarket.length >= rsiPeriod) {
         // extract int from string input for ma_type
 
-        tulind.indicators.rsi.indicator([tmpMarket], [rsi_period], function(err, result) {
+        tulind.indicators.rsi.indicator([tmpMarket], [rsiPeriod], (err, result) => {
           if (err) {
             console.log(err)
             reject(err)

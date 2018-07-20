@@ -1,26 +1,27 @@
-//module.exports = (function container (get, set, clear) {
-export default //code.stephenmorley.org
-/*return*/ function Queue() {
-  var a = [],
-    b = 0
-  this.getLength = function() {
+export default function Queue() {
+  let a = []
+  let b = 0
+  this.getLength = () => {
     return a.length - b
   }
-  this.isEmpty = function() {
-    return 0 == a.length
+  this.isEmpty = () => {
+    return 0 === a.length
   }
-  this.enqueue = function(b) {
-    a.push(b)
+  this.enqueue = (d) => {
+    a.push(d)
   }
-  this.dequeue = function() {
-    if (0 != a.length) {
-      var c = a[b]
-      2 * ++b >= a.length && ((a = a.slice(b)), (b = 0))
+  this.dequeue = () => {
+    if (0 !== a.length) {
+      const c = a[b]
+      if (2 * ++b >= a.length) {
+        a = a.slice(b)
+        b = 0
+      }
+
       return c
     }
   }
-  this.peek = function() {
+  this.peek = () => {
     return 0 < a.length ? a[b] : void 0
   }
 }
-//})

@@ -1,13 +1,13 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { ema, srsi, cci } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'cci_srsi',
   description: 'Stochastic CCI Strategy',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length, same as --period_length', String, '20m')
     this.option('period_length', 'period length, same as --period', String, '20m')
     this.option('min_periods', 'min. number of history periods', Number, 30)
@@ -25,11 +25,12 @@ export default {
     console.log('If you have questions about this strategy, contact me... @talvasconcelos')
   },
 
-  calculate: function(s) {
-    //get market trend
+  calculate(s) {
+    // get market trend
     ema(s, 'trend_ema', s.options.min_periods)
-    if (typeof s.period.trend_ema !== 'undefined')
+    if (typeof s.period.trend_ema !== 'undefined') {
       s.trend = s.period.trend_ema > s.lookback[0].trend_ema ? 'up' : 'down'
+    }
 
     // compute Stochastic RSI
     srsi(s, 'srsi', s.options.rsi_periods, s.options.srsi_k, s.options.srsi_d)
@@ -38,8 +39,8 @@ export default {
     cci(s, 'cci', s.options.cci_periods, s.options.constant)
 
     if (typeof s.period.cci !== 'undefined' && typeof s.period.srsi_K !== 'undefined') {
-      s.cci_fromAbove = s.period.cci < s.lookback[0]['cci']
-      s.rsi_fromAbove = s.period.srsi_K < s.lookback[0]['srsi_K']
+      s.cci_fromAbove = s.period.cci < s.lookback[0].cci
+      s.rsi_fromAbove = s.period.srsi_K < s.lookback[0].srsi_K
     }
 
     if (s.period.trend_ema && s.lookback[0] && s.lookback[0].trend_ema) {
@@ -47,7 +48,7 @@ export default {
     }
   },
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     if (!s.in_preroll && typeof s.trend !== 'undefined') {
       // Sideways Market
       if (s.period.acc < s.options.ema_acc) {
@@ -69,7 +70,7 @@ export default {
             s.signal = 'sell'
           }
         }
-        //cb()
+        // cb()
       }
       // Buy signal
       if (s.trend === 'up') {
@@ -96,10 +97,10 @@ export default {
     }
     cb()
   },
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
     if (typeof s.period.cci === 'number') {
-      var color = 'grey'
+      let color = 'grey'
       if (s.period.cci > 0) {
         color = 'green'
       } else if (s.period.cci < 0) {
@@ -115,28 +116,28 @@ export default {
 
   phenotypes: {
     // -- common
-    period_length: Phenotypes.RangePeriod(1, 120, 'm'),
-    min_periods: Phenotypes.Range(1, 200),
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 5),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 5),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    period_length: phenotypes.rangePeriod(1, 120, 'm'),
+    min_periods: phenotypes.range0(1, 200),
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 5),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 5),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
     // -- strategy
-    ema_acc: Phenotypes.RangeFloat(0, 0.5),
-    cci_periods: Phenotypes.Range(1, 200),
-    rsi_periods: Phenotypes.Range(1, 200),
-    srsi_periods: Phenotypes.Range(1, 200),
-    srsi_k: Phenotypes.Range(1, 50),
-    srsi_d: Phenotypes.Range(1, 50),
-    oversold_rsi: Phenotypes.Range(1, 100),
-    overbought_rsi: Phenotypes.Range(1, 100),
-    oversold_cci: Phenotypes.Range(-100, 100),
-    overbought_cci: Phenotypes.Range(1, 100),
-    constant: Phenotypes.RangeFloat(0.001, 0.05),
+    ema_acc: phenotypes.rangeFloat(0, 0.5),
+    cci_periods: phenotypes.range0(1, 200),
+    rsi_periods: phenotypes.range0(1, 200),
+    srsi_periods: phenotypes.range0(1, 200),
+    srsi_k: phenotypes.range0(1, 50),
+    srsi_d: phenotypes.range0(1, 50),
+    oversold_rsi: phenotypes.range0(1, 100),
+    overbought_rsi: phenotypes.range0(1, 100),
+    oversold_cci: phenotypes.range0(-100, 100),
+    overbought_cci: phenotypes.range0(1, 100),
+    constant: phenotypes.rangeFloat(0.001, 0.05),
   },
 }
 

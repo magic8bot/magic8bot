@@ -34,7 +34,7 @@ export class SessionService {
     this.sessionId = crypto.randomBytes(4).toString('hex')
   }
 
-  async loadLastSession(resetProfit: boolean) {
+  public async loadLastSession(resetProfit: boolean) {
     const { selector } = this
     const sessions = await this.sessionsCollection
       .find({ selector })
@@ -52,8 +52,8 @@ export class SessionService {
         this.s.options.mode === 'paper' && !this.s.options.currency_capital && !this.s.options.asset_capital
       const isLive =
         this.s.options.mode === 'live' &&
-        session.balance.asset == this.s.balance.asset &&
-        session.balance.currency == this.s.balance.currency
+        session.balance.asset === this.s.balance.asset &&
+        session.balance.currency === this.s.balance.currency
 
       if (hasOrigCapital && (isPaper || isLive)) {
         this.s.orig_capital = session.orig_capital = session.orig_capital
@@ -70,22 +70,22 @@ export class SessionService {
     }
   }
 
-  async newSession() {
+  public async newSession() {
     if (!this.session) {
       this.session = {
-        id: this.sessionId,
         _id: this.sessionId,
+        id: this.sessionId,
         options: this.s.options,
       } as Session
     }
 
     const session: Session = {
       ...this.session,
-      updated: new Date().getTime(),
       balance: this.s.balance,
       num_trades: this.s.my_trades.length,
       start_capital: this.s.start_capital,
       start_price: this.s.start_price,
+      updated: new Date().getTime(),
     }
 
     if (this.s.options.deposit) session.deposit = this.s.options.deposit
@@ -94,8 +94,8 @@ export class SessionService {
 
     if (!this.s.period) {
       session.balance = {
-        currency: this.s.balance.currency,
         asset: this.s.balance.asset,
+        currency: this.s.balance.currency,
       } as Balance
 
       return session
@@ -110,7 +110,7 @@ export class SessionService {
     return session
   }
 
-  async saveSession() {
+  public async saveSession() {
     const session = await this.newSession()
 
     await this.sessionsCollection.save(session)

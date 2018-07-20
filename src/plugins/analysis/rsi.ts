@@ -1,38 +1,38 @@
-var precisionRound = function(number, precision) {
-  var factor = Math.pow(10, precision)
-  return Math.round(number * factor) / factor
+const precisionRound = (num, precision) => {
+  const factor = Math.pow(10, precision)
+  return Math.round(num * factor) / factor
 }
 export const rsi = (s, key, length) => {
   if (s.lookback.length >= length) {
-    var avg_gain = s.lookback[0][key + '_avg_gain']
-    var avg_loss = s.lookback[0][key + '_avg_loss']
-    if (typeof avg_gain === 'undefined') {
-      var gain_sum = 0
-      var loss_sum = 0
-      var last_close
-      s.lookback.slice(0, length).forEach(function(period) {
-        if (last_close) {
-          if (period.close > last_close) {
-            gain_sum += period.close - last_close
+    const avgGain = s.lookback[0][key + '_avg_gain']
+    const avgLoss = s.lookback[0][key + '_avg_loss']
+    if (typeof avgGain === 'undefined') {
+      let gainSum = 0
+      let lossSum = 0
+      let lastClose
+      s.lookback.slice(0, length).forEach((period) => {
+        if (lastClose) {
+          if (period.close > lastClose) {
+            gainSum += period.close - lastClose
           } else {
-            loss_sum += last_close - period.close
+            lossSum += lastClose - period.close
           }
         }
-        last_close = period.close
+        lastClose = period.close
       })
-      s.period[key + '_avg_gain'] = gain_sum / length
-      s.period[key + '_avg_loss'] = loss_sum / length
+      s.period[key + '_avg_gain'] = gainSum / length
+      s.period[key + '_avg_loss'] = lossSum / length
     } else {
-      var current_gain = s.period.close - s.lookback[0].close
-      s.period[key + '_avg_gain'] = (avg_gain * (length - 1) + (current_gain > 0 ? current_gain : 0)) / length
-      var current_loss = s.lookback[0].close - s.period.close
-      s.period[key + '_avg_loss'] = (avg_loss * (length - 1) + (current_loss > 0 ? current_loss : 0)) / length
+      const currentGain = s.period.close - s.lookback[0].close
+      s.period[key + '_avg_gain'] = (avgGain * (length - 1) + (currentGain > 0 ? currentGain : 0)) / length
+      const currentLoss = s.lookback[0].close - s.period.close
+      s.period[key + '_avg_loss'] = (avgLoss * (length - 1) + (currentLoss > 0 ? currentLoss : 0)) / length
     }
 
-    if (s.period[key + '_avg_loss'] == 0) {
+    if (s.period[key + '_avg_loss'] === 0) {
       s.period[key] = 100
     } else {
-      var rs = s.period[key + '_avg_gain'] / s.period[key + '_avg_loss']
+      const rs = s.period[key + '_avg_gain'] / s.period[key + '_avg_loss']
       s.period[key] = precisionRound(100 - 100 / (1 + rs), 2)
     }
   }

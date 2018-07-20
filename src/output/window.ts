@@ -11,7 +11,7 @@ const { version } = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package
 class Window {
   public screenEvents: EventEmitter = new EventEmitter()
 
-  private title: string = `Magic8bot ${version}`
+  private title = `Magic8bot ${version}`
 
   private screen: Widgets.Screen
   private progressArea: Widgets.BoxElement
@@ -25,7 +25,7 @@ class Window {
       smartCSR: true,
     })
 
-    this.screen.key(['escape', 'q', 'C-c'], function() {
+    this.screen.key(['escape', 'q', 'C-c'], () => {
       return process.exit(0)
     })
 
@@ -34,7 +34,7 @@ class Window {
     this.createLog()
   }
 
-  addProgressBar(title: string) {
+  public addProgressBar(title: string) {
     const barLine = blessed.box({ height: 1, width: '100%' })
     const bar = new ProgressBar(barLine, title)
 
@@ -47,20 +47,20 @@ class Window {
     this.screen.render()
 
     return {
-      update: (percent: number) => {
-        bar.update(percent)
-        this.screen.render()
-      },
       done: () => {
         // @ts-ignore
         this.log.log(`${title} done`)
         bar.done()
         this.screen.render()
       },
+      update: (percent: number) => {
+        bar.update(percent)
+        this.screen.render()
+      },
     }
   }
 
-  setStatus(msg: string) {
+  public setStatus(msg: string) {
     this.log.log(msg)
   }
 
@@ -84,11 +84,11 @@ class Window {
   private createLog() {
     const logBox = blessed.box({ top: '100%-6', height: 6, width: '100%' })
     this.log = contrib.log({
-      fg: 'green',
-      label: 'Logs',
-      height: 6,
-      width: '100%',
       border: { type: 'line', fg: 'cyan' },
+      fg: 'green',
+      height: 6,
+      label: 'Logs',
+      width: '100%',
     })
     logBox.append(this.log)
     this.screen.append(logBox)

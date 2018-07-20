@@ -1,6 +1,6 @@
 import n from 'numbro'
 
-let max_fc_width = 0
+let maxFcWidth = 0
 
 export const formatAsset = (amt, asset) => {
   return n(amt).format('0.00000000') + ' ' + asset
@@ -10,7 +10,7 @@ export const formatPercent = (ratio) => {
   return (ratio >= 0 ? '+' : '') + n(ratio).format('0.00%')
 }
 
-export const formatCurrency = (amt, currency, omit_currency?, color_trick?, do_pad?) => {
+export const formatCurrency = (amt, currency, omitCurrency?, colorTrick?, doPad?) => {
   let str
   let fstr
   amt > 999
@@ -27,14 +27,14 @@ export const formatCurrency = (amt, currency, omit_currency?, color_trick?, do_p
               ? (fstr = '0.0000000')
               : (fstr = '0.00000000')
   str = n(amt).format(fstr)
-  if (do_pad) {
-    max_fc_width = Math.max(max_fc_width, str.length)
-    str = ' '.repeat(max_fc_width - str.length) + str
+  if (doPad) {
+    maxFcWidth = Math.max(maxFcWidth, str.length)
+    str = ' '.repeat(maxFcWidth - str.length) + str
   }
-  if (color_trick) {
-    str = str.replace(/^(.*\.)(.*?)(0*)$/, function(_, m1, m2, m3) {
+  if (colorTrick) {
+    str = str.replace(/^(.*\.)(.*?)(0*)$/, (_, m1, m2, m3) => {
       return m1.cyan + m2.yellow + m3.grey
     })
   }
-  return str + (omit_currency ? '' : ' ' + currency)
+  return str + (omitCurrency ? '' : ' ' + currency)
 }

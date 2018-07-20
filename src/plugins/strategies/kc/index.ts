@@ -1,13 +1,13 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { kc } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'kc',
   description: 'Buy when (Signal ≤ Lower Keltner Channel) and sell when (Signal ≥ Upper Keltner Channel).',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length, same as --period_length', String, '1h')
     this.option('period_length', 'period length, same as --period', String, '1h')
     this.option('kc_size', 'period size', Number, 20)
@@ -26,16 +26,16 @@ export default {
     )
   },
 
-  calculate: function(s) {
+  calculate(s) {
     // calculate Keltner Channels
     kc(s, 'kc', s.options.kc_size)
   },
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     if (s.period.kc) {
       if (s.period.kc.upper && s.period.kc.lower) {
-        let upperChannel = s.period.kc.upper[s.period.kc.upper.length - 1]
-        let lowerChannel = s.period.kc.lower[s.period.kc.lower.length - 1]
+        const upperChannel = s.period.kc.upper[s.period.kc.upper.length - 1]
+        const lowerChannel = s.period.kc.lower[s.period.kc.lower.length - 1]
         if (s.period.close > (upperChannel / 100) * (100 - s.options.kc_upper_channel_pct)) {
           s.signal = 'sell'
         } else if (s.period.close < (lowerChannel / 100) * (100 + s.options.kc_lower_channel_pct)) {
@@ -48,13 +48,13 @@ export default {
     cb()
   },
 
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
     if (s.period.kc) {
       if (s.period.kc.upper && s.period.kc.lower) {
-        let upperChannel = s.period.kc.upper[s.period.kc.upper.length - 1]
-        let lowerChannel = s.period.kc.lower[s.period.kc.lower.length - 1]
-        var color = 'grey'
+        const upperChannel = s.period.kc.upper[s.period.kc.upper.length - 1]
+        const lowerChannel = s.period.kc.lower[s.period.kc.lower.length - 1]
+        let color = 'grey'
         if (s.period.close > (upperChannel / 100) * (100 - s.options.kc_upper_channel_pct)) {
           color = 'green'
         } else if (s.period.close < (lowerChannel / 100) * (100 + s.options.kc_lower_channel_pct)) {
@@ -88,18 +88,18 @@ export default {
 
   phenotypes: {
     // -- common
-    period_length: Phenotypes.RangePeriod(1, 120, 'm'),
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 5),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 5),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    period_length: phenotypes.rangePeriod(1, 120, 'm'),
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 5),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 5),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
     // -- strategy
-    kc_size: Phenotypes.Range(1, 40),
-    kc_upper_channel_pct: Phenotypes.RangeFloat(-1, 30),
-    kc_lower_channel_pct: Phenotypes.RangeFloat(-1, 30),
+    kc_size: phenotypes.range0(1, 40),
+    kc_upper_channel_pct: phenotypes.rangeFloat(-1, 30),
+    kc_lower_channel_pct: phenotypes.rangeFloat(-1, 30),
   },
 }

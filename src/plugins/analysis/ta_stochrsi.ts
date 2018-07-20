@@ -1,39 +1,39 @@
 import { getMaTypeFromString } from '@util'
 const talib = require('talib')
 
-export const taStochrsi = (s, key, rsi_periods, k_periods, d_periods, d_ma_type, optMarket?) => {
-  return new Promise(function(resolve, reject) {
+export const taStochrsi = (s, key, rsiPeriods, kPeriods, dPeriods, dMaType, optMarket?) => {
+  return new Promise((resolve, reject) => {
     // Returns the parameters needed to execute left comment for latter reference
-    //var o = talib.explain('STOCHRSI')
+    // var o = talib.explain('STOCHRSI')
 
     let tmpMarket = optMarket
     if (!tmpMarket) {
       tmpMarket = s.lookback.slice(0, 1000).map((x) => x.close)
       tmpMarket.reverse()
-      //add current period
+      // add current period
       tmpMarket.push(s.period.close)
     } else {
       tmpMarket = tmpMarket.map((x) => x.close)
     }
 
-    //dont calculate until we have enough data
-    if (tmpMarket.length > rsi_periods) {
-      //doublecheck length.
-      if (tmpMarket.length >= rsi_periods) {
+    // dont calculate until we have enough data
+    if (tmpMarket.length > rsiPeriods) {
+      // doublecheck length.
+      if (tmpMarket.length >= rsiPeriods) {
         // extract int from string input for ma_type
-        let optInMAType = getMaTypeFromString(d_ma_type)
+        const optInMAType = getMaTypeFromString(dMaType)
         talib.execute(
           {
-            name: 'STOCHRSI',
-            startIdx: 0,
             endIdx: tmpMarket.length - 1,
             inReal: tmpMarket,
-            optInTimePeriod: rsi_periods, //RSI 14 default
-            optInFastK_Period: k_periods, // K 5 default
-            optInFastD_Period: d_periods, // D 3 default
+            name: 'STOCHRSI',
             optInFastD_MAType: optInMAType, // type of Fast D default 0
+            optInFastD_Period: dPeriods, // D 3 default
+            optInFastK_Period: kPeriods, // K 5 default
+            optInTimePeriod: rsiPeriods, // RSI 14 default
+            startIdx: 0,
           },
-          function(err, result) {
+          (err, result) => {
             if (err) {
               console.log(err)
               reject(err)
@@ -41,8 +41,8 @@ export const taStochrsi = (s, key, rsi_periods, k_periods, d_periods, d_ma_type,
             }
 
             resolve({
-              outFastK: result.result.outFastK,
               outFastD: result.result.outFastD,
+              outFastK: result.result.outFastK,
             })
           }
         )

@@ -8,19 +8,19 @@ import { MongoConf, Base, ExchangeConf, Conf, Magic8bot } from '@m8bTypes'
 
 // Your mongodb conf
 const mongo: MongoConf = {
-  host: 'localhost',
-  port: 27017,
   db: 'magic8bot',
-  username: null,
+  host: 'localhost',
   password: null,
+  port: 27017,
   replicaSet: null,
+  username: null,
 }
 
 // Simulation settings
 // NOT IMPLEMENTED
 const sim = {
-  currency_capital: 1000,
   asset_capital: 0,
+  currency_capital: 1000,
   symmetrical: false,
 }
 
@@ -30,88 +30,88 @@ const base: Base = {
   period: '1m',
 
   // BELOW NOT IMPLEMENTED
-  min_periods: 1,
-  sell_stop_pct: 0,
-  buy_stop_pct: 0,
-  profit_stop_enable_pct: 0,
-  profit_stop_pct: 1,
-  max_slippage_pct: 5,
-  buy_pct: 100,
-  sell_pct: 100,
-  order_adjust_time: 500,
-  max_sell_loss_pct: 5,
-  max_buy_loss_pct: 5,
-  order_poll_time: 500,
-  wait_for_settlement: 500,
-  markdown_buy_pct: 0,
-  markup_sell_pct: 0,
-  order_type: 'maker',
-  post_only: true,
-  keep_lookback_periods: 50000,
-  poll_trades: 300,
-  rsi_periods: 14,
-  balance_snapshot_period: '15m',
   avg_slippage_pct: 0.045,
+  balance_snapshot_period: '15m',
+  buy_pct: 100,
+  buy_stop_pct: 0,
   cancel_after: 'day',
-  use_prev_trades: false,
-  min_prev_trades: 0,
-  use_fee_asset: false,
-  reset_profit: false,
+  currency_increment: null,
   exact_buy_orders: false,
   exact_sell_orders: false,
-  currency_increment: null,
+  keep_lookback_periods: 50000,
+  markdown_buy_pct: 0,
+  markup_sell_pct: 0,
+  max_buy_loss_pct: 5,
+  max_sell_loss_pct: 5,
+  max_slippage_pct: 5,
+  min_periods: 1,
+  min_prev_trades: 0,
+  order_adjust_time: 500,
+  order_poll_time: 500,
+  order_type: 'maker',
+  poll_trades: 300,
+  post_only: true,
+  profit_stop_enable_pct: 0,
+  profit_stop_pct: 1,
+  reset_profit: false,
+  rsi_periods: 14,
+  sell_pct: 100,
+  sell_stop_pct: 0,
+  use_fee_asset: false,
+  use_prev_trades: false,
+  wait_for_settlement: 500,
 }
 
 const exchanges: ExchangeConf[] = [
   {
     // each exchange will inherit from base, unless overwritten
-    exchangeName: 'gdax',
     auth: {
-      key: '',
-      b64secret: '',
-      passphrase: '',
       apiURI: 'https://api.pro.coinbase.com',
+      b64secret: '',
+      key: '',
+      passphrase: '',
       websocketURI: 'wss://ws-feed.pro.coinbase.com',
     },
+    exchangeName: 'gdax',
     options: {
       strategies: [
         // each strategy will inherit from exchange, unless overwritten
         {
           selector: 'BTC-USD',
-          strategyName: 'ta_macd',
           share: 0.25,
+          strategyName: 'ta_macd',
         },
         {
           selector: 'BCH-USD',
-          strategyName: 'ta_macd',
           share: 0.25,
+          strategyName: 'ta_macd',
         },
         {
           selector: 'LTC-USD',
-          strategyName: 'ta_macd',
           share: 0.25,
+          strategyName: 'ta_macd',
         },
         {
-          selector: 'ETH-USD',
-          strategyName: 'ta_macd',
-          share: 0.25,
           period: '4m',
+          selector: 'ETH-USD',
+          share: 0.25,
+          strategyName: 'ta_macd',
         },
       ],
     },
   },
   {
-    exchangeName: 'binance',
     auth: {
       key: '',
       secret: '',
     },
+    exchangeName: 'binance',
     options: {
       strategies: [
         {
           selector: 'BTC-USDT',
-          strategyName: 'ta_macd',
           share: 1,
+          strategyName: 'ta_macd',
         },
       ],
     },
@@ -134,8 +134,8 @@ export const magic8bot: Magic8bot = {
   conf,
   mongo,
 
-  port: 3000,
-  version: null,
-  srcRoot: null,
   debug: false,
+  port: 3000,
+  srcRoot: null,
+  version: null,
 }

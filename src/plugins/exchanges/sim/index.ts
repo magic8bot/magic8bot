@@ -5,18 +5,18 @@ import _ from 'lodash'
 import { loadExchange } from '..'
 
 export default (conf, s) => {
-  let latency = 100 // In milliseconds, enough to be realistic without being disruptive
-  let so = s.options
-  let exchange_id = so.selector.exchange_id
-  let real_exchange = loadExchange(exchange_id)(conf)
+  const latency = 100 // In milliseconds, enough to be realistic without being disruptive
+  const so = s.options
+  const exchange_id = so.selector.exchange_id
+  const real_exchange = loadExchange(exchange_id)(conf)
 
-  var now
-  var balance = { asset: so.asset_capital, currency: so.currency_capital, asset_hold: 0, currency_hold: 0 }
+  let now
+  const balance = { asset: so.asset_capital, currency: so.currency_capital, asset_hold: 0, currency_hold: 0 }
 
-  var last_order_id = 1001
-  var orders = {}
-  var openOrders = {}
-  let debug = false // debug output specific to the sim exchange
+  let last_order_id = 1001
+  const orders = {}
+  const openOrders = {}
+  const debug = false // debug output specific to the sim exchange
 
   // When orders change in any way, it's likely our "_hold" values have changed. Recalculate them
   function recalcHold() {
@@ -37,7 +37,7 @@ export default (conf, s) => {
     })
   }
 
-  var exchange = {
+  const exchange = {
     name: 'sim',
     historyScan: real_exchange.historyScan,
     historyScanUsesTime: real_exchange.historyScanUsesTime,
@@ -47,7 +47,7 @@ export default (conf, s) => {
 
     getProducts: real_exchange.getProducts,
 
-    getTrades: function(opts, cb) {
+    getTrades(opts, cb) {
       if (so.mode === 'paper') {
         return real_exchange.getTrades(opts, cb)
       } else {
@@ -55,14 +55,14 @@ export default (conf, s) => {
       }
     },
 
-    getBalance: function(opts, cb) {
+    getBalance(opts, cb) {
       setTimeout(function() {
         s.sim_asset = balance.asset
         return cb(null, balance)
       }, latency)
     },
 
-    getQuote: function(opts, cb) {
+    getQuote(opts, cb) {
       if (so.mode === 'paper') {
         return real_exchange.getQuote(opts, cb)
       } else {
@@ -75,10 +75,10 @@ export default (conf, s) => {
       }
     },
 
-    cancelOrder: function(opts, cb) {
+    cancelOrder(opts, cb) {
       setTimeout(function() {
-        var order_id = '~' + opts.order_id
-        var order = orders[order_id]
+        const order_id = '~' + opts.order_id
+        const order = orders[order_id]
 
         if (order.status === 'open') {
           order.status = 'cancelled'
@@ -90,24 +90,25 @@ export default (conf, s) => {
       }, latency)
     },
 
-    buy: function(opts, cb) {
+    buy(opts, cb) {
       setTimeout(function() {
-        if (debug)
+        if (debug) {
           console.log(
             `buying ${opts.size * opts.price} vs on hold: ${balance.currency} - ${
               balance.currency_hold
             } = ${balance.currency - balance.currency_hold}`
           )
+        }
         if (opts.size * opts.price > balance.currency - balance.currency_hold) {
           if (debug) console.log('nope')
           return cb(null, { status: 'rejected', reject_reason: 'balance' })
         }
 
-        var result = {
+        const result = {
           id: last_order_id++,
         }
 
-        var order = {
+        const order = {
           id: result.id,
           status: 'open',
           price: opts.price,
@@ -130,23 +131,24 @@ export default (conf, s) => {
       }, latency)
     },
 
-    sell: function(opts, cb) {
+    sell(opts, cb) {
       setTimeout(function() {
-        if (debug)
+        if (debug) {
           console.log(
             `selling ${opts.size} vs on hold: ${balance.asset} - ${balance.asset_hold} = ${balance.asset -
               balance.asset_hold}`
           )
+        }
         if (opts.size > balance.asset - balance.asset_hold) {
           if (debug) console.log('nope')
           return cb(null, { status: 'rejected', reject_reason: 'balance' })
         }
 
-        var result = {
+        const result = {
           id: last_order_id++,
         }
 
-        var order = {
+        const order = {
           id: result.id,
           status: 'open',
           price: opts.price,
@@ -168,14 +170,14 @@ export default (conf, s) => {
       }, latency)
     },
 
-    getOrder: function(opts, cb) {
+    getOrder(opts, cb) {
       setTimeout(function() {
-        var order = orders['~' + opts.order_id]
+        const order = orders['~' + opts.order_id]
         cb(null, order)
       }, latency)
     },
 
-    setFees: function(opts) {
+    setFees(opts) {
       if (so.mode === 'paper') {
         return real_exchange.setFees(opts)
       }
@@ -183,12 +185,12 @@ export default (conf, s) => {
 
     getCursor: real_exchange.getCursor,
 
-    getTime: function() {
+    getTime() {
       return now
     },
 
-    processTrade: function(trade) {
-      var orders_changed = false
+    processTrade(trade) {
+      let orders_changed = false
 
       _.each(openOrders, function(order) {
         // @ts-ignore
@@ -220,7 +222,7 @@ export default (conf, s) => {
 
   function processBuy(buy_order, trade) {
     let fee = 0
-    let size = Math.min(buy_order.remaining_size, trade.size)
+    const size = Math.min(buy_order.remaining_size, trade.size)
     let price = buy_order.price
 
     // Buying, so add asset
@@ -259,13 +261,13 @@ export default (conf, s) => {
       }
     }
 
-    let total = n(price).multiply(size)
+    const total = n(price).multiply(size)
     balance.currency = n(balance.currency)
       .subtract(total)
       .format('0.00000000')
 
     // Process existing order size changes
-    let order = buy_order
+    const order = buy_order
     order.filled_size = order.filled_size + size
     order.remaining_size = order.size - order.filled_size
 
@@ -281,7 +283,7 @@ export default (conf, s) => {
 
   function processSell(sell_order, trade) {
     let fee = 0
-    let size = Math.min(sell_order.remaining_size, trade.size)
+    const size = Math.min(sell_order.remaining_size, trade.size)
     let price = sell_order.price
 
     // Selling, so subtract asset
@@ -324,13 +326,13 @@ export default (conf, s) => {
       }
     }
 
-    let total = n(price).multiply(size)
+    const total = n(price).multiply(size)
     balance.currency = n(balance.currency)
       .add(total)
       .format('0.00000000')
 
     // Process existing order size changes
-    let order = sell_order
+    const order = sell_order
     order.filled_size = order.filled_size + size
     order.remaining_size = order.size - order.filled_size
 

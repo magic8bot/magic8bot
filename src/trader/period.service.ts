@@ -24,7 +24,7 @@ export class PeriodService {
     this.periodCollection = collectionServiceInstance.getPeriods()
   }
 
-  async savePeriod(period: Period, sessionId: string) {
+  public async savePeriod(period: Period, sessionId: string) {
     if (!period.id) {
       period.id = crypto.randomBytes(4).toString('hex')
       period.selector = this.selector

@@ -6,8 +6,10 @@ interface BaseOpts {
   currency: string
 }
 
-interface ProductOpts {
-  product_id: string
+export interface ProductOpts {
+  productId: string
+  to?: number
+  from?: number
 }
 
 type FeeOpts = BaseOpts
@@ -18,7 +20,7 @@ type TradesOpts = {
   from?: number
 } & ProductOpts
 
-type TradeOpts = {
+export type TradeOpts = {
   price: number
   size: number
   post_only: boolean
@@ -26,13 +28,13 @@ type TradeOpts = {
   order_type?: string
 } & ProductOpts
 
-type OrderOpts = {
+interface OrderOpts {
   order_id: string
 }
 
 type CancelOpts = OrderOpts
 
-interface IExchange {
+interface Exchange {
   name: string
   historyScan: 'backward' | 'forward'
   makerFee: number
@@ -54,9 +56,9 @@ interface IExchange {
 }
 
 export class ExchangeService {
-  private readonly exchange: IExchange
+  private readonly exchange: Exchange
 
-  constructor(exchangeName: string, auth: ExchangeAuth, isPaper: boolean = false) {
+  constructor(exchangeName: string, auth: ExchangeAuth, isPaper = false) {
     const exchange = loadExchange(!isPaper ? exchangeName : 'sim')
     // @todo(notVitaliy): Fix paper trader
     this.exchange = !isPaper ? exchange(auth) : exchange(auth)
@@ -90,61 +92,61 @@ export class ExchangeService {
     return this.exchange.makerBuy100Workaround
   }
 
-  setFees(opts: FeeOpts) {
+  public setFees(opts: FeeOpts) {
     this.exchange.setFees(opts)
   }
 
-  getProducts(): Product[] {
+  public getProducts(): Product[] {
     return this.exchange.getProducts()
   }
 
-  getCursor(trade) {
+  public getCursor(trade) {
     return this.exchange.getCursor(trade)
   }
 
-  async getTrades(opts: TradesOpts) {
+  public async getTrades(opts: TradesOpts) {
     return new Promise<Trade[]>((resolve, reject) => {
       this.exchange.getTrades(opts, (err, trades) => (err ? reject(err) : resolve(trades)))
     })
   }
 
-  async getQuote(opts: ProductOpts) {
+  public async getQuote(opts: ProductOpts) {
     return new Promise<Quote>((resolve, reject) => {
       this.exchange.getQuote(opts, (err, quote) => (err ? reject(err) : resolve(quote)))
     })
   }
 
-  async buy(opts: TradeOpts) {
+  public async buy(opts: TradeOpts) {
     return new Promise<Record<string, any>>((resolve, reject) => {
       this.exchange.buy(opts, (err, apiOrder) => (err ? reject(err) : resolve(apiOrder)))
     })
   }
 
-  async sell(opts: TradeOpts) {
+  public async sell(opts: TradeOpts) {
     return new Promise<Record<string, any>>((resolve, reject) => {
       this.exchange.sell(opts, (err, apiOrder) => (err ? reject(err) : resolve(apiOrder)))
     })
   }
 
-  async getBalance(opts: BalanceOpts) {
+  public async getBalance(opts: BalanceOpts) {
     return new Promise<{ asset: number }>((resolve, reject) =>
       this.exchange.getBalance(opts, (err, balance) => (err ? reject(err) : resolve(balance)))
     )
   }
 
-  async cancelOrder(opts: OrderOpts) {
+  public async cancelOrder(opts: OrderOpts) {
     await new Promise((resolve) => this.exchange.cancelOrder(opts, () => resolve()))
 
-    return await this.getOrder(opts)
+    return this.getOrder(opts)
   }
 
-  async getOrder(opts: OrderOpts) {
+  public async getOrder(opts: OrderOpts) {
     return new Promise<Record<string, any>>((resolve, reject) =>
       this.exchange.getOrder(opts, (err, apiOrder) => (err ? reject(err) : resolve(apiOrder)))
     )
   }
 
-  async placeOrder(type: 'buy' | 'sell', opts: TradeOpts) {
+  public async placeOrder(type: 'buy' | 'sell', opts: TradeOpts) {
     return type === 'buy' ? this.buy(opts) : this.sell(opts)
   }
 }

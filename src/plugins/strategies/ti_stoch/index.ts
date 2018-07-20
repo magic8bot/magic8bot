@@ -1,14 +1,14 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { tiStoch } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'ti_stoch',
   description:
     'Buy when (Signal ≤ srsi_k_buy) and sell when (Signal ≥ srsi_k_sell).  (this should not be used alone.  you will lose over time)',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'period length, same as --period_length', String, '5m')
     this.option('period_length', 'period length, same as --period', String, '5m')
     this.option('rsi_periods', 'number of RSI periods', 14)
@@ -19,22 +19,22 @@ export default {
     this.option('stoch_k_buy', 'K must be below this before buying', Number, 10)
   },
 
-  calculate: function(s) {
+  calculate(s) {
     if (s.in_preroll) return
   },
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     if (s.in_preroll) return cb()
     tiStoch(s, 'tulip_stoch', s.options.rsi_periods, s.options.stoch_k, s.options.stoch_d)
       .then(function(result: Record<string, any>) {
         if (!result) return cb()
         if (result.k.length == 0) return cb()
-        var divergent = result.k[result.k.length - 1] - result.d[result.d.length - 1]
+        const divergent = result.k[result.k.length - 1] - result.d[result.d.length - 1]
         s.period.srsi_D = result.d[result.d.length - 1]
         s.period.srsi_K = result.k[result.k.length - 1]
-        var last_divergent = result.k[result.k.length - 2] - result.d[result.d.length - 2]
-        var _switch = 0 //s.lookback[0]._switch
-        var nextdivergent = (divergent + last_divergent) / 2 + (divergent - last_divergent)
+        const last_divergent = result.k[result.k.length - 2] - result.d[result.d.length - 2]
+        let _switch = 0 // s.lookback[0]._switch
+        const nextdivergent = (divergent + last_divergent) / 2 + (divergent - last_divergent)
         if (last_divergent <= 0 && divergent > 0) _switch = 1 // price rising
         if (last_divergent >= 0 && divergent < 0) _switch = -1 // price falling
 
@@ -58,8 +58,8 @@ export default {
       })
   },
 
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
 
     cols.push(z(8, n(s.period.close).format('+00.0000'), ' ').cyan)
     cols.push(
@@ -104,21 +104,21 @@ export default {
 
   phenotypes: {
     // -- common
-    period_length: Phenotypes.RangePeriod(1, 120, 'm'),
-    markdown_buy_pct: Phenotypes.RangeFactor(-1.0, 5.0, 0.1),
-    markup_sell_pct: Phenotypes.RangeFactor(-1.0, 5.0, 0.1),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.RangeFactor(0.0, 50.0, 0.01),
-    buy_stop_pct: Phenotypes.RangeFactor(0.0, 50.0, 0.01),
-    profit_stop_enable_pct: Phenotypes.RangeFactor(0.0, 5.0, 0.1),
-    profit_stop_pct: Phenotypes.RangeFactor(0.0, 20.0, 0.1),
+    period_length: phenotypes.rangePeriod(1, 120, 'm'),
+    markdown_buy_pct: phenotypes.rangeFactor(-1.0, 5.0, 0.1),
+    markup_sell_pct: phenotypes.rangeFactor(-1.0, 5.0, 0.1),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.rangeFactor(0.0, 50.0, 0.01),
+    buy_stop_pct: phenotypes.rangeFactor(0.0, 50.0, 0.01),
+    profit_stop_enable_pct: phenotypes.rangeFactor(0.0, 5.0, 0.1),
+    profit_stop_pct: phenotypes.rangeFactor(0.0, 20.0, 0.1),
 
     // -- strategy
-    rsi_periods: Phenotypes.Range(10, 30),
-    stoch_periods: Phenotypes.Range(5, 30),
-    stoch_k: Phenotypes.Range(1, 10),
-    stoch_d: Phenotypes.Range(1, 10),
-    stoch_k_sell: Phenotypes.RangeFactor(0.0, 100.0, 1.0),
-    stoch_k_buy: Phenotypes.RangeFactor(0.0, 100.0, 1.0),
+    rsi_periods: phenotypes.range0(10, 30),
+    stoch_periods: phenotypes.range0(5, 30),
+    stoch_k: phenotypes.range0(1, 10),
+    stoch_d: phenotypes.range0(1, 10),
+    stoch_k_sell: phenotypes.rangeFactor(0.0, 100.0, 1.0),
+    stoch_k_buy: phenotypes.rangeFactor(0.0, 100.0, 1.0),
   },
 }

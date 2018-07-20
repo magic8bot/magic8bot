@@ -2,7 +2,7 @@ import convnetjs from 'convnetjs'
 import z from 'zero-fill'
 import n from 'numbro'
 import { ema } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 import cluster from 'cluster'
 
 const G = global as any
@@ -11,13 +11,13 @@ const G = global as any
 G.forks = 0
 
 // the below line is for calculating the last mean vs the now mean.
-var oldmean = 0
+let oldmean = 0
 
 export default {
   name: 'neural',
   description:
     'Use neural learning to predict future price. Buy = mean(last 3 real prices) < mean(current & last prediction)',
-  getOptions: function() {
+  getOptions() {
     this.option('period', 'Period length - longer gets a better average', String, '30m')
     this.option('period_length', 'Period length set same as --period', String, '30m')
     this.option('activation_1_type', 'Neuron Activation Type: sigmoid, tanh, relu', String, 'sigmoid')
@@ -33,8 +33,8 @@ export default {
     this.option('learns', "Number of times to 'learn' the neural network with past data", Number, 10)
     this.option('learningrate', 'The learning rate of the neural network between 0 and 1 - 0.01 is stock', Number, 0.01)
   },
-  calculate: function() {},
-  onPeriod: function(s, cb) {
+  calculate() {},
+  onPeriod(s, cb) {
     ema(s, 'neural', s.options.neural)
     if (s.neural === undefined) {
       // Create the net the first time it is needed and NOT on every run
@@ -69,27 +69,28 @@ export default {
 
     if (cluster.isWorker) {
       ema(s, 'neural', s.options.neural)
-      var tlp = []
-      var tll = []
+      const tlp = []
+      const tll = []
       // this thing is crazy run with trendline placed here. But there needs to be a coin lock so you dont buy late!
       if (!s.in_preroll && s.lookback[s.options.min_periods]) {
-        var min_predict = s.options.min_predict > s.options.min_periods ? s.options.min_periods : s.options.min_predict
+        const min_predict =
+          s.options.min_predict > s.options.min_periods ? s.options.min_periods : s.options.min_predict
         for (let i = 0; i < s.options.min_periods; i++) {
           tll.push(s.lookback[i])
         }
         for (let i = 0; i < min_predict; i++) {
           tlp.push(s.lookback[i])
         }
-        var my_data = tll.reverse()
-        var learn = function() {
-          //Learns
-          for (var j = 0; j < s.options.learns; j++) {
-            for (var i = 0; i < my_data.length - s.neural.neuralDepth; i++) {
-              var data = my_data.slice(i, i + s.neural.neuralDepth)
-              var real_value = my_data[i + s.neural.neuralDepth]
-              var x = new convnetjs.Vol(5, 1, s.neural.neuralDepth, 0)
+        const my_data = tll.reverse()
+        const learn = function() {
+          // Learns
+          for (let j = 0; j < s.options.learns; j++) {
+            for (let i = 0; i < my_data.length - s.neural.neuralDepth; i++) {
+              const data = my_data.slice(i, i + s.neural.neuralDepth)
+              const real_value = my_data[i + s.neural.neuralDepth]
+              const x = new convnetjs.Vol(5, 1, s.neural.neuralDepth, 0)
 
-              for (var k = 0; k < s.neural.neuralDepth; k++) {
+              for (let k = 0; k < s.neural.neuralDepth; k++) {
                 x.set(0, 0, k, data[k].open)
                 x.set(1, 0, k, data[k].close)
                 x.set(2, 0, k, data[k].high)
@@ -107,10 +108,10 @@ export default {
             }
           }
         }
-        var predict = function(data) {
-          var x = new convnetjs.Vol(5, 1, s.neural.neuralDepth, 0)
+        const predict = function(data) {
+          const x = new convnetjs.Vol(5, 1, s.neural.neuralDepth, 0)
 
-          for (var k = 0; k < s.neural.neuralDepth; k++) {
+          for (let k = 0; k < s.neural.neuralDepth; k++) {
             x.set(0, 0, k, data[k].open)
             x.set(1, 0, k, data[k].close)
             x.set(2, 0, k, data[k].high)
@@ -118,16 +119,16 @@ export default {
             x.set(4, 0, k, data[k].volume)
           }
 
-          var predicted_value = s.neural.net.forward(x)
+          const predicted_value = s.neural.net.forward(x)
           return predicted_value.w[1] // close value - x.set(1,0,k,data[k].close)
         }
         learn()
-        var item = tlp.reverse()
+        const item = tlp.reverse()
         s.prediction = predict(item)
       }
       // NORMAL onPeriod STUFF here
       G.predi = s.prediction
-      //something strange is going on here
+      // something strange is going on here
       G.sig0 = G.predi > oldmean
       if (G.sig0 === false) {
         s.signal = 'sell'
@@ -138,35 +139,35 @@ export default {
       cb()
     }
   },
-  onReport: function() {
-    var cols = []
+  onReport() {
+    const cols = []
     cols.push(z(8, n(G.predi).format('0000.000000000'), ' '))
     return cols
   },
 
   phenotypes: {
     // -- common
-    period_length: Phenotypes.RangePeriod(1, 120, 'm'),
-    min_periods: Phenotypes.Range(1, 200),
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 5),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 5),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    period_length: phenotypes.rangePeriod(1, 120, 'm'),
+    min_periods: phenotypes.range0(1, 200),
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 5),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 5),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
     // -- strategy
-    neurons_1: Phenotypes.Range(1, 20),
-    neurons_2: Phenotypes.Range(1, 20),
-    activation_1_type: Phenotypes.ListOption(['sigmoid', 'tanh', 'relu']),
-    activation_2_type: Phenotypes.ListOption(['sigmoid', 'tanh', 'relu']),
-    depth: Phenotypes.Range(1, 200),
-    min_predict: Phenotypes.Range(1, 200),
+    neurons_1: phenotypes.range0(1, 20),
+    neurons_2: phenotypes.range0(1, 20),
+    activation_1_type: phenotypes.listOption(['sigmoid', 'tanh', 'relu']),
+    activation_2_type: phenotypes.listOption(['sigmoid', 'tanh', 'relu']),
+    depth: phenotypes.range0(1, 200),
+    min_predict: phenotypes.range0(1, 200),
     // momentum and decay and learning rate are decimals?
-    momentum: Phenotypes.RangeFloat(0, 1),
-    decay: Phenotypes.RangeFloat(0, 1),
-    learns: Phenotypes.Range(1, 500),
-    learningrate: Phenotypes.RangeFloat(0, 1),
+    momentum: phenotypes.rangeFloat(0, 1),
+    decay: phenotypes.rangeFloat(0, 1),
+    learns: phenotypes.range0(1, 500),
+    learningrate: phenotypes.rangeFloat(0, 1),
   },
 }

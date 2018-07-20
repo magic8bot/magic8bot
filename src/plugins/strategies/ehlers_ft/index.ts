@@ -37,13 +37,13 @@ https://discordapp.com/channels/316120967200112642/383023593942155274
 import z from 'zero-fill'
 import n from 'numbro'
 import * as tv from '../../../util/helpers'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'ehlers_fisher_transform',
   description: '',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period_length', 'period length, same as --period', String, '30m')
     this.option('fish_pct_change', 'percent change of fisher transform for reversal', Number, 0)
     this.option('length', 'number of past periods to use including current', Number, 10)
@@ -51,9 +51,9 @@ export default {
     this.option('pos_length', 'check this number of previous periods have opposing pos value', Number, 1)
   },
 
-  calculate: function() {},
+  calculate() {},
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     // console.log('')
     if (!s.eft) {
       s.eft = {
@@ -66,13 +66,13 @@ export default {
 
     s.period.src = tv.src(s.options.src, s.period, s.lookback[0])
 
-    let lbks = s.lookback.slice(0, s.options.length - 1).map((p) => p.src),
+    const lbks = s.lookback.slice(0, s.options.length - 1).map((p) => p.src),
       maxH = Math.max(s.period.src, ...lbks),
       minL = Math.min(s.period.src, ...lbks)
 
     s.eft.n1.unshift(0.33 * 2 * ((s.period.src - minL) / (maxH - minL) - 0.5) + 0.67 * tv.nz(s.eft.n1[0]))
 
-    let n2 = tv.iff(s.eft.n1[0] > 0.99, 0.999, tv.iff(s.eft.n1[0] < -0.99, -0.999, s.eft.n1[0]))
+    const n2 = tv.iff(s.eft.n1[0] > 0.99, 0.999, tv.iff(s.eft.n1[0] < -0.99, -0.999, s.eft.n1[0]))
 
     s.eft.fish.unshift(0.5 * Math.log((1 + n2) / (1 - n2)) + 0.5 * tv.nz(s.eft.fish[0]))
 
@@ -94,7 +94,7 @@ export default {
           s.signal = null
         }
       } else {
-        let pos = s.eft.pos.slice(1, s.options.pos_length + 1),
+        const pos = s.eft.pos.slice(1, s.options.pos_length + 1),
           posUp = s.eft.pos[0] === -1 && pos.every((pos) => pos === 1),
           posDn = s.eft.pos[0] === 1 && pos.every((pos) => pos === -1)
 
@@ -107,38 +107,39 @@ export default {
     }
 
     // cleanup
-    if (s.eft.pos.length > s.eft_max_elements)
+    if (s.eft.pos.length > s.eft_max_elements) {
       Object.keys(s.eft).forEach((k) => {
         s.eft[k].pop()
       })
+    }
 
     cb()
   },
 
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
     cols.push(z(10, 'F[' + n(s.eft.fish[0]).format('#.000') + ']', ''))
     cols.push(z(10, ' P[' + n(s.eft.pos[0]).format('##') + ']', ''))
     return cols
   },
 
   phenotypes: {
-    //General Options
-    period_length: Phenotypes.RangePeriod(5, 300, 'm'),
-    min_periods: Phenotypes.Range(10, 40),
-    markdown_buy_pct: Phenotypes.RangeFloat(0, 10),
-    markup_sell_pct: Phenotypes.RangeFloat(0, 10),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 10),
+    // General Options
+    period_length: phenotypes.rangePeriod(5, 300, 'm'),
+    min_periods: phenotypes.range0(10, 40),
+    markdown_buy_pct: phenotypes.rangeFloat(0, 10),
+    markup_sell_pct: phenotypes.rangeFloat(0, 10),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range0(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 10),
 
-    //Strategy Specific
-    length: Phenotypes.Range(1, 30),
-    fish_pct_change: Phenotypes.Range(-25, 75),
-    pos_length: Phenotypes.Range(1, 6),
-    src: Phenotypes.ListOption(['close', 'hl2', 'hlc3', 'ohlc4', 'HAhlc3', 'HAohlc4']),
+    // Strategy Specific
+    length: phenotypes.range0(1, 30),
+    fish_pct_change: phenotypes.range0(-25, 75),
+    pos_length: phenotypes.range0(1, 6),
+    src: phenotypes.listOption(['close', 'hl2', 'hlc3', 'ohlc4', 'HAhlc3', 'HAohlc4']),
   },
 }
 

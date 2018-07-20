@@ -25,7 +25,7 @@ interface MyTradesOptions {
 
 export class MyTradesService {
   public myTrades: MyTrade[] = []
-  public myTradesSize: number = 0
+  public myTradesSize = 0
 
   private myTradesCollection: Collection<MyTrade> = null
 
@@ -33,7 +33,7 @@ export class MyTradesService {
     this.myTradesCollection = this.collectionServiceInstance.getMyTrades()
   }
 
-  async getMyTrades(firststTradeTime: number) {
+  public async getMyTrades(firststTradeTime: number) {
     const query: Record<string, any> = {
       selector: this.opts.selector,
     }
@@ -51,13 +51,13 @@ export class MyTradesService {
     this.myTradesSize = this.myTrades.length
   }
 
-  async saveMyTrades(myTrades: MyTrade[], sessionId: string, mode: string) {
-    await Promise.all(myTrades.map(async (myTrade) => await this.saveMyTrade(myTrade, sessionId, mode)))
+  public async saveMyTrades(myTrades: MyTrade[], sessionId: string, mode: string) {
+    await Promise.all(myTrades.map(async (myTrade) => this.saveMyTrade(myTrade, sessionId, mode)))
 
     this.myTradesSize = this.myTrades.length
   }
 
-  async saveMyTrade(myTrade: MyTrade, sessionId: string, mode: string) {
+  public async saveMyTrade(myTrade: MyTrade, sessionId: string, mode: string) {
     myTrade.id = crypto.randomBytes(4).toString('hex')
     myTrade._id = myTrade.id
     myTrade.selector = this.opts.selector

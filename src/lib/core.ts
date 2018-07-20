@@ -9,7 +9,7 @@ export class Core {
     this.sessionStore = new SessionStore()
   }
 
-  async init() {
+  public async init() {
     const { exchanges, session_id, reset_profit } = this.conf
 
     // @todo(notVitaliy): Fix this shit... eventually

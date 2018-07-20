@@ -1,8 +1,8 @@
-export const sma = (s, key, length, source_key?) => {
-  if (!source_key) source_key = 'close'
+export const sma = (s, key, length, sourceKey?) => {
+  if (!sourceKey) sourceKey = 'close'
   if (s.lookback.length >= length) {
-    let SMA = s.lookback.slice(0, length).reduce((sum, cur) => {
-      return sum + cur[source_key]
+    const SMA = s.lookback.slice(0, length).reduce((sum, cur) => {
+      return sum + cur[sourceKey]
     }, 0)
 
     s.period[key] = SMA / length

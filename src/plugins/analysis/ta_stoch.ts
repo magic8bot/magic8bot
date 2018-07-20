@@ -1,38 +1,38 @@
 import { getMaTypeFromString } from '@util'
 const talib = require('talib')
 
-export const taStoch = (s, key, k_periods, sk_periods, k_ma_type, d_periods, d_ma_type, optMarket?) => {
-  return new Promise(function(resolve, reject) {
+export const taStoch = (s, key, kPeriods, skPeriods, kMaType, dPeriods, dMaType, optMarket?) => {
+  return new Promise((resolve, reject) => {
     let tmpMarket = optMarket
     if (!tmpMarket) {
       tmpMarket = s.lookback.slice(0, 1000)
       tmpMarket.reverse()
-      //add current period
+      // add current period
       tmpMarket.push(s.period)
     }
 
-    let tmpMarketHigh = tmpMarket.map((x) => x.high)
-    let tmpMarketClose = tmpMarket.map((x) => x.close)
-    let tmpMarketLow = tmpMarket.map((x) => x.low)
+    const tmpMarketHigh = tmpMarket.map((x) => x.high)
+    const tmpMarketClose = tmpMarket.map((x) => x.close)
+    const tmpMarketLow = tmpMarket.map((x) => x.low)
 
-    if (tmpMarket.length >= Math.max(k_periods, d_periods, sk_periods)) {
-      let optInSlowDMAType = getMaTypeFromString(d_ma_type)
-      let optInSlowKMAType = getMaTypeFromString(k_ma_type)
+    if (tmpMarket.length >= Math.max(kPeriods, dPeriods, skPeriods)) {
+      const optInSlowDMAType = getMaTypeFromString(dMaType)
+      const optInSlowKMAType = getMaTypeFromString(kMaType)
       talib.execute(
         {
-          name: 'STOCH',
-          startIdx: 0,
+          close: tmpMarketClose,
           endIdx: tmpMarketClose.length - 1,
           high: tmpMarketHigh,
           low: tmpMarketLow,
-          close: tmpMarketClose,
-          optInFastK_Period: k_periods, // K 5 default
-          optInSlowK_Period: sk_periods, //Slow K 3 default
-          optInSlowK_MAType: optInSlowKMAType, //Slow K maType default 0
-          optInSlowD_Period: d_periods, // D 3 default
+          name: 'STOCH',
+          optInFastK_Period: kPeriods, // K 5 default
           optInSlowD_MAType: optInSlowDMAType, // type of Fast D default 0
+          optInSlowD_Period: dPeriods, // D 3 default
+          optInSlowK_MAType: optInSlowKMAType, // Slow K maType default 0
+          optInSlowK_Period: skPeriods, // Slow K 3 default
+          startIdx: 0,
         },
-        function(err, result) {
+        (err, result) => {
           if (err) {
             console.log(err)
             reject(err)
@@ -40,8 +40,8 @@ export const taStoch = (s, key, k_periods, sk_periods, k_ma_type, d_periods, d_m
           }
 
           resolve({
-            k: result.result.outSlowK,
             d: result.result.outSlowD,
+            k: result.result.outSlowK,
           })
         }
       )

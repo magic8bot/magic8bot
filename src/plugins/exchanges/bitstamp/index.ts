@@ -7,9 +7,9 @@ import n from 'numbro'
 import util from 'util'
 import EventEmitter from 'events'
 
-var args = process.argv
+const args = process.argv
 
-var wsOpts = {
+const wsOpts = {
   encrypted: true,
   pairOk: false,
   currencyPair: 'btcusd',
@@ -26,9 +26,9 @@ var wsOpts = {
 // t:he command line arguments
 args.forEach(function(value) {
   if (value.toLowerCase().match(/bitstamp/)) {
-    var p = value.split('.')[1]
-    var prod = p.split('-')[0] + p.split('-')[1]
-    var pair = prod.toLowerCase()
+    const p = value.split('.')[1]
+    const prod = p.split('-')[0] + p.split('-')[1]
+    const pair = prod.toLowerCase()
     if (!wsOpts.pairOk) {
       if (pair !== 'btcusd') {
         wsOpts.trades.channel = 'live_trades_' + pair
@@ -52,12 +52,12 @@ export default (conf) => {
     throw new Error('\nPlease configure your Bitstamp credentials in ' + path.resolve(__dirname, 'conf.js'))
   }
 
-  //-----------------------------------------------------
+  // -----------------------------------------------------
   //  The websocket functions
   //
-  var BITSTAMP_PUSHER_KEY = 'de504dc5763aeef9ff52'
+  const BITSTAMP_PUSHER_KEY = 'de504dc5763aeef9ff52'
 
-  var Bitstamp_WS = function(opts) {
+  const Bitstamp_WS = function(opts) {
     if (opts) {
       this.opts = opts
     } else {
@@ -68,7 +68,7 @@ export default (conf) => {
 
     this.client = new Pusher(BITSTAMP_PUSHER_KEY, {
       encrypted: this.opts.encrypted,
-      //encrypted: true
+      // encrypted: true
     })
 
     // bitstamp publishes all data over just 2 channels
@@ -83,15 +83,15 @@ export default (conf) => {
 
   Bitstamp.prototype.tradeDaily = function(direction, market, amount, price, callback) {
     this._post(market, direction, callback, {
-      amount: amount,
-      price: price,
+      amount,
+      price,
       daily_order: true,
     })
   }
 
   Bitstamp.prototype.tradeMarket = function(direction, market, amount, callback) {
     this._post(market, direction + '/market', callback, {
-      amount: amount,
+      amount,
     })
   }
 
@@ -114,8 +114,8 @@ export default (conf) => {
     }.bind(this)
   }
   // Placeholders
-  var wsquotes = { bid: 0, ask: 0 }
-  var wstrades: Record<string, any>[] = [
+  let wsquotes = { bid: 0, ask: 0 }
+  const wstrades: Record<string, any>[] = [
     {
       trade_id: 0,
       time: 1000,
@@ -125,12 +125,12 @@ export default (conf) => {
     },
   ]
 
-  var wsTrades = new Bitstamp_WS({
+  const wsTrades = new Bitstamp_WS({
     channel: wsOpts.trades.channel,
     evType: 'trade',
   })
 
-  var wsQuotes = new Bitstamp_WS({
+  const wsQuotes = new Bitstamp_WS({
     channel: wsOpts.quotes.channel,
     evType: 'data',
   })
@@ -152,12 +152,12 @@ export default (conf) => {
     })
     if (wstrades.length > 30) wstrades.splice(0, 10)
   })
-  //-----------------------------------------------------
+  // -----------------------------------------------------
 
   function statusErr(err, body) {
     if (typeof body === 'undefined') {
-      var ret: Record<string, any> = {}
-      var res = err.toString().split(':', 2)
+      const ret: Record<string, any> = {}
+      const res = err.toString().split(':', 2)
       ret.status = res[1]
       return new Error(ret.status)
     } else {
@@ -170,7 +170,7 @@ export default (conf) => {
   }
 
   function retry(method, args) {
-    var to = args.wait
+    const to = args.wait
     if (method !== 'getTrades') {
       console.error(('\nBitstamp API is not answering! unable to call ' + method + ', retrying in ' + to + 's').red)
     }
@@ -179,41 +179,41 @@ export default (conf) => {
     }, to * 1000)
   }
 
-  var lastBalance: Record<string, any> = { asset: 0, currency: 0 }
-  var orders = {}
+  let lastBalance: Record<string, any> = { asset: 0, currency: 0 }
+  const orders = {}
 
-  var exchange = {
+  const exchange = {
     name: 'bitstamp',
     historyScan: false,
     makerFee: 0.25,
     takerFee: 0.25,
 
-    getProducts: function() {
+    getProducts() {
       return require('./products.json')
     },
 
-    //-----------------------------------------------------
+    // -----------------------------------------------------
     // Public API functions
     // getQuote() and getTrades() are using Bitstamp websockets
     // The data is not done by calling the interface function,
     // but rather pulled from the "wstrades" and "wsquotes" JSOM objects
     // Those objects are populated by the websockets event handlers
 
-    getTrades: function(opts, cb) {
-      var args = {
+    getTrades(opts, cb) {
+      const args = {
         wait: 2, // Seconds
         product_id: wsOpts.currencyPair,
       }
       if (!wstrades.length) return retry('getTrades', args)
-      var t = wstrades
-      var trades = t.map(function(trade) {
+      const t = wstrades
+      const trades = t.map(function(trade) {
         return trade
       })
       cb(null, trades)
     },
 
-    getQuote: function(opts, cb) {
-      var args = {
+    getQuote(opts, cb) {
+      const args = {
         wait: 2, // Seconds
         currencyPair: wsOpts.currencyPair,
       }
@@ -221,23 +221,23 @@ export default (conf) => {
       cb(null, wsquotes)
     },
 
-    //-----------------------------------------------------
+    // -----------------------------------------------------
     // Private (authenticated) functions
     //
 
-    getBalance: function(opts, cb) {
-      var args = {
+    getBalance(opts, cb) {
+      const args = {
         currency: opts.currency.toLowerCase(),
         asset: opts.asset.toLowerCase(),
         wait: 10,
       }
-      var client = authedClient()
+      const client = authedClient()
       client.balance(null, function(err, body) {
         body = statusErr(err, body)
         if (body.status === 'error') {
           return retry('getBalance', args)
         }
-        var balance: Record<string, any> = {
+        let balance: Record<string, any> = {
           asset: '0',
           asset_hold: '0',
           currency: '0',
@@ -265,9 +265,9 @@ export default (conf) => {
       })
     },
 
-    cancelOrder: function(opts, cb) {
-      var func_args = [].slice.call(arguments)
-      var client = authedClient()
+    cancelOrder(opts, cb) {
+      const func_args = [].slice.call(arguments)
+      const client = authedClient()
       client.cancel_order(opts.order_id, function(err, body) {
         body = statusErr(err, body)
         if (body.status === 'error') {
@@ -277,9 +277,9 @@ export default (conf) => {
       })
     },
 
-    trade: function(type, opts, cb) {
-      var client = authedClient()
-      var currencyPair = joinProduct(opts.product_id).toLowerCase()
+    trade(type, opts, cb) {
+      const client = authedClient()
+      const currencyPair = joinProduct(opts.product_id).toLowerCase()
       if (typeof opts.order_type === 'undefined') {
         opts.order_type = 'maker'
       }
@@ -289,7 +289,7 @@ export default (conf) => {
         client.tradeDaily(type, currencyPair, opts.size, opts.price, function(err, body) {
           body = statusErr(err, body)
           if (body.status === 'error') {
-            var order = { status: 'rejected', reject_reason: 'balance' }
+            const order = { status: 'rejected', reject_reason: 'balance' }
             return cb(null, order)
           } else {
             // Statuses:
@@ -306,7 +306,7 @@ export default (conf) => {
         client.tradeMarket(type, currencyPair, opts.size, function(err, body) {
           body = statusErr(err, body)
           if (body.status === 'error') {
-            var order = { status: 'rejected', reject_reason: 'balance' }
+            const order = { status: 'rejected', reject_reason: 'balance' }
             return cb(null, order)
           } else {
             body.status = 'done'
@@ -317,16 +317,16 @@ export default (conf) => {
       }
     },
 
-    buy: function(opts, cb) {
+    buy(opts, cb) {
       exchange.trade('buy', opts, cb)
     },
 
-    sell: function(opts, cb) {
+    sell(opts, cb) {
       exchange.trade('sell', opts, cb)
     },
 
-    getOrder: function(opts, cb) {
-      var client = authedClient()
+    getOrder(opts, cb) {
+      const client = authedClient()
       client.order_status(opts.order_id, function(err, body) {
         body = statusErr(err, body)
         if (body.status === 'error') {
@@ -344,7 +344,7 @@ export default (conf) => {
     },
 
     // return the property used for range querying.
-    getCursor: function(trade) {
+    getCursor(trade) {
       return trade.trade_id
     },
   }

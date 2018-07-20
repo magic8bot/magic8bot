@@ -18,7 +18,8 @@
     "dist": "npm run build",
     "rebuild": "npm run clean && npm run dist",
     "start": "node ./magic8bot.js",
-    "start:dev": "cross-env NODE_ENV=development node ./magic8bot.js"
+    "start:dev": "cross-env NODE_ENV=development node ./magic8bot.js",
+    "lint": "tslint -p ./tsconfig.json --fix"
   },
   "dependencies": {
     "@slack/client": "^4.1.0",
@@ -31,6 +32,7 @@
     "ccxt": "^1.12.97",
     "cexio-api-node": "^1.0.8",
     "colors": "^1.2.1",
+    "convnetjs": "^0.3.0",
     "cross-env": "5.2.0",
     "forex.analytics": "github:mkmarek/forex.analytics#7bc278987700d4204e959af17de61495941d1a14",
     "gdax": "^0.8.0",
@@ -69,14 +71,32 @@
   },
   "devDependencies": {
     "@types/blessed": "^0.1.10",
+    "@types/jest": "^23.3.0",
     "@types/moment": "^2.13.0",
     "@types/mongodb": "^3.1.0",
     "@types/ws": "^5.1.2",
+    "jest": "^23.4.1",
     "rimraf": "^2.6.2",
+    "ts-jest": "^23.0.1",
     "ts-node": "^7.0.0",
+    "tslint": "^5.11.0",
     "typescript": "^2.9.2"
   },
   "engines": {
     "node": "^10.0.0"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   }
 }

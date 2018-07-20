@@ -1,13 +1,13 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { highest, lowest } from '@plugins'
-import { Phenotypes } from '@util'
+import { phenotypes } from '@util'
 
 export default {
   name: 'ichimoku',
   description: 'Ichimoku Cloud',
 
-  getOptions: function() {
+  getOptions() {
     this.option('period_length', 'period length', String, '4h')
     this.option('min_periods', 'min periods (should be >= senkou_b option)', Number, 52)
     this.option('tenkan', 'Tenkan (conversion) line', Number, 9)
@@ -16,9 +16,9 @@ export default {
     this.option('chikou', 'Chikou (lagging) span)', Number, 26)
   },
 
-  calculate: function(s) {},
+  calculate(s) {},
 
-  onPeriod: function(s, cb) {
+  onPeriod(s, cb) {
     if (s.lookback[s.options.min_periods]) {
       highest(s, 'tenkan_high', s.options.tenkan)
       lowest(s, 'tenkan_low', s.options.tenkan)
@@ -55,27 +55,27 @@ export default {
     cb()
   },
 
-  onReport: function(s) {
-    var cols = []
+  onReport(s) {
+    const cols = []
     return cols
   },
 
   phenotypes: {
-    //General Options
-    period_length: Phenotypes.RangePeriod(5, 120, 'm'),
-    min_periods: Phenotypes.Range(150, 150), //(should be >= senkou_b option)
-    markdown_buy_pct: Phenotypes.RangeFloat(-1, 5),
-    markup_sell_pct: Phenotypes.RangeFloat(-1, 5),
-    order_type: Phenotypes.ListOption(['maker', 'taker']),
-    sell_stop_pct: Phenotypes.Range0(1, 50),
-    buy_stop_pct: Phenotypes.Range0(1, 50),
-    profit_stop_enable_pct: Phenotypes.Range0(1, 20),
-    profit_stop_pct: Phenotypes.Range(1, 20),
+    // General Options
+    period_length: phenotypes.rangePeriod(5, 120, 'm'),
+    min_periods: phenotypes.range0(150, 150), // (should be >= senkou_b option)
+    markdown_buy_pct: phenotypes.rangeFloat(-1, 5),
+    markup_sell_pct: phenotypes.rangeFloat(-1, 5),
+    order_type: phenotypes.listOption(['maker', 'taker']),
+    sell_stop_pct: phenotypes.range1(1, 50),
+    buy_stop_pct: phenotypes.range1(1, 50),
+    profit_stop_enable_pct: phenotypes.range1(1, 20),
+    profit_stop_pct: phenotypes.range0(1, 20),
 
-    //Strategy Specific
-    tenkan: Phenotypes.RangeFactor(5, 30, 1),
-    kijun: Phenotypes.RangeFactor(25, 75, 1),
-    senkou_b: Phenotypes.RangeFactor(50, 150, 1),
-    chikou: Phenotypes.RangeFactor(20, 40, 1),
+    // Strategy Specific
+    tenkan: phenotypes.rangeFactor(5, 30, 1),
+    kijun: phenotypes.rangeFactor(25, 75, 1),
+    senkou_b: phenotypes.rangeFactor(50, 150, 1),
+    chikou: phenotypes.rangeFactor(20, 40, 1),
   },
 }

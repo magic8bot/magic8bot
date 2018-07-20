@@ -3,13 +3,13 @@ import { dbDriver, TradeItem } from '@lib'
 export class TradeStore {
   public tradesMap: Map<string, TradeItem[]> = new Map()
 
-  addSelector(selector: string) {
+  public addSelector(selector: string) {
     if (this.tradesMap.has(selector)) return
 
     this.tradesMap.set(selector, [])
   }
 
-  async loadTrades(selector: string) {
+  public async loadTrades(selector: string) {
     const trades = await dbDriver.trade
       .find({ selector })
       .sort({ time: 1 })
@@ -18,7 +18,7 @@ export class TradeStore {
     this.tradesMap.set(selector, trades)
   }
 
-  async update(selector: string, newTrades: TradeItem[]) {
+  public async update(selector: string, newTrades: TradeItem[]) {
     await dbDriver.trade.insertMany(newTrades.map((trade) => ({ ...trade, selector })))
 
     if (!this.tradesMap.has(selector)) this.tradesMap.set(selector, [])

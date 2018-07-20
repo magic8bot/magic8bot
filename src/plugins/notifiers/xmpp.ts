@@ -1,8 +1,8 @@
 import simplexmpp from 'simple-xmpp'
 
 export const xmpp = (config) => {
-  var xmpp = {
-    pushMessage: function(title, message) {
+  const xmpp = {
+    pushMessage(title, message) {
       if (!simplexmpp.conn) {
         simplexmpp.connect({
           jid: config.jid,

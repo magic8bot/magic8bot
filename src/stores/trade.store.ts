@@ -19,9 +19,11 @@ export class TradeStore {
   }
 
   async update(selector: string, newTrades: TradeItem[]) {
-    await dbDriver.trade.insertMany(newTrades)
+    await dbDriver.trade.insertMany(newTrades.map((trade) => ({ ...trade, selector })))
 
-    const trades = !this.tradesMap.has(selector) ? [] : this.tradesMap.get(selector)
+    if (!this.tradesMap.has(selector)) this.tradesMap.set(selector, [])
+    const trades = this.tradesMap.get(selector)
+
     newTrades.forEach((trade) => trades.push(trade))
     this.tradesMap.set(selector, trades)
   }

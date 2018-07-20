@@ -13,7 +13,6 @@ export class Engine {
   private strategies: Map<string, StrategyService> = new Map()
 
   constructor({ exchangeName, auth, options, ...exchangeConf }: ExchangeConf, isPaper: boolean) {
-    console.log({ exchangeName })
     this.exchangeService = new ExchangeService(exchangeName, auth, isPaper)
     this.tradeStore = new TradeStore()
     this.tradeService = new TradeService(this.exchangeService)

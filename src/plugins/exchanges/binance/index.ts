@@ -346,6 +346,7 @@ export default (conf) => {
       var numToRoundTo = _.find(this.getProducts(), {
         asset: opts.product_id.split('-')[0],
         currency: opts.product_id.split('-')[1],
+        // @ts-ignore
       }).min_size
       numToRoundTo = 1 / numToRoundTo
 

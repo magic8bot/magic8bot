@@ -23,11 +23,15 @@ export default (conf, s) => {
     balance.currency_hold = 0
     balance.asset_hold = 0
     _.each(openOrders, function(order) {
+      // @ts-ignore
       if (order.tradetype === 'buy') {
+        // @ts-ignore
         balance.currency_hold += n(order.remaining_size)
+          // @ts-ignore
           .multiply(n(order.price))
           .value()
       } else {
+        // @ts-ignore
         balance.asset_hold += n(order.remaining_size).value()
       }
     })
@@ -187,16 +191,22 @@ export default (conf, s) => {
       var orders_changed = false
 
       _.each(openOrders, function(order) {
+        // @ts-ignore
         if (order.tradetype === 'buy') {
+          // @ts-ignore
           if (trade.time - order.time < so.order_adjust_time) {
             // Not time yet
+            // @ts-ignore
           } else if (trade.price <= Number(order.price)) {
             processBuy(order, trade)
             orders_changed = true
           }
+          // @ts-ignore
         } else if (order.tradetype === 'sell') {
+          // @ts-ignore
           if (trade.time - order.time < so.order_adjust_time) {
             // Not time yet
+            // @ts-ignore
           } else if (trade.price >= order.price) {
             processSell(order, trade)
             orders_changed = true

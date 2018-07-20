@@ -1,4 +1,4 @@
-import { dbDriver, OrderItem } from '../lib'
+import { dbDriver, OrderItem } from '@lib'
 
 export class OrderStore {
   public orders: OrderItem[] = []

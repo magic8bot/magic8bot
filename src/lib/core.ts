@@ -1,5 +1,5 @@
 import { Engine } from './engine'
-import { SessionStore } from '../store/session.store'
+import { SessionStore } from '@stores'
 import { Conf, ExchangeConf } from '@m8bTypes'
 
 export class Core {

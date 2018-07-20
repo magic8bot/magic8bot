@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 
-import { dbDriver, Marker } from '../lib'
+import { dbDriver, Marker } from '@lib'
 
 export class MarkerStore {
   private markers: Map<string, Marker> = new Map()

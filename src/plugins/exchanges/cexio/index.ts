@@ -3,7 +3,6 @@ import path from 'path'
 import n from 'numbro'
 import minimist from 'minimist'
 import _ from 'lodash'
-import * as debug from '../../../engine/debug'
 
 export default (conf) => {
   let s = {
@@ -37,7 +36,7 @@ export default (conf) => {
   }
 
   function retry(method, args) {
-    debug.msg(('CEX.IO API is down! unable to call ' + method + ', retrying in 10s').red)
+    // debug.msg(('CEX.IO API is down! unable to call ' + method + ', retrying in 10s').red)
     setTimeout(function() {
       exchange[method].apply(exchange, args)
     }, 10000)
@@ -65,12 +64,12 @@ export default (conf) => {
     ).setHours(24, 0, 0, 0)
 
     let countdown = midnightUTC - nowUTC + skew
-    if (debug.on) {
-      let hours = Math.round((countdown / (1000 * 60 * 60)) % 24)
-      let minutes = Math.round((countdown / (1000 * 60)) % 60)
-      let seconds = Math.round((countdown / 1000) % 60)
-      debug.msg('Refreshing fees in ' + hours + ' hours ' + minutes + ' minutes ' + seconds + ' seconds')
-    }
+    // if (debug.on) {
+    //   let hours = Math.round((countdown / (1000 * 60 * 60)) % 24)
+    //   let minutes = Math.round((countdown / (1000 * 60)) % 60)
+    //   let seconds = Math.round((countdown / 1000) % 60)
+    //   debug.msg('Refreshing fees in ' + hours + ' hours ' + minutes + ' minutes ' + seconds + ' seconds')
+    // }
     setTimeout(function() {
       exchange['setFees'].apply(exchange, args)
     }, countdown)
@@ -85,10 +84,10 @@ export default (conf) => {
         ws_client = new CEX(conf.cexio.key, conf.cexio.secret).ws
         ws_client.open()
         ws_client.on('open', function() {
-          debug.msg('WebSocket connected')
+          // debug.msg('WebSocket connected')
           ws_client.auth()
           ws_client.on('auth', function() {
-            debug.msg('WebSocket authenticated')
+            // debug.msg('WebSocket authenticated')
             ws_authed = true
             resolve(ws_client)
           })
@@ -96,7 +95,7 @@ export default (conf) => {
         ws_client.on('message', function(msg) {
           switch (msg.e) {
             case 'disconnecting':
-              debug.msg('WebSocket disconnecting:' + msg.reason)
+              // debug.msg('WebSocket disconnecting:' + msg.reason)
               break
             case 'ping':
               ws_client.send({ e: 'pong' }) // Heartbeat
@@ -143,7 +142,7 @@ export default (conf) => {
           ws_client = null
           ws_authed = false
           ws_subscribed = false
-          debug.msg('WebSocket disconnected')
+          // debug.msg('WebSocket disconnected')
         })
       } else {
         switch (ws_client.ws.readyState) {
@@ -302,7 +301,7 @@ export default (conf) => {
         let pair = joinProduct(opts.product_id)
         client.trade_history(pair, opts.from, function(err, body) {
           if (err || (typeof body === 'string' && body.match(/error/))) {
-            debug.msg(('getTrades ' + (err ? err : body)).red)
+            // debug.msg(('getTrades ' + (err ? err : body)).red)
             return retry('getTrades', func_args)
           }
           let trades = body.map(function(trade) {
@@ -339,7 +338,7 @@ export default (conf) => {
               })
             })
             .catch(function(err) {
-              debug.msg(('getTrades ' + err).red)
+              // debug.msg(('getTrades ' + err).red)
               return retry('getTrades', func_args)
             })
         _.remove(ws_trades, function(t) {
@@ -362,7 +361,7 @@ export default (conf) => {
           cb(null, ws_balance)
         })
         .catch(function(err) {
-          debug.msg(('getBalance ' + err).red)
+          // debug.msg(('getBalance ' + err).red)
           return retry('getBalance', func_args)
         })
     },
@@ -378,7 +377,7 @@ export default (conf) => {
           cb(null, ws_ticker)
         })
         .catch(function(err) {
-          debug.msg(('getQuote ' + err).red)
+          // debug.msg(('getQuote ' + err).red)
           return retry('getQuote', func_args)
         })
     },
@@ -390,7 +389,7 @@ export default (conf) => {
           cb()
         })
         .catch(function(err) {
-          debug.msg(('cancelOrder ' + err).red)
+          // debug.msg(('cancelOrder ' + err).red)
           if (err !== 'Error: Order not found') return retry('cancelOrder', func_args)
         })
     },
@@ -409,7 +408,7 @@ export default (conf) => {
         let client = authedClient()
         client.place_order(joinProduct(opts.product_id), action, opts.size, opts.price, 'market', function(err, body) {
           if (err || (typeof body === 'string' && body.match(/error/))) {
-            debug.msg(('trade ' + (err ? err : body)).red)
+            // debug.msg(('trade ' + (err ? err : body)).red)
             if (body === 'error: Error: Place order error: Insufficient funds.') {
               let order = {
                 status: 'rejected',
@@ -456,7 +455,7 @@ export default (conf) => {
             cb(null, order)
           })
           .catch(function(err) {
-            debug.msg(('trade ' + err).red)
+            // debug.msg(('trade ' + err).red)
             return retry('trade', func_args)
           })
       }
@@ -488,7 +487,7 @@ export default (conf) => {
           cb(null, order)
         })
         .catch(function(err) {
-          debug.msg(('getOrder ' + err).red)
+          // debug.msg(('getOrder ' + err).red)
           return retry('getOrder', func_args)
         })
     },
@@ -498,18 +497,18 @@ export default (conf) => {
       let client = authedClient()
       client.get_my_fee(function(err, body) {
         if (err || (typeof body === 'string' && body.match(/error/))) {
-          debug.msg(('setFees ' + (err ? err : body) + ' - using fixed fees!').red)
+          // debug.msg(('setFees ' + (err ? err : body) + ' - using fixed fees!').red)
           return retry('setFees', func_args)
         } else {
           let pair = opts.asset + ':' + opts.currency
           let makerFee = (parseFloat(body[pair].buyMaker) + parseFloat(body[pair].sellMaker)) / 2
           let takerFee = (parseFloat(body[pair].buy) + parseFloat(body[pair].sell)) / 2
           if (exchange.makerFee != makerFee) {
-            debug.msg('Maker fee changed: ' + exchange.makerFee + '% -> ' + makerFee + '%')
+            // debug.msg('Maker fee changed: ' + exchange.makerFee + '% -> ' + makerFee + '%')
             exchange.makerFee = makerFee
           }
           if (exchange.takerFee != takerFee) {
-            debug.msg('Taker fee changed: ' + exchange.takerFee + '% -> ' + takerFee + '%')
+            // debug.msg('Taker fee changed: ' + exchange.takerFee + '% -> ' + takerFee + '%')
             exchange.takerFee = takerFee
           }
         }

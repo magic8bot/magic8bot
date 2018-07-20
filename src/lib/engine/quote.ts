@@ -1,5 +1,5 @@
 import n from 'numbro'
-import { ExchangeService } from '../services/exchange.service'
+import { ExchangeService } from '@services'
 
 export interface QuoteResponse {
   bid: number

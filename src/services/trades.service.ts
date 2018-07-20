@@ -1,4 +1,4 @@
-import { MarkerStore } from '../store/marker.store'
+import { MarkerStore } from '@stores'
 import { ExchangeService } from './exchange.service'
 
 interface TradeOpts {

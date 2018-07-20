@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 
-import { dbDriver } from '../lib'
+import { dbDriver } from '@lib'
 
 export class SessionStore {
   private sessionId: string

@@ -1,4 +1,4 @@
-import { dbDriver, Options } from '../lib'
+import { dbDriver, Options } from '@lib'
 
 export class OptionStore {
   public options: Options = {} as Options

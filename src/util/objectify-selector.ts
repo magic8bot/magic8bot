@@ -1,4 +1,4 @@
-import normalizeSelector from './normalize-selector'
+import { normalizeSelector } from './normalize-selector'
 
 export interface Selector {
   exchange_id: string
@@ -8,7 +8,7 @@ export interface Selector {
   normalized: string
 }
 
-export default (selector): Selector => {
+export const objectifySelector = (selector): Selector => {
   var rtn
 
   if (typeof selector == 'string') {

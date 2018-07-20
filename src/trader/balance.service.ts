@@ -1,4 +1,4 @@
-import { timebucket } from '../util/timebucket'
+import { timebucket } from '@util'
 import n from 'numbro'
 import { Collection } from 'mongodb'
 

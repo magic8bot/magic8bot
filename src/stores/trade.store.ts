@@ -1,4 +1,4 @@
-import { dbDriver, TradeItem } from '../lib'
+import { dbDriver, TradeItem } from '@lib'
 
 export class TradeStore {
   public tradesMap: Map<string, TradeItem[]> = new Map()

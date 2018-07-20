@@ -1,10 +1,3 @@
-//Basic Usage
-// let crossover = require('../../../lib/helpers').crossover,
-// or
-// const tv = require('../../../lib/helpers')
-// ...
-// s.period.hl2 = tv.hl2(s.period)
-
 export const crossover = (s, key1, key2) => {
   return s.period[key1] > s.period[key2] && s.lookback[0][key1] <= s.lookback[0][key2]
 }

@@ -1,5 +1,5 @@
 import { Trade, Quote, Product, ExchangeAuth } from '@m8bTypes'
-import { loadExchange } from '../plugins/exchanges'
+import { loadExchange } from '@plugins'
 
 interface BaseOpts {
   asset: string

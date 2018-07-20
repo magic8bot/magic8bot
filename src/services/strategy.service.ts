@@ -1,5 +1,5 @@
-import { loadStrategy } from '../plugins/strategies'
-import { PeriodStore } from '../store/period.store'
+import { loadStrategy } from '@plugins'
+import { PeriodStore } from '@stores'
 
 interface IStrategy {
   name: string

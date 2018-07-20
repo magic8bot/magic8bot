@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 
-import { timebucket } from '../util'
-import { PeriodItem, TradeItem } from '../lib'
+import { timebucket } from '@util'
+import { PeriodItem, TradeItem } from '@lib'
 
 export class PeriodStore {
   public periods: PeriodItem[] = []

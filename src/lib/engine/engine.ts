@@ -1,10 +1,8 @@
 import { ExchangeConf } from '@m8bTypes'
-import { ExchangeService } from '../services/exchange.service'
-import { StrategyService } from '../services/strategy.service'
-import { TradeStore } from '../store/trade.store'
-import { TradeService } from '../services/trades.service'
-import { sleep } from '../util'
-import objectifySelector from '../util/objectify-selector'
+import { ExchangeService, StrategyService, TradeService } from '@services'
+import { TradeStore } from '@stores'
+import { sleep } from '@util'
+import { objectifySelector } from '@util'
 
 enum BACKFILL_STATUS {
   INIT,

@@ -8,7 +8,7 @@ let PROPERTY_RANDOM_CHANCE = 0.3 // Chance of a Mutation to spawn a new species 
 let PROPERTY_MUTATION_CHANCE = 0.3 // Chance of a Mutation in an aspect of the species
 let PROPERTY_CROSSOVER_CHANCE = 0.5 // Chance of a aspect being inherited by another species
 
-export const create = (strategy) => {
+const create = (strategy) => {
   var r = {}
   for (var k in strategy) {
     var v = strategy[k]
@@ -45,7 +45,7 @@ export const create = (strategy) => {
   return r
 }
 
-export const range = (v, step, stepSize) => {
+const range = (v, step, stepSize) => {
   var scale = step / (stepSize - 1)
 
   if (v.type === 'int') {
@@ -70,7 +70,7 @@ export const range = (v, step, stepSize) => {
   }
 }
 
-export const mutation = (oldPhenotype, strategy) => {
+const mutation = (oldPhenotype, strategy) => {
   var r = create(strategy)
   if (Math.random() > PROPERTY_RANDOM_CHANCE) {
     for (var k in oldPhenotype) {
@@ -83,7 +83,7 @@ export const mutation = (oldPhenotype, strategy) => {
   return r
 }
 
-export const crossover = (phenotypeA, phenotypeB, strategy) => {
+const crossover = (phenotypeA, phenotypeB, strategy) => {
   var p1 = {}
   var p2 = {}
 
@@ -99,7 +99,7 @@ export const crossover = (phenotypeA, phenotypeB, strategy) => {
   return [p1, p2]
 }
 
-export const fitness = (phenotype) => {
+const fitness = (phenotype) => {
   if (typeof phenotype.sim === 'undefined') return 0
   let rate = 0
   if (phenotype.fitnessCalcType == 'profitwl') {
@@ -163,12 +163,12 @@ export const fitness = (phenotype) => {
   return rate
 }
 
-export const competition = (phenotypeA, phenotypeB) => {
+const competition = (phenotypeA, phenotypeB) => {
   // TODO: Refer to geneticalgorithm documentation on how to improve this with diverstiy
   return fitness(phenotypeA) >= fitness(phenotypeB)
 }
 
-export const Range = (min, max) => {
+const Range = (min, max) => {
   var r = {
     type: 'int',
     min: min,
@@ -177,7 +177,7 @@ export const Range = (min, max) => {
   return r
 }
 
-export const Range0 = (min, max) => {
+const Range0 = (min, max) => {
   var r = {
     type: 'int0',
     min: min,
@@ -186,7 +186,7 @@ export const Range0 = (min, max) => {
   return r
 }
 
-export const RangeFactor = (min, max, factor) => {
+const RangeFactor = (min, max, factor) => {
   var r = {
     type: 'intfactor',
     min: min,
@@ -196,7 +196,7 @@ export const RangeFactor = (min, max, factor) => {
   return r
 }
 
-export const RangeFloat = (min, max) => {
+const RangeFloat = (min, max) => {
   var r = {
     type: 'float',
     min: min,
@@ -205,7 +205,7 @@ export const RangeFloat = (min, max) => {
   return r
 }
 
-export const RangePeriod = (min, max, period_length) => {
+const RangePeriod = (min, max, period_length) => {
   var r = {
     type: 'period_length',
     min: min,
@@ -215,7 +215,7 @@ export const RangePeriod = (min, max, period_length) => {
   return r
 }
 
-export const RangeMaType = () => {
+const RangeMaType = () => {
   var r = {
     type: 'listOption',
     options: ['SMA', 'EMA', 'WMA', 'DEMA', 'TEMA', 'TRIMA', 'KAMA', 'MAMA', 'T3'],
@@ -223,10 +223,26 @@ export const RangeMaType = () => {
   return r
 }
 
-export const ListOption = (options) => {
+const ListOption = (options) => {
   var r = {
     type: 'listOption',
     options: options,
   }
   return r
+}
+
+export const Phenotypes = {
+  create,
+  range,
+  mutation,
+  crossover,
+  fitness,
+  competition,
+  Range,
+  Range0,
+  RangeFactor,
+  RangeFloat,
+  RangePeriod,
+  RangeMaType,
+  ListOption,
 }

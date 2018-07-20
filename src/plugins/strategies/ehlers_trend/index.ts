@@ -1,6 +1,6 @@
 import z from 'zero-fill'
 import n from 'numbro'
-import * as Phenotypes from '../../../util/phenotype'
+import { Phenotypes } from '@util'
 import { crossover, crossunder, nz } from '../../../util/helpers'
 import * as tv from '../../../util/helpers'
 

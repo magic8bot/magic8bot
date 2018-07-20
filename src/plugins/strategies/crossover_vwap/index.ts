@@ -1,7 +1,7 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { vwap, ema, sma } from '@plugins'
-import * as Phenotypes from '../../../util/phenotype'
+import { Phenotypes } from '@util'
 
 export default {
   name: 'crossover_vwap',

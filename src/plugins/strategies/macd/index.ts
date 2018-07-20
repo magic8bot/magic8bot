@@ -3,7 +3,7 @@ import 'colors'
 import z from 'zero-fill'
 import n from 'numbro'
 import { ema, rsi } from '@plugins'
-import * as Phenotypes from '../../../util/phenotype'
+import { Phenotypes } from '@util'
 
 export default {
   name: 'macd',

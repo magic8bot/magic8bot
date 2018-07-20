@@ -2,7 +2,7 @@ import convnetjs from 'convnetjs'
 import z from 'zero-fill'
 import n from 'numbro'
 import { ema } from '@plugins'
-import * as Phenotypes from '../../../util/phenotype'
+import { Phenotypes } from '@util'
 import cluster from 'cluster'
 
 const G = global as any

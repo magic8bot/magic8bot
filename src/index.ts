@@ -5,7 +5,7 @@ import { magic8bot } from './conf'
 import { Conf } from '@m8bTypes'
 import { dbDriver } from './lib'
 
-import { Core } from './engine'
+import { Core } from './lib'
 // import { window } from './output'
 
 const checkSharePercent = ({ exchanges }: Conf) => {

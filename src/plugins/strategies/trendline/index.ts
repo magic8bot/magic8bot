@@ -4,7 +4,7 @@ import z from 'zero-fill'
 import n from 'numbro'
 import stats from 'stats-lite'
 import { ema } from '@plugins'
-import * as Phenotypes from '../../../util/phenotype'
+import { Phenotypes } from '@util'
 
 var oldgrowth = 1
 

@@ -1,7 +1,7 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { rsi, tiHma } from '@plugins'
-import * as Phenotypes from '../../../util/phenotype'
+import { Phenotypes } from '@util'
 
 export default {
   name: 'ti_hma',

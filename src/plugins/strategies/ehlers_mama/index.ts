@@ -24,7 +24,7 @@ Travis      ETH = 0xdA963A127BeCB08227583d11f912F400D5347060 , BTC = 3KKHdBJpEGx
 
 import z from 'zero-fill'
 import n from 'numbro'
-import * as Phenotypes from '../../../util/phenotype'
+import { Phenotypes } from '@util'
 import { crossover, crossunder, nz, iff } from '../../../util/helpers'
 import * as tv from '../../../util/helpers'
 

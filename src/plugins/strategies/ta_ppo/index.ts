@@ -1,7 +1,7 @@
 import z from 'zero-fill'
 import n from 'numbro'
 import { rsi, taPpo } from '@plugins'
-import * as Phenotypes from '../../../util/phenotype'
+import { Phenotypes } from '@util'
 
 export default {
   name: 'ta_ppo',

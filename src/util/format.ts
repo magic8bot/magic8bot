@@ -2,15 +2,15 @@ import n from 'numbro'
 
 let max_fc_width = 0
 
-export function formatAsset(amt, asset) {
+export const formatAsset = (amt, asset) => {
   return n(amt).format('0.00000000') + ' ' + asset
 }
 
-export function formatPercent(ratio) {
+export const formatPercent = (ratio) => {
   return (ratio >= 0 ? '+' : '') + n(ratio).format('0.00%')
 }
 
-export function formatCurrency(amt, currency, omit_currency?, color_trick?, do_pad?) {
+export const formatCurrency = (amt, currency, omit_currency?, color_trick?, do_pad?) => {
   let str
   let fstr
   amt > 999

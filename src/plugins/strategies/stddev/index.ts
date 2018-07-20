@@ -2,7 +2,7 @@ import z from 'zero-fill'
 import stats from 'stats-lite'
 import math from 'mathjs'
 import { ema } from '@plugins'
-import * as Phenotypes from '../../../util/phenotype'
+import { Phenotypes } from '@util'
 
 export default {
   name: 'stddev',

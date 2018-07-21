@@ -37,7 +37,7 @@ Red: Direct data flow
 Yellow: Blunt end of line is directly injected into the arrow end of line
 Dashed: Not yet implemented
 
-![logo](https://rawgit.com/notvitaliy/magic8bot/master/assets/magic8bot.svg)
+![logo](https://rawgit.com/notvitaliy/magic8bot/master/assets/flowchart.svg)
 
 ## Donate
 

@@ -26,8 +26,8 @@ export default (conf) => {
     return authed_client
   }
 
-  function joinProduct(product_id) {
-    return (product_id.split('-')[0] + '_' + product_id.split('-')[1]).toLowerCase()
+  function joinProduct(productId) {
+    return (productId.split('-')[0] + '_' + productId.split('-')[1]).toLowerCase()
   }
 
   function statusErr(err, body) {
@@ -72,7 +72,7 @@ export default (conf) => {
     getTrades(opts, cb) {
       const func_args = [].slice.call(arguments)
       const client = publicClient()
-      const pair = joinProduct(opts.product_id)
+      const pair = joinProduct(opts.productId)
       const args: Record<string, any> = {}
       if (opts.from) {
         // move cursor into the future
@@ -125,7 +125,7 @@ export default (conf) => {
     getQuote(opts, cb) {
       const func_args = [].slice.call(arguments)
       const client = publicClient()
-      const pair = joinProduct(opts.product_id).toLowerCase()
+      const pair = joinProduct(opts.productId).toLowerCase()
       client.ticker({ pair }, function(err, body) {
         if (err) return retry('getQuote', func_args, err)
         cb(null, { bid: body.ticker.buy, ask: body.ticker.sell })
@@ -147,7 +147,7 @@ export default (conf) => {
     trade(type, opts, cb) {
       const func_args = [].slice.call(arguments)
       const client = authedClient()
-      const pair = joinProduct(opts.product_id)
+      const pair = joinProduct(opts.productId)
       /* WEXNZ has no order type?
       if (typeof opts.post_only === 'undefined') {
         opts.post_only = true
@@ -193,7 +193,7 @@ export default (conf) => {
         count: 1,
         from_id: opts.order_id,
         // end_id: opts.order_id,
-        pair: opts.product_id,
+        pair: opts.productId,
       }
       client.activeOrders(orderInfo, function(err, resp, body) {
         body = statusErr(err, body)

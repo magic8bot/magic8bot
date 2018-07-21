@@ -81,7 +81,7 @@ export default (conf) => {
       }
       if (firstRun) {
         client
-          .fetchOHLCV(joinProduct(opts.product_id), args.timeframe, opts.from)
+          .fetchOHLCV(joinProduct(opts.productId), args.timeframe, opts.from)
           .then((result) => {
             let lastVal = 0
             trades = result.map((trade) => {
@@ -109,7 +109,7 @@ export default (conf) => {
           })
       } else {
         client
-          .fetchTrades(joinProduct(opts.product_id), undefined, undefined, args)
+          .fetchTrades(joinProduct(opts.productId), undefined, undefined, args)
           .then((result) => {
             const newTrades = result.map((trade) => {
               return {
@@ -158,7 +158,7 @@ export default (conf) => {
       const funcArgs = [].slice.call(arguments)
       const client = publicClient()
       client
-        .fetchTicker(joinProduct(opts.product_id))
+        .fetchTicker(joinProduct(opts.productId))
         .then((result) => {
           cb(null, { bid: result.bid, ask: result.ask })
         })
@@ -172,7 +172,7 @@ export default (conf) => {
       const funcArgs = [].slice.call(arguments)
       const client = publicClient()
       client
-        .fetchOrderBook(joinProduct(opts.product_id), { limit: opts.limit })
+        .fetchOrderBook(joinProduct(opts.productId), { limit: opts.limit })
         .then((result) => {
           cb(null, result)
         })
@@ -185,7 +185,7 @@ export default (conf) => {
     cancelOrder(opts, cb) {
       const funcArgs = [].slice.call(arguments)
       const client = authedClient()
-      client.cancelOrder(opts.order_id, joinProduct(opts.product_id)).then(
+      client.cancelOrder(opts.order_id, joinProduct(opts.productId)).then(
         (body) => {
           if (body && (body.message === 'Order already done' || body.message === 'order not found')) return cb()
           cb(null)
@@ -231,7 +231,7 @@ export default (conf) => {
       let order = {}
       client
         .createOrder(
-          joinProduct(opts.product_id),
+          joinProduct(opts.productId),
           opts.type,
           opts.side,
           this.roundToNearest(opts.size, opts),
@@ -297,7 +297,7 @@ export default (conf) => {
       let order = {}
       client
         .createOrder(
-          joinProduct(opts.product_id),
+          joinProduct(opts.productId),
           opts.type,
           opts.side,
           this.roundToNearest(opts.size, opts),
@@ -345,8 +345,8 @@ export default (conf) => {
 
     roundToNearest(numToRound, opts) {
       let numToRoundTo = _.find(this.getProducts(), {
-        asset: opts.product_id.split('-')[0],
-        currency: opts.product_id.split('-')[1],
+        asset: opts.productId.split('-')[0],
+        currency: opts.productId.split('-')[1],
         // @ts-ignore
       }).min_size
       numToRoundTo = 1 / numToRoundTo
@@ -358,7 +358,7 @@ export default (conf) => {
       const funcArgs = [].slice.call(arguments)
       const client = authedClient()
       const order = orders['~' + opts.order_id]
-      client.fetchOrder(opts.order_id, joinProduct(opts.product_id)).then(
+      client.fetchOrder(opts.order_id, joinProduct(opts.productId)).then(
         (body) => {
           if (body.status !== 'open' && body.status !== 'canceled') {
             order.status = 'done'

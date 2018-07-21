@@ -7,7 +7,7 @@ import n from 'numbro'
 export default (conf) => {
   let public_client, authed_client
 
-  function publicClient(/*product_id*/) {
+  function publicClient(/*productId*/) {
     if (!public_client) public_client = new Poloniex()
     return public_client
   }
@@ -22,8 +22,8 @@ export default (conf) => {
     return authed_client
   }
 
-  function joinProduct(product_id) {
-    return product_id.split('-')[1] + '_' + product_id.split('-')[0]
+  function joinProduct(productId) {
+    return productId.split('-')[1] + '_' + productId.split('-')[0]
   }
 
   function retry(method, args) {
@@ -48,7 +48,7 @@ export default (conf) => {
       const func_args = [].slice.call(arguments)
       const client = publicClient()
       const args: Record<string, any> = {
-        currencyPair: joinProduct(opts.product_id),
+        currencyPair: joinProduct(opts.productId),
       }
       if (opts.from) {
         args.start = opts.from
@@ -120,7 +120,7 @@ export default (conf) => {
     getOrderBook(opts, cb) {
       const client = publicClient()
       const params = {
-        currencyPair: joinProduct(opts.product_id),
+        currencyPair: joinProduct(opts.productId),
         depth: 10,
       }
       client._public('returnOrderBook', params, function(err, data) {
@@ -144,7 +144,7 @@ export default (conf) => {
     getQuote(opts, cb) {
       const args = [].slice.call(arguments)
       const client = publicClient()
-      const product_id = joinProduct(opts.product_id)
+      const productId = joinProduct(opts.productId)
       client.getTicker(function(err, body) {
         if (err) return cb(err)
         if (typeof body === 'string') {
@@ -155,9 +155,9 @@ export default (conf) => {
           console.error(body)
           return retry('getQuote', args)
         }
-        const quote = body[product_id]
-        if (!quote) return cb(new Error('no quote for ' + product_id))
-        if (quote.isFrozen == '1') console.error('\nwarning: product ' + product_id + ' is frozen')
+        const quote = body[productId]
+        if (!quote) return cb(new Error('no quote for ' + productId))
+        if (quote.isFrozen == '1') console.error('\nwarning: product ' + productId + ' is frozen')
         cb(null, {
           bid: quote.highestBid,
           ask: quote.lowestAsk,
@@ -187,7 +187,7 @@ export default (conf) => {
       const args = [].slice.call(arguments)
       const client = authedClient()
       const params = {
-        currencyPair: joinProduct(opts.product_id),
+        currencyPair: joinProduct(opts.productId),
         rate: opts.price,
         amount: opts.size,
         postOnly: opts.post_only === false ? '0' : '1',
@@ -240,7 +240,7 @@ export default (conf) => {
       if (!order) return cb(new Error('order not found in cache'))
       const client = authedClient()
       const params = {
-        currencyPair: joinProduct(opts.product_id),
+        currencyPair: joinProduct(opts.productId),
       }
       client._private('returnOpenOrders', params, function(err, body) {
         if (err) return cb(err)

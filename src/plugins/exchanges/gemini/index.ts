@@ -36,8 +36,8 @@ export default (conf) => {
     return authed_client
   }
 
-  function joinProduct(product_id) {
-    return (product_id.split('-')[0].toLowerCase() + product_id.split('-')[1]).toLowerCase()
+  function joinProduct(productId) {
+    return (productId.split('-')[0].toLowerCase() + productId.split('-')[1]).toLowerCase()
   }
 
   function retry(method, args, error) {
@@ -83,7 +83,7 @@ export default (conf) => {
 
       const client = publicClient()
       client
-        .getTradeHistory(joinProduct(opts.product_id), args)
+        .getTradeHistory(joinProduct(opts.productId), args)
         .then((body) => {
           const trades = body
             .filter((t) => {
@@ -139,7 +139,7 @@ export default (conf) => {
 
       const client = publicClient()
       client
-        .getTicker(joinProduct(opts.product_id))
+        .getTicker(joinProduct(opts.productId))
         .then((body) => {
           const r = {
             bid: String(body.bid),
@@ -168,7 +168,7 @@ export default (conf) => {
 
     buy(opts, cb) {
       const params = {
-        symbol: joinProduct(opts.product_id),
+        symbol: joinProduct(opts.productId),
         amount: n(opts.size).format('0.00000'),
         price: n(opts.price).format('0.00'),
         side: 'buy',
@@ -213,7 +213,7 @@ export default (conf) => {
 
     sell(opts, cb) {
       const params = {
-        symbol: joinProduct(opts.product_id),
+        symbol: joinProduct(opts.productId),
         amount: n(opts.size).format('0.00000'),
         price: n(opts.price).format('0.00'),
         side: 'sell',

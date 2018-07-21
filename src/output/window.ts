@@ -20,7 +20,7 @@ class Window {
 
   private progressBars: Widgets.BoxElement[] = []
 
-  constructor() {
+  public init() {
     this.screen = blessed.screen({
       smartCSR: true,
     })

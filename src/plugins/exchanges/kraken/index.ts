@@ -37,9 +37,9 @@ export default (conf) => {
 
   // This is to deal with a silly bug where kraken doesn't use a consistent definition for currency
   // with certain assets they will mix the use of 'Z' and 'X' prefixes
-  function joinProductFormatted(product_id) {
-    const asset = product_id.split('-')[0]
-    let currency = product_id.split('-')[1]
+  function joinProductFormatted(productId) {
+    const asset = productId.split('-')[0]
+    let currency = productId.split('-')[1]
 
     const assetsToFix = ['BCH', 'DASH', 'EOS', 'GNO']
     if (assetsToFix.indexOf(asset) >= 0 && currency.length > 3) {
@@ -101,7 +101,7 @@ export default (conf) => {
       const func_args = [].slice.call(arguments)
       const client = publicClient()
       const args: Record<string, any> = {
-        pair: joinProductFormatted(opts.product_id),
+        pair: joinProductFormatted(opts.productId),
       }
       if (opts.from) {
         args.since = Number(opts.from) * 1000000
@@ -180,7 +180,7 @@ export default (conf) => {
     getQuote(opts, cb) {
       const args = [].slice.call(arguments)
       const client = publicClient()
-      const pair = joinProductFormatted(opts.product_id)
+      const pair = joinProductFormatted(opts.productId)
       client.api(
         'Ticker',
         {
@@ -239,7 +239,7 @@ export default (conf) => {
       const args = [].slice.call(arguments)
       const client = authedClient()
       const params: Record<string, any> = {
-        pair: joinProductFormatted(opts.product_id),
+        pair: joinProductFormatted(opts.productId),
         type,
         ordertype: opts.order_type === 'taker' ? 'market' : 'limit',
         volume: opts.size,

@@ -20,8 +20,8 @@ export default (conf) => {
     return authed_client
   }
 
-  function joinProduct(product_id) {
-    return product_id.split('-')[0] + product_id.split('-')[1]
+  function joinProduct(productId) {
+    return productId.split('-')[0] + productId.split('-')[1]
   }
 
   function retry(method, args) {
@@ -80,7 +80,7 @@ export default (conf) => {
 
     getTrades(opts, cb) {
       const args: Record<string, any> = {
-        id: joinProduct(opts.product_id),
+        id: joinProduct(opts.productId),
         per_page: 200,
         page: 1,
       }
@@ -134,7 +134,7 @@ export default (conf) => {
       const func_args = [].slice.call(arguments)
       const client = publicClient()
       client
-        .fetchTicker({ id: joinProduct(opts.product_id) })
+        .fetchTicker({ id: joinProduct(opts.productId) })
         .then((result) => {
           cb(null, { bid: result.bid, ask: result.ask })
         })

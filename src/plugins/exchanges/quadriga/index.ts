@@ -32,8 +32,8 @@ export default (conf) => {
     return authed_client
   }
 
-  function joinProduct(product_id) {
-    return (product_id.split('-')[0] + '_' + product_id.split('-')[1]).toLowerCase()
+  function joinProduct(productId) {
+    return (productId.split('-')[0] + '_' + productId.split('-')[1]).toLowerCase()
   }
 
   function retry(method, args, error) {
@@ -71,7 +71,7 @@ export default (conf) => {
     getTrades(opts, cb) {
       const func_args = [].slice.call(arguments)
       const args = {
-        book: joinProduct(opts.product_id),
+        book: joinProduct(opts.productId),
         time: 'hour',
       }
 
@@ -144,7 +144,7 @@ export default (conf) => {
       const func_args = [].slice.call(arguments)
 
       const params = {
-        book: joinProduct(opts.product_id),
+        book: joinProduct(opts.productId),
       }
 
       const client = publicClient()
@@ -180,7 +180,7 @@ export default (conf) => {
     buy(opts, cb) {
       const params: Record<string, any> = {
         amount: opts.size,
-        book: joinProduct(opts.product_id),
+        book: joinProduct(opts.productId),
       }
 
       if (opts.order_type === 'maker') {
@@ -237,7 +237,7 @@ export default (conf) => {
     sell(opts, cb) {
       const params: Record<string, any> = {
         amount: opts.size,
-        book: joinProduct(opts.product_id),
+        book: joinProduct(opts.productId),
       }
 
       if (opts.order_type === 'maker' && typeof opts.type === 'undefined') {

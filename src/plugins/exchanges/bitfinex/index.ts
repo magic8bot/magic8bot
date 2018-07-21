@@ -1,3 +1,5 @@
+import 'colors'
+
 import BFX from 'bitfinex-api-node'
 import minimist from 'minimist'
 import path from 'path'
@@ -136,7 +138,7 @@ export default (conf) => {
       ws_orders['~' + cid].reject_reason = 'balance'
     }
     if (error[6] === 'ERROR' && error[7] === 'Invalid price.') {
-      cid = error[4][2]
+      const cid = error[4][2]
 
       if (!ws_orders['~' + cid]) {
         if (so.debug) {
@@ -340,8 +342,8 @@ export default (conf) => {
     }
   }
 
-  function joinProduct(product_id) {
-    return product_id.split('-')[0] + '' + product_id.split('-')[1]
+  function joinProduct(productId) {
+    return productId.split('-')[0] + '' + productId.split('-')[1]
   }
 
   function retry(method, args, cb) {
@@ -464,7 +466,7 @@ export default (conf) => {
 
     getTrades(opts, cb) {
       if (!pair) {
-        pair = joinProduct(opts.product_id)
+        pair = joinProduct(opts.productId)
       }
 
       // Backfilling using the REST API
@@ -483,7 +485,7 @@ export default (conf) => {
           args.start = args.end - 500000
         }
         const query = encodeQueryData(args)
-        const tpair = 't' + joinProduct(opts.product_id)
+        const tpair = 't' + joinProduct(opts.productId)
         client.makePublicRequest('trades/' + tpair + '/hist?' + query, function(err, body) {
           if (err) return retry('getTrades', opts, cb)
           const trades = body.map(function(trade) {
@@ -615,7 +617,7 @@ export default (conf) => {
 
     trade(action, opts, cb) {
       if (!pair) {
-        pair = joinProduct(opts.product_id)
+        pair = joinProduct(opts.productId)
       }
       const symbol = 't' + pair
 

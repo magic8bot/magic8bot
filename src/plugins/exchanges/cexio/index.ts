@@ -31,8 +31,8 @@ export default (conf) => {
     return authed_client
   }
 
-  function joinProduct(product_id) {
-    return product_id.split('-')[0] + '/' + product_id.split('-')[1]
+  function joinProduct(productId) {
+    return productId.split('-')[0] + '/' + productId.split('-')[1]
   }
 
   function retry(method, args) {
@@ -298,7 +298,7 @@ export default (conf) => {
       if (so._[2] === 'backfill') {
         // Backfill using REST
         const client = publicClient()
-        const pair = joinProduct(opts.product_id)
+        const pair = joinProduct(opts.productId)
         client.trade_history(pair, opts.from, function(err, body) {
           if (err || (typeof body === 'string' && body.match(/error/))) {
             // debug.msg(('getTrades ' + (err ? err : body)).red)
@@ -318,10 +318,10 @@ export default (conf) => {
       } else {
         // WebSocket once Live
         if (!ws_subscribed) {
-          wsTrades(opts.product_id)
+          wsTrades(opts.productId)
             .then(function(data: any[]) {
               ws_subscribed = true
-              amount_format = opts.product_id.split('-')[0] === 'ETH' ? 1000000 : 100000000 // trade amount is an unformatted integer
+              amount_format = opts.productId.split('-')[0] === 'ETH' ? 1000000 : 100000000 // trade amount is an unformatted integer
               data.forEach(function(trade) {
                 const t = trade.split(':')
                 ws_trades.push({
@@ -369,7 +369,7 @@ export default (conf) => {
 
     getQuote(opts, cb) {
       const func_args = [].slice.call(arguments)
-      wsQuote(opts.product_id)
+      wsQuote(opts.productId)
         .then(function(data: Record<string, any>) {
           const ws_ticker = {
             ask: data.ask,
@@ -407,7 +407,7 @@ export default (conf) => {
             .value() // CEXIO estimates asset size and uses free currency to performe margin buy
         }
         const client = authedClient()
-        client.place_order(joinProduct(opts.product_id), action, opts.size, opts.price, 'market', function(err, body) {
+        client.place_order(joinProduct(opts.productId), action, opts.size, opts.price, 'market', function(err, body) {
           if (err || (typeof body === 'string' && body.match(/error/))) {
             // debug.msg(('trade ' + (err ? err : body)).red)
             if (body === 'error: Error: Place order error: Insufficient funds.') {
@@ -437,7 +437,7 @@ export default (conf) => {
       } else {
         wsTrade({
           type: action,
-          pair: opts.product_id,
+          pair: opts.productId,
           size: opts.size,
           price: opts.price,
         })

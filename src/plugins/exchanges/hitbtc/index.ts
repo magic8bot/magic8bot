@@ -21,8 +21,8 @@ export default (conf) => {
     return authed_client
   }
 
-  function joinProduct(product_id) {
-    return product_id.split('-')[0] + '/' + product_id.split('-')[1]
+  function joinProduct(productId) {
+    return productId.split('-')[0] + '/' + productId.split('-')[1]
   }
 
   function retry(method, args, err) {
@@ -110,7 +110,7 @@ export default (conf) => {
       const client = publicClient()
       {
         client
-          .fetchTrades(joinProduct(opts.product_id), opts.from)
+          .fetchTrades(joinProduct(opts.productId), opts.from)
           .then((result) => {
             const trades = result.map(function(trade) {
               return {
@@ -118,7 +118,7 @@ export default (conf) => {
                 time: trade.timestamp,
                 size: parseFloat(trade.amount),
                 price: parseFloat(trade.price),
-                selector: 'hitbtc.' + opts.product_id,
+                selector: 'hitbtc.' + opts.productId,
                 side: trade.side,
               }
             })
@@ -159,7 +159,7 @@ export default (conf) => {
       const func_args = [].slice.call(arguments)
       const client = publicClient()
       client
-        .fetchTicker(joinProduct(opts.product_id))
+        .fetchTicker(joinProduct(opts.productId))
         .then((result) => {
           cb(null, { bid: result.bid, ask: result.ask })
         })
@@ -172,7 +172,7 @@ export default (conf) => {
       const func_args = [].slice.call(arguments)
       const client = authedClient()
       client
-        .cancelOrder(opts.order_id, joinProduct(opts.product_id))
+        .cancelOrder(opts.order_id, joinProduct(opts.productId))
         .then((result) => {
           cb(result)
         })
@@ -198,7 +198,7 @@ export default (conf) => {
       opts.side = 'buy'
 
       const callParams = {
-        symbol: joinProduct(opts.product_id),
+        symbol: joinProduct(opts.productId),
         type: opts.type,
         side: 'buy',
         quantity: opts.size,
@@ -236,7 +236,7 @@ export default (conf) => {
       }
       opts.side = 'sell'
       const callParams = {
-        symbol: joinProduct(opts.product_id),
+        symbol: joinProduct(opts.productId),
         type: opts.type,
         side: 'sell',
         quantity: opts.size,
@@ -276,7 +276,7 @@ export default (conf) => {
       const client = authedClient()
 
       client
-        .fetchOrder(opts.order_id, joinProduct(opts.product_id), { wait: 100000 })
+        .fetchOrder(opts.order_id, joinProduct(opts.productId), { wait: 100000 })
         .then((result) => {
           const r = result
           if (result.status === 'canceled') {

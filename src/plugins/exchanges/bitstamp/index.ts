@@ -40,8 +40,8 @@ args.forEach(function(value) {
   }
 })
 
-function joinProduct(product_id) {
-  return product_id.split('-')[0] + product_id.split('-')[1]
+function joinProduct(productId) {
+  return productId.split('-')[0] + productId.split('-')[1]
 }
 
 export default (conf) => {
@@ -202,7 +202,7 @@ export default (conf) => {
     getTrades(opts, cb) {
       const args = {
         wait: 2, // Seconds
-        product_id: wsOpts.currencyPair,
+        productId: wsOpts.currencyPair,
       }
       if (!wstrades.length) return retry('getTrades', args)
       const t = wstrades
@@ -279,7 +279,7 @@ export default (conf) => {
 
     trade(type, opts, cb) {
       const client = authedClient()
-      const currencyPair = joinProduct(opts.product_id).toLowerCase()
+      const currencyPair = joinProduct(opts.productId).toLowerCase()
       if (typeof opts.order_type === 'undefined') {
         opts.order_type = 'maker'
       }

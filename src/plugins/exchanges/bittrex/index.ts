@@ -19,8 +19,8 @@ export default (conf) => {
     verbose: false,
   })
 
-  function joinProduct(product_id) {
-    return product_id.split('-')[1] + '-' + product_id.split('-')[0]
+  function joinProduct(productId) {
+    return productId.split('-')[1] + '-' + productId.split('-')[0]
   }
 
   function retry(method, args, error) {
@@ -81,8 +81,8 @@ export default (conf) => {
     getTrades(opts, cb) {
       const func_args = [].slice.call(arguments)
       const args = {
-        market: joinProduct(opts.product_id),
-        marketName: joinProduct(opts.product_id),
+        market: joinProduct(opts.productId),
+        marketName: joinProduct(opts.productId),
         tickInterval: 'oneMin',
       }
       // accomplish back trades using 2 calls. ticks and getMarket and create a hybrid result.
@@ -118,7 +118,7 @@ export default (conf) => {
                   size: parseFloat(trade.V),
                   price: parseFloat(trade.C),
                   // selector should get overwritten by backfill, but was a point where it was missing in the backfill function so this was put in so it is never missed
-                  selector: 'bittrex.' + opts.product_id,
+                  selector: 'bittrex.' + opts.productId,
                   side: buySell,
                 })
                 lastVal = parseFloat(trade.C)
@@ -137,7 +137,7 @@ export default (conf) => {
                       size: parseFloat(trade.Quantity),
                       price: parseFloat(trade.Price),
                       // selector should get overwritten by backfill, but was a point where it was missing in the backfill function so this was put in so it is never missed
-                      selector: 'bittrex.' + opts.product_id,
+                      selector: 'bittrex.' + opts.productId,
                       side: trade.OrderType || trade.OrderType == 'SELL' ? 'sell' : 'buy',
                       // selector:
                     })
@@ -173,7 +173,7 @@ export default (conf) => {
                   size: parseFloat(trade.Quantity),
                   price: parseFloat(trade.Price),
                   // selector should get overwritten by backfill, but was a point where it was missing in the backfill function so this was put in so it is never missed
-                  selector: 'bittrex.' + opts.product_id,
+                  selector: 'bittrex.' + opts.productId,
                   side: trade.OrderType || trade.OrderType == 'SELL' ? 'sell' : 'buy',
                 })
               }
@@ -207,17 +207,17 @@ export default (conf) => {
             const _balance = data.result[key]
             if (opts.last_signal === 'buy') {
               if (_balance.Currency === opts.currency.toUpperCase()) {
-                ; (balance.currency = n(_balance.Available).format('0.00000000')), (balance.currency_hold = 0)
+                ;(balance.currency = n(_balance.Available).format('0.00000000')), (balance.currency_hold = 0)
               }
               if (_balance.Currency === opts.asset.toUpperCase()) {
-                ; (balance.asset = n(_balance.Available).format('0.00000000')), (balance.asset_hold = 0)
+                ;(balance.asset = n(_balance.Available).format('0.00000000')), (balance.asset_hold = 0)
               }
             } else {
               if (_balance.Currency === opts.asset.toUpperCase()) {
-                ; (balance.asset = n(_balance.Available).format('0.00000000')), (balance.asset_hold = 0)
+                ;(balance.asset = n(_balance.Available).format('0.00000000')), (balance.asset_hold = 0)
               }
               if (_balance.Currency === opts.currency.toUpperCase()) {
-                ; (balance.currency = n(_balance.Available).format('0.00000000')), (balance.currency_hold = 0)
+                ;(balance.currency = n(_balance.Available).format('0.00000000')), (balance.currency_hold = 0)
               }
             }
           }
@@ -228,7 +228,7 @@ export default (conf) => {
 
     getOrderBook(opts, cb) {
       const args = {
-        market: joinProduct(opts.product_id),
+        market: joinProduct(opts.productId),
         type: 'both',
         depth: 10,
       }
@@ -259,10 +259,10 @@ export default (conf) => {
 
     getQuote(opts, cb) {
       if (opts == undefined) return
-      if (opts.product_id == undefined) return
+      if (opts.productId == undefined) return
       const func_args = [].slice.call(arguments)
       const args = {
-        market: joinProduct(opts.product_id),
+        market: joinProduct(opts.productId),
       }
       bittrex_public.getticker(args, function(data, err) {
         const res = handleErrors('getQuote', err, data, func_args, cb)
@@ -291,7 +291,7 @@ export default (conf) => {
     trade(type, opts, cb) {
       const func_args = [].slice.call(arguments)
       const params = {
-        market: joinProduct(opts.product_id),
+        market: joinProduct(opts.productId),
         quantity: opts.size,
         rate: opts.price,
       }

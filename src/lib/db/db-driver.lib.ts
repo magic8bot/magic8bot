@@ -6,11 +6,11 @@ type DbType = 'mongo' // | 'pg' | 'sqlite' | 'mysql'
 class DbDriver {
   private db: MongoLib
 
-  public connect(dbType: DbType, dbConfig: MongoConf) {
+  public async connect(dbType: DbType, dbConfig: MongoConf) {
     if (dbType === 'mongo') this.db = new MongoLib()
     else throw new Error(`${dbType} not yet supported.`)
 
-    this.db.connect(dbConfig)
+    await this.db.connect(dbConfig)
     this.db.init()
   }
 

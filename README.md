@@ -28,6 +28,17 @@ Magic8bot a crypto trading bot originally based off of zenbot4. It is a complete
 
 this bot has a Discord chat! You can get in [through this invite link](https://discord.gg/JGCNsh8).
 
+## Development
+
+### Flowchart
+
+Green: Shows directionality of instantiation
+Red: Direct data flow
+Yellow: Blunt end of line is directly injected into the arrow end of line
+Dashed: Not yet implemented
+
+![logo](https://rawgit.com/notvitaliy/magic8bot/master/assets/magic8bot.svg)
+
 ## Donate
 
 ### notVitaliy (author)

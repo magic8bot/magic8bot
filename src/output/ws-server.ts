@@ -11,14 +11,7 @@ class WsServer {
   }
 
   public init() {
-    this.server.on('connection', (ws) => {
-      ws.on('message', (body) => {
-        const { action, payload } = JSON.parse(body.toString())
-        if (!this.actions.has(action)) return
-
-        this.actions.get(action)(payload)
-      })
-    })
+    this.server.on('connection', (ws) => ws.on('message', this.hanndleMessage))
   }
 
   public broadcast(action: string, payload: Payload) {
@@ -29,6 +22,17 @@ class WsServer {
     if (this.actions.has(actionName)) return
 
     this.actions.set(actionName, actionFn)
+  }
+
+  private hanndleMessage = (raw: string | Buffer) => {
+    const body = raw.toString()
+    const parsed = JSON.parse(body)
+    if (!parsed || !parsed.action || !parsed.payload) return
+
+    const { action, payload } = parsed
+    if (!this.actions.has(action)) return
+
+    this.actions.get(action)(payload)
   }
 }
 

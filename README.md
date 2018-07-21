@@ -33,8 +33,11 @@ this bot has a Discord chat! You can get in [through this invite link](https://d
 ### Flowchart
 
 Green: Shows directionality of instantiation
+
 Red: Direct data flow
+
 Yellow: Blunt end of line is directly injected into the arrow end of line
+
 Dashed: Not yet implemented
 
 ![logo](https://rawgit.com/notvitaliy/magic8bot/master/assets/flowchart.svg)

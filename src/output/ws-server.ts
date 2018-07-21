@@ -26,13 +26,17 @@ class WsServer {
 
   private hanndleMessage = (raw: string | Buffer) => {
     const body = raw.toString()
-    const parsed = JSON.parse(body)
-    if (!parsed || !parsed.action || !parsed.payload) return
+    try {
+      const parsed = JSON.parse(body)
+      if (!parsed.action || !parsed.payload) return
 
-    const { action, payload } = parsed
-    if (!this.actions.has(action)) return
+      const { action, payload } = parsed
+      if (!this.actions.has(action)) return
 
-    this.actions.get(action)(payload)
+      this.actions.get(action)(payload)
+    } catch (e) {
+      console.error(e)
+    }
   }
 }
 

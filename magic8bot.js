@@ -7,5 +7,6 @@ if (isDev) {
   require('ts-node/register')
   require('./src')
 } else {
+  require('module-alias/register')
   require('./dist')
 }

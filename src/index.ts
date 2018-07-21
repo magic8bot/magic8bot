@@ -1,10 +1,8 @@
 import semver from 'semver'
-
 import { magic8bot } from './conf'
-
 import { Conf } from '@m8bTypes'
-
 import { Core, dbDriver } from '@lib'
+import { wsServer } from './output'
 
 const checkSharePercent = ({ exchanges }: Conf) => {
   exchanges.forEach(({ exchangeName, options: { strategies } }) => {
@@ -27,6 +25,7 @@ const run = async () => {
       magic8bot.mongo
     )
 
+    wsServer.init()
     const core = new Core(magic8bot.conf)
     await core.init()
   } catch (e) {

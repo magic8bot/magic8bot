@@ -1,6 +1,11 @@
 jest.mock('pushbullet')
 jest.mock('crypto', () => ({ randomBytes: () => ({ toString: () => 'random-string' }) }))
 
+jest.mock('../../src/lib/ws-server', () => {
+  const wsServer = {}
+  return { wsServer }
+})
+
 jest.mock('../../src/lib/db/db-driver.lib', () => {
   const { db } = global
 

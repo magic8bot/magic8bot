@@ -40,13 +40,14 @@ Yellow: Blunt end of line is directly injected into the arrow end of line
 
 Dashed: Not yet implemented
 
-![logo](https://rawgit.com/notvitaliy/magic8bot/master/assets/flowchart.svg)
+![flowchart](https://rawgit.com/notvitaliy/magic8bot/master/assets/flowchart.svg)
 
 ## Donate
 
 ### notVitaliy (author)
 
-`32gjP2cSQqaoaZ25ixvtqNhM272sRhXWjA`
+BTC: `32gjP2cSQqaoaZ25ixvtqNhM272sRhXWjA`
+ETH: `0xF0C99295CE430cc0B2ed6B9aa31a7fC10Cf0EaA9`
 
 ![logo](https://rawgit.com/notvitaliy/magic8bot/master/assets/logo-sm.svg)
 

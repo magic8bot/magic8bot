@@ -24,6 +24,7 @@
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {
+    "@magic8bot/timebucket": "^1.0.0",
     "@slack/client": "^4.1.0",
     "async": "^2.5.0",
     "bitfinex-api-node": "^1.2.0",

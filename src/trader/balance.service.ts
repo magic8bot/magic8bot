@@ -1,4 +1,4 @@
-import { timebucket } from '@util'
+import { timebucket } from '@magic8bot/timebucket'
 import n from 'numbro'
 import { Collection } from 'mongodb'
 

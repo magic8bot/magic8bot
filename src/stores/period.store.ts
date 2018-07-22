@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-import { timebucket } from '@util'
+import { timebucket } from '@magic8bot/timebucket'
 import { PeriodItem, TradeItem } from '@lib'
 
 export class PeriodStore {

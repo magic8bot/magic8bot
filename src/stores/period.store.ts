@@ -9,7 +9,7 @@ export class PeriodStore {
   constructor(private readonly period: string) {}
 
   public initPeriods(trades: TradeItem[]) {
-    trades.forEach((trade) => this.addTrade(trade))
+    trades.sort(({ time: a }, { time: b }) => (a === b ? 0 : a > b ? 1 : -1)).forEach((trade) => this.addTrade(trade))
   }
 
   public addTrade(trade: TradeItem) {

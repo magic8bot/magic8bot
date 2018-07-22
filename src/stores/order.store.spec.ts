@@ -40,6 +40,7 @@ describe('OrderStore store', () => {
     done()
   })
 
+  // @todo(notVitaliy): Figure out why this test is flaky
   it('should load previous orders', async (done) => {
     await orderStore.newOrder(orderItem)
     await orderStore.loadOrders()

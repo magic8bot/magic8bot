@@ -1,10 +1,13 @@
 import { PeriodStore } from './period.store'
 import { randomInRange, randomChoice } from '@util'
-import { TradeItem } from '@lib';
+import { TradeItem } from '@lib'
+import { time } from '../util/time'
 
-const makeNewOrder = (time: number): TradeItem => {
+const now = 1532266820000
+
+const makeNewOrder = (t: number): TradeItem => {
   return {
-    time,
+    time: t,
     trade_id: Math.random(),
     size: randomInRange(1, 10000) / 1000,
     price: randomInRange(100, 200),
@@ -21,7 +24,7 @@ describe('OrderStore store', () => {
 
   it('should add trades', async (done) => {
     expect(async () => {
-      await periodStore.addTrade(makeNewOrder(new Date().getTime()))
+      await periodStore.addTrade(makeNewOrder(now))
       done()
     }).not.toThrowError()
   })
@@ -33,31 +36,20 @@ describe('OrderStore store', () => {
   })
 
   it('should init with trades', async (done) => {
-    const now = new Date().getTime();
-    const items = [
-      makeNewOrder(now - (120 * 1000 + 1)),
-      makeNewOrder(now - (60 * 1000 + 5)),
-      makeNewOrder(now - (60 * 1000 + 1)),
-      makeNewOrder(now),
-    ]
+    const orders = [...Array(3).fill(0)].map((v, i) => makeNewOrder(time(now).sub.s(i * 10)))
 
-    periodStore.initPeriods(items)
-    expect(periodStore.periods.length).toEqual(3)
+    periodStore.initPeriods(orders)
 
-    periodStore.addTrade(makeNewOrder(now + 60 * 1000))
-    expect(periodStore.periods.length).toEqual(4)
+    expect(periodStore.periods.length).toEqual(1)
 
     done()
   })
 
   it('should set new periods', async (done) => {
-    const now = new Date().getTime();
-    periodStore.addTrade(makeNewOrder(now - (120 * 1000 + 1)))
-    periodStore.addTrade(makeNewOrder(now - (60 * 1000 + 5)))
-    periodStore.addTrade(makeNewOrder(now - (60 * 1000 + 1)))
-    periodStore.addTrade(makeNewOrder(now))
+    const orders = [...Array(9).fill(0)].map((v, i) => makeNewOrder(time(now).sub.s(i * 10))).reverse()
+    orders.forEach((order) => periodStore.addTrade(order))
 
-    expect(periodStore.periods.length).toEqual(3)
+    expect(periodStore.periods.length).toEqual(2)
 
     done()
   })

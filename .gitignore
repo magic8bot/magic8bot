@@ -6,3 +6,4 @@ conf.ts
 dist
 .idea
 coverage
+.vscode

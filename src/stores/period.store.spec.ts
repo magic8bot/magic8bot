@@ -38,7 +38,7 @@ describe('OrderStore store', () => {
       makeNewOrder(now - (120 * 1000 + 1)),
       makeNewOrder(now - (60 * 1000 + 5)),
       makeNewOrder(now - (60 * 1000 + 1)),
-      makeNewOrder(now)
+      makeNewOrder(now),
     ]
 
     periodStore.initPeriods(items)

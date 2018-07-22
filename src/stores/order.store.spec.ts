@@ -17,7 +17,7 @@ const orderItem = {
   type,
 }
 
-describe('OrderStore store', () => {
+describe('OrderStore', () => {
   let orderStore: OrderStore
 
   beforeEach(() => {

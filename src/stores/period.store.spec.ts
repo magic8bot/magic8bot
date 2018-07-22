@@ -15,7 +15,7 @@ const makeNewOrder = (t: number): TradeItem => {
   }
 }
 
-describe('OrderStore store', () => {
+describe('PeriodStore', () => {
   let periodStore: PeriodStore
 
   beforeEach(() => {

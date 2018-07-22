@@ -1,6 +1,6 @@
 import { MarkerStore } from './marker.store'
 
-describe('Market store', () => {
+describe('MarkerStore', () => {
   let markerStore: MarkerStore
 
   beforeEach(() => {

@@ -40,6 +40,7 @@
     "no-var-keyword": true,
     "no-var-requires": false,
     "object-literal-shorthand": true,
+    "object-literal-sort-keys": false,
     "one-line": [true, "check-open-brace", "check-whitespace"],
     "ordered-imports": false,
     "prefer-const": true,

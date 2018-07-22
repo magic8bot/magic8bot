@@ -19,8 +19,9 @@
     "rebuild": "npm run clean && npm run dist",
     "start": "node ./magic8bot.js",
     "start:dev": "cross-env NODE_ENV=development node ./magic8bot.js",
-    "lint": "tslint -p ./tsconfig.json --fix",
-    "test": "jest"
+    "lint": "tslint -p ./tsconfig.json",
+    "lint:fix": "npm run lint -- --fix",
+    "test": "jest --detectOpenHandles"
   },
   "dependencies": {
     "@slack/client": "^4.1.0",
@@ -76,8 +77,13 @@
     "@types/jest": "^23.3.0",
     "@types/moment": "^2.13.0",
     "@types/mongodb": "^3.1.0",
+    "@types/mongodb-memory-server": "^1.8.0",
     "@types/ws": "^5.1.2",
     "jest": "^23.4.1",
+    "jest-environment-node": "^23.4.0",
+    "mongodb-memory-server": "^1.9.0",
+    "pre-commit": "^1.2.2",
+    "pre-push": "^0.1.1",
     "rimraf": "^2.6.2",
     "ts-jest": "^23.0.1",
     "ts-node": "^7.0.0",
@@ -88,6 +94,12 @@
   "engines": {
     "node": "^10.0.0"
   },
+  "pre-commit": [
+    "lint"
+  ],
+  "pre-push": [
+    "test"
+  ],
   "_moduleAliases": {
     "@lib": "dist/lib/index.js",
     "@plugins": "dist/plugins/index.js",
@@ -95,36 +107,5 @@
     "@stores": "dist/stores/index.js",
     "@m8bTypes": "dist/types/index.js",
     "@util": "dist/util/index.js"
-  },
-  "jest": {
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
-    "moduleDirectories": [
-      "node_modules",
-      "src"
-    ],
-    "moduleNameMapper": {
-      "^@lib$": "<rootDir>/src/lib/index.ts",
-      "^@plugins$": "<rootDir>/src/plugins/index.ts",
-      "^@services$": "<rootDir>/src/services/index.ts",
-      "^@stores$": "<rootDir>/src/stores/index.ts",
-      "^@m8bTypes$": "<rootDir>/src/types/index.ts",
-      "^@util$": "<rootDir>/src/util/index.ts"
-    },
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
-    ],
-    "globals": {
-      "ts-jest": {
-        "tsConfigFile": "tsconfig.json"
-      }
-    }
   }
 }

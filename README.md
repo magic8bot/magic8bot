@@ -47,6 +47,7 @@ Dashed: Not yet implemented
 ### notVitaliy (author)
 
 BTC: `32gjP2cSQqaoaZ25ixvtqNhM272sRhXWjA`
+
 ETH: `0xF0C99295CE430cc0B2ed6B9aa31a7fC10Cf0EaA9`
 
 ![logo](https://rawgit.com/notvitaliy/magic8bot/master/assets/logo-sm.svg)

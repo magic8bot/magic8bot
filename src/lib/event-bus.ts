@@ -21,15 +21,21 @@ type SelectorMap = Map<string, StrategyMap>
 type ExchangeMap = Map<string, SelectorMap>
 type EventMap = Map<EVENT, ExchangeMap>
 
+const optsErr = 'selector is required if strategy is defined'
+
 export class EventBus {
   private eventMap: EventMap = new Map()
 
   public register(eventBusEvent: EventBusEvent) {
+    if (eventBusEvent.strategy && !eventBusEvent.selector) throw new Error(optsErr)
+
     // pop onto next callstack
     return (eventData: EventData) => setImmediate(() => this.emit(eventBusEvent, eventData))
   }
 
   public subscribe(eventBusEvent: EventBusEvent, fn: EventDataFn) {
+    if (eventBusEvent.strategy && !eventBusEvent.selector) throw new Error(optsErr)
+
     const set = this.makeSet(eventBusEvent)
     set.add(fn)
 

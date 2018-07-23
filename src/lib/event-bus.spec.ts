@@ -1,4 +1,5 @@
-import { EventBus, EVENT } from './event-bus'
+import { EventBus } from './event-bus'
+import { EVENT } from './events.enum'
 
 describe('EventBus', () => {
   let eventBus: EventBus

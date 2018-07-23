@@ -45,15 +45,48 @@ export class Macd {
 
   private overbought = false
 
-  constructor(exchange: string, selector: string, options: MacdOptions) {
+  constructor(exchange: string, selector: string, options?: Partial<MacdOptions>) {
     this.options = { ...this.options, ...options }
 
-    const eventBusEvent = { event: EVENT.PERIOD, exchange, selector, strategy: this.name }
-    // tslint:disable-next-line:no-empty
-    eventBus.subscribe(eventBusEvent, () => {})
+    const eventBusEvent = { exchange, selector, strategy: this.name }
+
+    eventBus.subscribe({ event: EVENT.TRADE, ...eventBusEvent }, (periods: PeriodItem[]) => this.calculate(periods))
+
+    eventBus.subscribe({ event: EVENT.PERIOD, ...eventBusEvent }, () => this.onPeriod())
   }
 
   public calculate(periods: PeriodItem[]) {
+    this.checkOverbought(periods)
+    this.getEmaShort(periods)
+    this.getEmaLong(periods)
+
+    this.calculateMacd()
+  }
+
+  public calculateMacd() {
+    if (this.emaShort && this.emaLong) {
+      const macd = this.emaShort - this.emaLong
+      this.periods[0].macd = macd
+      this.getEmaMacd()
+      if (this.emaMacd) {
+        this.periods[0].history = macd - this.emaMacd
+      }
+    }
+  }
+
+  public getEmaShort(periods: PeriodItem[]) {
+    this.emaShort = EMA.calculate(this.emaShort, periods as any, this.options.emaShortPeriod)
+  }
+
+  public getEmaLong(periods: PeriodItem[]) {
+    this.emaLong = EMA.calculate(this.emaLong, periods as any, this.options.emaLongPeriod)
+  }
+
+  public getEmaMacd() {
+    this.emaMacd = EMA.calculate(this.emaMacd, this.periods, this.options.signalPeriod, 'macd')
+  }
+
+  public checkOverbought(periods: PeriodItem[]) {
     const { rsi, avgGain, avgLoss } = RSI.calculate(
       this.avgGain,
       this.avgLoss,
@@ -65,19 +98,6 @@ export class Macd {
     this.avgGain = avgGain
     this.avgLoss = avgLoss
     this.overbought = !this.isPreroll && rsi >= this.options.overboughtRsi && !this.overbought
-
-    this.emaShort = EMA.calculate(this.emaShort, periods as any, this.options.emaShortPeriod)
-    this.emaLong = EMA.calculate(this.emaLong, periods as any, this.options.emaLongPeriod)
-
-    if (this.emaShort && this.emaLong) {
-      const macd = this.emaShort - this.emaLong
-      this.periods[0].macd = macd
-
-      this.emaMacd = EMA.calculate(this.emaMacd, this.periods, this.options.signalPeriod, 'macd')
-      if (this.emaMacd) {
-        this.periods[0].history = macd - this.emaMacd
-      }
-    }
   }
 
   public onPeriod() {
@@ -98,6 +118,10 @@ export class Macd {
       return null
     }
 
+    this.newPeriod()
+  }
+
+  public newPeriod() {
     this.periods.push({ macd: null, history: null })
   }
 

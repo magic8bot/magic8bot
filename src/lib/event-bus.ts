@@ -1,9 +1,4 @@
-export enum EVENT {
-  PERIOD = 'period',
-  TRADE = 'trade',
-  ORDER = 'order',
-  BOOK = 'book',
-}
+import { EVENT } from './events.enum'
 
 interface EventBusEvent {
   event: EVENT

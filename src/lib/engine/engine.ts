@@ -1,12 +1,16 @@
 import { ExchangeConf } from '@m8bTypes'
 import { ExchangeService, StrategyService, TradeService } from '@services'
 import { TradeStore } from '@stores'
-import { sleep, objectifySelector } from '@util'
+import { objectifySelector } from '@util'
+
+import { Backfiller } from './backfill'
 
 export class Engine {
   private exchangeService: ExchangeService
   private tradeStore: TradeStore
   private tradeService: TradeService
+
+  private backfiller: Backfiller
   private backfillers: Map<string, number> = new Map()
 
   private strategies: Map<string, StrategyService> = new Map()
@@ -15,6 +19,8 @@ export class Engine {
     this.exchangeService = new ExchangeService(exchangeName, auth, isPaper)
     this.tradeStore = new TradeStore()
     this.tradeService = new TradeService(this.exchangeService)
+
+    this.backfiller = new Backfiller(this.tradeService, this.tradeStore)
 
     const currencyPairDays = options.strategies.reduce((acc, { days, selector }) => {
       if (!acc[selector]) acc[selector] = days ? days : options.base.days
@@ -36,7 +42,7 @@ export class Engine {
 
   public async init() {
     this.backfillers.forEach(async (days, selector) => {
-      await this.backfill(selector, days)
+      await this.backfiller.backfill(selector, days)
 
       this.strategies.forEach(
         (strategy, strategySelector) => selector === strategySelector && this.tick(selector, strategy)
@@ -44,61 +50,7 @@ export class Engine {
     })
   }
 
-  public async backfill(selector: string, days: number) {
-    const historyScan = this.tradeService.getHistoryScan()
-
-    const now = new Date().getTime()
-    const targetTime = now - 86400000 * days
-    const baseTime = now - targetTime
-
-    // this.tradeEvents.emit('start')
-    return historyScan === 'backward'
-      ? this.backScan(selector, days, targetTime, baseTime)
-      : this.forwardScan(selector, targetTime, now)
-  }
-
   public async tick(selector: string, strategy: StrategyService) {
     //
-  }
-
-  private async backScan(selector: string, days: number, targetTime: number, baseTime: number) {
-    const trades = await this.tradeService.backfill(selector)
-
-    const oldestTrade = Math.min(...trades.map(({ time }) => time))
-    const percent = (baseTime - (oldestTrade - targetTime)) / baseTime
-
-    // this.tradeEvents.emit('update', percent)
-    await this.tradeStore.update(selector, trades)
-
-    if (oldestTrade > targetTime) {
-      if (this.tradeService.getBackfillRateLimit()) await sleep(this.tradeService.getBackfillRateLimit())
-      return this.backScan(selector, days, targetTime, baseTime)
-    }
-
-    // this.tradeEvents.emit('done')
-    return Math.max(...trades.map(({ time }) => time))
-  }
-
-  private async forwardScan(selector: string, startTime: number, now: number, latestTime?: number) {
-    const trades = await this.tradeService.backfill(selector, latestTime ? latestTime : startTime)
-
-    if (!trades.length) {
-      // return this.tradeEvents.emit('done')
-      return
-    }
-
-    const newestTime = Math.max(...trades.map(({ time }) => time))
-    const percent = (newestTime - startTime) / (now - startTime)
-
-    // this.tradeEvents.emit('update', percent)
-    await this.tradeStore.update(selector, trades)
-
-    if (newestTime < now) {
-      if (this.tradeService.getBackfillRateLimit()) await sleep(this.tradeService.getBackfillRateLimit())
-      return this.forwardScan(selector, startTime, now, newestTime)
-    }
-
-    // this.tradeEvents.emit('done')
-    return newestTime
   }
 }

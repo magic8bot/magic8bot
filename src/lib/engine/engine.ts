@@ -1,5 +1,5 @@
 import { ExchangeConf } from '@m8bTypes'
-import { ExchangeService, StrategyService, TradeService } from '@services'
+import { ExchangeService, LegacyStrategyService, TradeService } from '@services'
 import { TradeStore } from '@stores'
 import { objectifySelector } from '@util'
 
@@ -13,7 +13,7 @@ export class Engine {
   private backfiller: Backfiller
   private backfillers: Map<string, number> = new Map()
 
-  private strategies: Map<string, StrategyService> = new Map()
+  private strategies: Map<string, LegacyStrategyService> = new Map()
 
   constructor({ exchangeName, auth, options, ...exchangeConf }: ExchangeConf, isPaper: boolean) {
     this.exchangeService = new ExchangeService(exchangeName, auth, isPaper)
@@ -36,7 +36,7 @@ export class Engine {
 
       this.tradeStore.addSelector(selectorStr)
       this.tradeService.addSelector(selectorStr, productId)
-      this.strategies.set(selectorStr, new StrategyService(strategyName, period))
+      this.strategies.set(selectorStr, new LegacyStrategyService(strategyName, period))
     })
   }
 
@@ -50,7 +50,7 @@ export class Engine {
     })
   }
 
-  public async tick(selector: string, strategy: StrategyService) {
+  public async tick(selector: string, strategy: LegacyStrategyService) {
     //
   }
 }

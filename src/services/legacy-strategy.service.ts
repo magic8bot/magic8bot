@@ -1,7 +1,7 @@
 import { loadStrategy } from '@plugins'
 import { PeriodStore } from '@stores'
 
-interface Strategy {
+interface LegacyStrategy {
   name: string
   description: string
   getOptions: () => void
@@ -17,8 +17,8 @@ interface LocalState {
   signal: 'buy' | 'sell'
 }
 
-export class StrategyService {
-  private readonly strategy: Strategy
+export class LegacyStrategyService {
+  private readonly strategy: LegacyStrategy
   private readonly periodStore: PeriodStore
 
   private lastSignal: 'buy' | 'sell' = null

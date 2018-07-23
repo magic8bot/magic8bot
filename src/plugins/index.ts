@@ -1,4 +1,4 @@
-export * from './analysis'
+export * from './legacy_analysis'
 export * from './exchanges'
 export * from './notifiers'
-export * from './strategies'
+export * from './legacy_strategies'

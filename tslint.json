@@ -1,7 +1,7 @@
 {
   "extends": "tslint:latest",
   "linterOptions": {
-    "exclude": ["./src/plugins/exchanges/**", "./src/plugins/strategies/**", "./src/plugins/notifiers/**"]
+    "exclude": ["./src/plugins/exchanges/**", "./src/plugins/legacy_strategies/**", "./src/plugins/notifiers/**"]
   },
   "rules": {
     "no-unnecessary-type-assertion": true,

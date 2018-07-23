@@ -1,5 +1,5 @@
-import { precisionRound } from '@util'
-import { PeriodItem } from '@lib'
+import { precisionRound } from '../../util'
+import { PeriodItem } from '../../lib'
 
 export class RSI {
   public static calculate(lastAvgGain: number, lastAvgLoss: number, periods: PeriodItem[], length: number) {
@@ -10,10 +10,13 @@ export class RSI {
     return { avgGain, avgLoss, rsi }
   }
 
-  private static getAvgGainLoss(lastAvgGain: number, lastAvgLoss: number, periods: PeriodItem[], length: number) {
+  public static getAvgGainLoss(lastAvgGain: number, lastAvgLoss: number, periods: PeriodItem[], length: number) {
     if (!lastAvgGain) {
       const { gain, loss } = RSI.getSums(periods, length)
-      return { avgGain: gain / length, avgLoss: loss / length }
+      return {
+        avgGain: gain / length,
+        avgLoss: loss / length,
+      }
     }
 
     const [{ close }, { close: prevClose }] = periods
@@ -26,13 +29,22 @@ export class RSI {
     return { avgGain, avgLoss }
   }
 
-  private static getSums(periods: PeriodItem[], length: number) {
-    return periods.slice(1, length + 1).reduce(
-      ({ last, gain, loss }, { close }) => {
-        if (!last) return { last: close, gain, loss }
-        return { last: close, gain: close - last, loss: last - close }
-      },
-      { last: 0, gain: 0, loss: 0 }
-    )
+  public static getSums(periods: PeriodItem[], length: number) {
+    return periods
+      .slice(0, length + 1)
+      .reverse()
+      .reduce(
+        ({ last, gain, loss }, { close }) => {
+          if (!last) return { last: close, gain, loss }
+          const g = close - last
+          const l = last - close
+          return {
+            last: close,
+            gain: (g > 0 ? g : 0) + gain,
+            loss: (l > 0 ? l : 0) + loss,
+          }
+        },
+        { last: 0, gain: 0, loss: 0 }
+      )
   }
 }

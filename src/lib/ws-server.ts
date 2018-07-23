@@ -11,7 +11,7 @@ export class WsServer {
   }
 
   public init() {
-    this.server.on('connection', (ws) => ws.on('message', this.hanndleMessage))
+    this.server.on('connection', (ws) => ws.on('message', this.handleMessage))
   }
 
   public broadcast(action: string, payload: Payload) {
@@ -24,7 +24,7 @@ export class WsServer {
     this.actions.set(actionName, actionFn)
   }
 
-  private hanndleMessage = (raw: string | Buffer) => {
+  private handleMessage = (raw: string | Buffer) => {
     const body = raw.toString()
     try {
       const parsed = JSON.parse(body)

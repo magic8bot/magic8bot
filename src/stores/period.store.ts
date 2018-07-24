@@ -1,12 +1,21 @@
-import { EventEmitter } from 'events'
-
 import { timebucket } from '@magic8bot/timebucket'
-import { PeriodItem, TradeItem } from '@lib'
+import { PeriodItem, TradeItem, eventBus, EventBusEmitter, EVENT } from '@lib'
 
 export class PeriodStore {
   public periods: PeriodItem[] = []
 
-  constructor(private readonly period: string) {}
+  private updateEmitter: EventBusEmitter
+  private periodEmitter: EventBusEmitter
+
+  private tradeEventTimeout: NodeJS.Timer = null
+
+  constructor(private readonly period: string, exchange: string, selector: string, strategy: string) {
+    const eventBusEvent = { exchange, selector, strategy }
+
+    eventBus.subscribe({ event: EVENT.TRADE, exchange, selector }, (trade: TradeItem) => this.addTrade(trade))
+    this.updateEmitter = eventBus.register({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent })
+    this.periodEmitter = eventBus.register({ event: EVENT.PERIOD_NEW, ...eventBusEvent })
+  }
 
   public initPeriods(trades: TradeItem[]) {
     trades.sort(({ time: a }, { time: b }) => (a === b ? 0 : a > b ? 1 : -1)).forEach((trade) => this.addTrade(trade))
@@ -25,10 +34,14 @@ export class PeriodStore {
     this.periods[0].close = price
     this.periods[0].volume += size
 
-    // this.periodEvents.emit('newTrade')
+    this.emitTrades()
   }
 
   public newPeriod(bucket: number, { time, size, price }: TradeItem) {
+    // Events are fired on next tick. Speading the array will
+    // prevent the new period from being injected.
+    this.updateEmitter({ periods: [...this.periods] })
+
     this.periods.unshift({
       close: price,
       high: price,
@@ -38,7 +51,13 @@ export class PeriodStore {
       volume: size,
     })
 
-    // this.periodEvents.emit('newTrade')
-    // this.periodEvents.emit('newPeriod')
+    this.periodEmitter()
+  }
+
+  private emitTrades() {
+    clearTimeout(this.tradeEventTimeout)
+    this.tradeEventTimeout = setTimeout(() => {
+      this.updateEmitter({ periods: [...this.periods] })
+    }, 100)
   }
 }

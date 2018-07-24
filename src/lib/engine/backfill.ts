@@ -4,7 +4,11 @@ import { TradeStore } from '@stores'
 import { sleep } from '@util'
 
 export class Backfiller {
-  constructor(private readonly tradeService: TradeService, private readonly tradeStore: TradeStore) {}
+  constructor(
+    private readonly exchange: string,
+    private readonly tradeService: TradeService,
+    private readonly tradeStore: TradeStore
+  ) {}
 
   public async backfill(selector: string, days: number) {
     const historyScan = this.tradeService.getHistoryScan()
@@ -26,7 +30,7 @@ export class Backfiller {
     const percent = (baseTime - (oldestTrade - targetTime)) / baseTime
 
     // this.tradeEvents.emit('update', percent)
-    await this.tradeStore.update(selector, trades)
+    await this.tradeStore.update(this.exchange, selector, trades)
 
     if (oldestTrade > targetTime) {
       if (this.tradeService.getBackfillRateLimit()) await sleep(this.tradeService.getBackfillRateLimit())
@@ -49,7 +53,7 @@ export class Backfiller {
     const percent = (newestTime - startTime) / (now - startTime)
 
     // this.tradeEvents.emit('update', percent)
-    await this.tradeStore.update(selector, trades)
+    await this.tradeStore.update(this.exchange, selector, trades)
 
     if (newestTime < now) {
       if (this.tradeService.getBackfillRateLimit()) await sleep(this.tradeService.getBackfillRateLimit())

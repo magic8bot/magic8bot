@@ -1,5 +1,5 @@
 import { Engine } from './engine'
-import { SessionStore } from '@stores'
+import { SessionStore, TradeStore } from '@stores'
 import { Conf, ExchangeConf } from '@m8bTypes'
 
 export class Core {
@@ -19,8 +19,10 @@ export class Core {
       await this.sessionStore.loadSession(session_id)
     }
 
+    const tradeStore = new TradeStore()
+
     exchanges.forEach(async (exchangeConf) => {
-      const engine = new Engine(this.mergeConfig(exchangeConf), this.conf.mode !== 'live')
+      const engine = new Engine(tradeStore, this.mergeConfig(exchangeConf), this.conf.mode !== 'live')
       engine.init()
     })
   }

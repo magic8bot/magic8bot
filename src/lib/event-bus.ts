@@ -16,12 +16,14 @@ type SelectorMap = Map<string, StrategyMap>
 type ExchangeMap = Map<string, SelectorMap>
 type EventMap = Map<EVENT, ExchangeMap>
 
+export type EventBusEmitter = (eventData?: Record<string, any>) => any
+
 const optsErr = 'selector is required if strategy is defined'
 
 export class EventBus {
   private eventMap: EventMap = new Map()
 
-  public register(eventBusEvent: EventBusEvent) {
+  public register(eventBusEvent: EventBusEvent): EventBusEmitter {
     if (eventBusEvent.strategy && !eventBusEvent.selector) throw new Error(optsErr)
 
     // pop onto next callstack

@@ -1,8 +1,10 @@
 // Mock must be above the import
 const mockSubscribe = jest.fn()
+const mockRegister = jest.fn().mockReturnValue(jest.fn())
+
 jest.mock('../../../lib', () => {
   return {
-    eventBus: { subscribe: mockSubscribe },
+    eventBus: { subscribe: mockSubscribe, register: mockRegister },
     EVENT: { TRADE: 0, PERIOD: 1 },
   }
 })
@@ -31,8 +33,9 @@ describe('Macd', () => {
     macd = new Macd('test', 'test')
   })
 
-  it('should react to emitted trade events', () => {
+  it('should subscribe to and register events', () => {
     expect(mockSubscribe).toHaveBeenCalledTimes(2)
+    expect(mockRegister).toHaveBeenCalledTimes(2)
   })
 
   it('should finish preroll', () => {

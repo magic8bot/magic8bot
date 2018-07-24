@@ -10,7 +10,7 @@ describe('TradeStore', () => {
   })
 
   it('should be able to add selectors', async (done) => {
-    tradeStore.addSelector('test')
+    tradeStore.addSelector('test', 'test')
 
     expect(tradeStore.tradesMap.size).toEqual(1)
 
@@ -18,12 +18,12 @@ describe('TradeStore', () => {
   })
 
   it('should update a selector with trades', async (done) => {
-    tradeStore.addSelector('test')
+    tradeStore.addSelector('test', 'test')
     const trades = [...Array(9).fill(0)].map((v, i) => makeNewOrder(time(now).sub.s(i * 10))).reverse()
 
-    await tradeStore.update('test', trades)
+    await tradeStore.update('test', 'test', trades)
 
-    expect(tradeStore.tradesMap.get('test').length).toEqual(9)
+    expect(tradeStore.tradesMap.get('test.test').size).toEqual(9)
 
     done()
   })

@@ -1,7 +1,8 @@
-import { eventBus, EVENT, PeriodItem } from '@lib'
+import { eventBus, EVENT, EventBusEmitter, PeriodItem } from '@lib'
 import { EMA, RSI } from '@plugins'
+import { BaseStrategy } from '../base-strategy'
 
-interface MacdOptions {
+export interface MacdOptions {
   period: string
   minPeriods: number
   emaShortPeriod: number
@@ -13,9 +14,7 @@ interface MacdOptions {
   overboughtRsi: number
 }
 
-export class Macd {
-  public readonly name: string = 'MACD'
-
+export class Macd extends BaseStrategy<MacdOptions> {
   public options: MacdOptions = {
     period: '1h',
     minPeriods: 52,
@@ -28,6 +27,8 @@ export class Macd {
     overboughtRsi: 70,
   }
 
+  public readonly name: string = 'MACD'
+
   private isPreroll = true
 
   private rsi = 0
@@ -38,6 +39,9 @@ export class Macd {
   private emaLong: number = null
   private emaMacd: number = null
 
+  private signalEmitter: EventBusEmitter
+  private calcEmitter: EventBusEmitter
+
   private periods: {
     macd: number
     history: number
@@ -46,13 +50,19 @@ export class Macd {
   private overbought = false
 
   constructor(exchange: string, selector: string, options?: Partial<MacdOptions>) {
+    super()
+
     this.options = { ...this.options, ...options }
 
     const eventBusEvent = { exchange, selector, strategy: this.name }
 
-    eventBus.subscribe({ event: EVENT.TRADE, ...eventBusEvent }, (periods: PeriodItem[]) => this.calculate(periods))
+    eventBus.subscribe({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent }, (periods: PeriodItem[]) =>
+      this.calculate(periods)
+    )
+    eventBus.subscribe({ event: EVENT.PERIOD_NEW, ...eventBusEvent }, () => this.onPeriod())
 
-    eventBus.subscribe({ event: EVENT.PERIOD, ...eventBusEvent }, () => this.onPeriod())
+    this.signalEmitter = eventBus.register({ event: EVENT.SIGNAL, ...eventBusEvent })
+    this.calcEmitter = eventBus.register({ event: EVENT.CALC, ...eventBusEvent })
   }
 
   public calculate(periods: PeriodItem[]) {
@@ -61,6 +71,11 @@ export class Macd {
     this.getEmaLong(periods)
 
     this.calculateMacd()
+
+    // prettier-ignore
+    const { rsi, periods: [{ history }] } = this
+
+    this.calcEmitter({ rsi, history })
   }
 
   public calculateMacd() {
@@ -101,24 +116,29 @@ export class Macd {
   }
 
   public onPeriod() {
+    let signal = null
+
     if (!this.isPreroll && this.rsi && this.overbought) {
       this.overbought = false
-      return 'sell'
+      signal = 'sell'
     }
 
-    const [{ history }, { history: lastHistory }] = this.periods
+    if (!signal) {
+      const [{ history }, { history: lastHistory }] = this.periods
 
-    if (history && lastHistory) {
-      const { upTrendThreshold } = this.options
-      if (history - upTrendThreshold > 0 && lastHistory - upTrendThreshold <= 0) return 'buy'
+      if (history && lastHistory) {
+        const { upTrendThreshold } = this.options
+        if (history - upTrendThreshold > 0 && lastHistory - upTrendThreshold <= 0) signal = 'buy'
 
-      const { downTrendThreshold } = this.options
-      if (history + downTrendThreshold < 0 && lastHistory + downTrendThreshold >= 0) return 'sell'
-
-      return null
+        const { downTrendThreshold } = this.options
+        if (history + downTrendThreshold < 0 && lastHistory + downTrendThreshold >= 0) signal = 'sell'
+      }
     }
 
+    this.signalEmitter({ signal })
     this.newPeriod()
+
+    return signal
   }
 
   public newPeriod() {

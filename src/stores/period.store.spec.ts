@@ -6,7 +6,7 @@ describe('PeriodStore', () => {
   let periodStore: PeriodStore
 
   beforeEach(() => {
-    periodStore = new PeriodStore('1m')
+    periodStore = new PeriodStore('1m', 'test', 'test', 'test')
   })
 
   it('should add trades', async (done) => {

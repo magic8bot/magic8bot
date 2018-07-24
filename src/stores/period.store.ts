@@ -9,7 +9,13 @@ export class PeriodStore {
 
   private tradeEventTimeout: NodeJS.Timer = null
 
-  constructor(private readonly period: string, exchange: string, selector: string, strategy: string) {
+  constructor(
+    private readonly period: string,
+    exchange: string,
+    selector: string,
+    strategy: string,
+    private readonly lookbackSize = 250
+  ) {
     const eventBusEvent = { exchange, selector, strategy }
 
     eventBus.subscribe({ event: EVENT.TRADE, exchange, selector }, (trade: TradeItem) => this.addTrade(trade))
@@ -50,6 +56,8 @@ export class PeriodStore {
       time: bucket,
       volume: size,
     })
+
+    if (this.periods.length >= this.lookbackSize) this.periods.pop()
 
     this.periodEmitter()
   }

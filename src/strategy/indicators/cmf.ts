@@ -4,7 +4,7 @@ export class CMF {
       let moneyFlowVolume = 0
       let sumOfVolume = 0
        periods.slice(0,length).forEach(({close, low, high, volume}) => {
-        moneyFlowVolume += (volume * (close - low - (high - close))) / (high - low)
+        moneyFlowVolume += (volume * (close - low) - (high - close)) / (high - low)
         sumOfVolume += volume
        })
       })

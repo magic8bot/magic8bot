@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/notVitaliy/magic8bot.svg?branch=master)](https://travis-ci.com/notVitaliy/magic8bot)
+
 ![logo](https://rawgit.com/notvitaliy/magic8bot/master/assets/logo.svg)
 
 ## Current Status (UPDATE July 17th '18)

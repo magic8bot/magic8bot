@@ -12,8 +12,8 @@ module.exports = {
   moduleDirectories: ['node_modules', 'src'],
   moduleNameMapper: {
     '^@lib$': '<rootDir>/src/lib/index.ts',
-    '^@plugins$': '<rootDir>/src/plugins/index.ts',
-    '^@services$': '<rootDir>/src/services/index.ts',
+    '^@exchange$': '<rootDir>/src/exchange/index.ts',
+    '^@strategy$': '<rootDir>/src/strategy/index.ts',
     '^@stores$': '<rootDir>/src/stores/index.ts',
     '^@m8bTypes$': '<rootDir>/src/types/index.ts',
     '^@util$': '<rootDir>/src/util/index.ts',

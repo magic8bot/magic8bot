@@ -1,5 +1,5 @@
 import { eventBus, EVENT, EventBusEmitter, PeriodItem } from '@lib'
-import { EMA, RSI } from '@plugins'
+import { EMA, RSI } from '../../indicators'
 import { BaseStrategy } from '../base-strategy'
 
 export interface MacdOptions {
@@ -61,8 +61,8 @@ export class Macd extends BaseStrategy<MacdOptions> {
     )
     eventBus.subscribe({ event: EVENT.PERIOD_NEW, ...eventBusEvent }, () => this.onPeriod())
 
-    this.signalEmitter = eventBus.register({ event: EVENT.SIGNAL, ...eventBusEvent })
-    this.calcEmitter = eventBus.register({ event: EVENT.CALC, ...eventBusEvent })
+    this.signalEmitter = eventBus.register({ event: EVENT.STRAT_SIGNAL, ...eventBusEvent })
+    this.calcEmitter = eventBus.register({ event: EVENT.STRAT_CALC, ...eventBusEvent })
   }
 
   public calculate(periods: PeriodItem[]) {

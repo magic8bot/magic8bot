@@ -97,3 +97,20 @@ export interface Options {
     normalized: string
   }
 }
+
+export interface Balance {
+  currency: number
+  asset: number
+}
+
+export interface Wallet {
+  init: Balance
+  current: Balance
+}
+
+export type WalletCollection = Wallet & {
+  sessionId: string
+  exchange: string
+  selector: string
+  strategy: string
+}

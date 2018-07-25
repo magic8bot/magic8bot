@@ -18,7 +18,7 @@ export class PeriodStore {
   ) {
     const eventBusEvent = { exchange, selector, strategy }
 
-    eventBus.subscribe({ event: EVENT.TRADE, exchange, selector }, (trade: TradeItem) => this.addTrade(trade))
+    eventBus.subscribe({ event: EVENT.XCH_TRADE, exchange, selector }, (trade: TradeItem) => this.addTrade(trade))
     this.updateEmitter = eventBus.register({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent })
     this.periodEmitter = eventBus.register({ event: EVENT.PERIOD_NEW, ...eventBusEvent })
   }

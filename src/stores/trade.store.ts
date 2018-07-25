@@ -9,7 +9,7 @@ export class TradeStore {
     if (this.tradesMap.has(idStr)) return
 
     this.tradesMap.set(idStr, new Set())
-    this.emitters.set(idStr, eventBus.register({ event: EVENT.TRADE, exchange, selector }))
+    this.emitters.set(idStr, eventBus.register({ event: EVENT.XCH_TRADE, exchange, selector }))
   }
 
   public async loadTrades(exchange: string, selector: string) {

@@ -1,16 +1,12 @@
 import { ExchangeConf, StrategyConf, Base } from '@m8bTypes'
-import { ExchangeService, TradeService } from '@services'
 import { TradeStore } from '@stores'
-import { objectifySelector } from '@util'
+import { ExchangeProvider } from '@exchange'
+import { BaseStrategy, strategyLoader } from '@strategy'
 
 import { Backfiller } from './backfill'
-import { strategyLoader, BaseStrategy } from '@plugins'
 
 export class Engine {
   private exchangeName: string
-
-  private exchangeService: ExchangeService
-  private tradeService: TradeService
 
   private baseConf: Base
 
@@ -20,17 +16,15 @@ export class Engine {
   private strategies: Map<string, Set<BaseStrategy>> = new Map()
 
   constructor(
+    private readonly exchangeProvider: ExchangeProvider,
     private readonly tradeStore: TradeStore,
-    { exchangeName, auth, options: { strategies, base } }: ExchangeConf,
+    { exchangeName, options: { strategies, base } }: ExchangeConf,
     isPaper: boolean
   ) {
     this.exchangeName = exchangeName
     this.baseConf = base
 
-    this.exchangeService = new ExchangeService(this.exchangeName, auth, isPaper)
-    this.tradeService = new TradeService(this.exchangeService)
-
-    this.backfiller = new Backfiller(this.exchangeName, this.tradeService, this.tradeStore)
+    this.backfiller = new Backfiller(this.exchangeName, this.exchangeProvider, this.tradeStore)
 
     const currencyPairDays = this.getBackfillerDays(strategies, base.days)
 
@@ -58,8 +52,6 @@ export class Engine {
   private setupBackfillers(days: number, selector: string) {
     if (!this.backfillers.has(selector)) this.backfillers.set(selector, days)
 
-    const { productId } = objectifySelector(`${this.exchangeName}.${selector}`)
-    this.tradeService.addSelector(selector, productId)
     this.tradeStore.addSelector(this.exchangeName, selector)
   }
 

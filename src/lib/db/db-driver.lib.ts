@@ -33,6 +33,10 @@ class DbDriver {
   get order() {
     return this.db.order
   }
+
+  get wallet() {
+    return this.db.wallet
+  }
 }
 
 export const dbDriver = new DbDriver()

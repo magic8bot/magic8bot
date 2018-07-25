@@ -10,14 +10,14 @@ jest.mock('../../../lib', () => {
 })
 
 const mockRsiCalculate = jest.fn()
-jest.mock('../../analysis/rsi', () => {
+jest.mock('../../indicators/rsi', () => {
   return {
     RSI: { calculate: mockRsiCalculate },
   }
 })
 
 const mockEmaCalculate = jest.fn()
-jest.mock('../../analysis/ema', () => {
+jest.mock('../../indicators/ema', () => {
   return {
     EMA: { calculate: mockEmaCalculate },
   }

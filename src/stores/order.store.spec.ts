@@ -21,7 +21,7 @@ describe('OrderStore', () => {
   let orderStore: OrderStore
 
   beforeEach(() => {
-    orderStore = new OrderStore('test', 'test')
+    orderStore = new OrderStore('test')
   })
 
   it('should save new orders', async (done) => {

@@ -3,10 +3,14 @@ import crypto from 'crypto'
 import { dbDriver, SessionCollection } from '@lib'
 
 export class SessionStore {
-  public sessionId: string
+  private _sessionId: string = null
+
+  public get sessionId() {
+    return this._sessionId
+  }
 
   public async newSession() {
-    this.sessionId = crypto.randomBytes(4).toString('hex')
+    this._sessionId = crypto.randomBytes(4).toString('hex')
     const now = new Date().getTime()
 
     const session: SessionCollection = {
@@ -19,9 +23,13 @@ export class SessionStore {
   }
 
   public async loadSession(sessionId: string) {
+    this._sessionId = sessionId
+
     const session = await dbDriver.session.findOne({ sessionId })
     if (!session) throw new Error(`Invalid session id: ${sessionId}`)
 
     await dbDriver.session.updateOne({ sessionId }, { $set: { last_run: new Date().getTime() } })
   }
 }
+
+export const sessionStore = new SessionStore()

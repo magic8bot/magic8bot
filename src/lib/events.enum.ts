@@ -1,9 +1,13 @@
 export enum EVENT {
+  ORDER_CANCEL = 'order_cancel',
+  ORDER_COMPLETE = 'order_complete',
+  ORDER_PARTIAL = 'order_partial',
+  ORDER_START = 'order_start',
   PERIOD_NEW = 'period_new',
   PERIOD_UPDATE = 'period_update',
-  SIGNAL = 'signal',
-  TRADE = 'trade',
-  CALC = 'calc',
-  ORDER = 'order',
-  BOOK = 'book',
+  STRAT_CALC = 'strat_calc',
+  STRAT_SIGNAL = 'strat_signal',
+  XCH_BALANCE = 'xch_balance,',
+  XCH_BOOK = 'xch_book',
+  XCH_TRADE = 'xch_trade',
 }

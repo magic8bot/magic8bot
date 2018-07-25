@@ -73,7 +73,9 @@ export interface ExchangeAuth {
   key?: string
   secret?: string
   username?: string
+  apiKey?: string
   b64secret?: string
+  password?: string
   passphrase?: string
   wallet?: string
   client_id?: string

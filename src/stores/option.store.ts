@@ -1,12 +1,11 @@
 import { dbDriver, Options } from '@lib'
+import { sessionStore } from './session.store'
 
 export class OptionStore {
   public options: Options = {} as Options
+  private readonly sessionId = sessionStore.sessionId
 
-  private sessionId: string
-
-  public async initOptions(sessionId: string, options: Options) {
-    this.sessionId = sessionId
+  public async initOptions(options: Options) {
     const savedOptions = await this.loadOptions()
 
     if (!savedOptions) {

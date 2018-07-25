@@ -1,9 +1,11 @@
 import { dbDriver, OrderItem } from '@lib'
+import { sessionStore } from './session.store'
 
 export class OrderStore {
   public orders: OrderItem[] = []
+  private readonly sessionId = sessionStore.sessionId
 
-  constructor(private readonly sessionId: string, private readonly selector: string) {}
+  constructor(private readonly selector: string) {}
 
   public async newOrder(order: OrderItem) {
     this.orders.push(order)

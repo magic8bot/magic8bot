@@ -27,12 +27,12 @@ export interface PeriodItem {
 }
 
 export interface Marker {
-  _id: string
   selector: string
+  exchange: string
   from: number
   to: number
-  oldest_time: number
-  newest_time: number
+  oldestTime: number
+  newestTime: number
 }
 
 export interface OrderItem {

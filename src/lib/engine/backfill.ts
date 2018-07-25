@@ -24,31 +24,20 @@ export class Backfiller {
 
   private async scanBack(selector: string, end: number) {
     // The next "to" is the previous "from"
-    const to = await this.getBackMarker(selector)
+    const to = await this.markerStore.getNextBackMarker(this.exchange, selector)
 
     const trades = await this.exchangeProvider.getTrades(this.exchange, selector, to)
 
     const from = Math.min(...trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
-    const { oldest_time } = await this.saveMarker(selector, to, from, trades)
+    const { oldestTime } = await this.markerStore.saveMarker(this.exchange, selector, to, from, trades)
 
-    if (oldest_time > end) {
+    if (oldestTime > end) {
       await this.scanBack(selector, end)
     }
   }
 
-  private async getBackMarker(selector: string) {
-    const marker = this.markerStore.getMarker(selector)
-    if (!marker || !marker.from) return null
-
-    const nextMarker = await this.markerStore.findInRange(selector, marker.from - 1)
-    if (!nextMarker) return marker.from
-
-    this.markerStore.setMarker(selector, nextMarker)
-    return this.getBackMarker(selector)
-  }
-
   private async scanForward(selector: string, start: number) {
-    const from = await this.getForwardMarker(selector, start)
+    const from = await this.markerStore.getNextForwardMarker(this.exchange, selector, start)
 
     const trades = await this.exchangeProvider.getTrades(this.exchange, selector, from)
 
@@ -57,29 +46,11 @@ export class Backfiller {
     await this.tradeStore.update(this.exchange, selector, trades)
 
     const to = Math.max(...trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
-    const { newest_time } = await this.saveMarker(selector, to, from, trades)
+    const { newestTime } = await this.markerStore.saveMarker(this.exchange, selector, to, from, trades)
 
     // Always get current time so backfill can catch up to "now"
-    if (newest_time < new Date().getTime()) {
+    if (newestTime < new Date().getTime()) {
       return this.scanForward(selector, to)
     }
-  }
-
-  private async getForwardMarker(selector: string, target: number) {
-    const marker = await this.markerStore.findInRange(selector, target)
-    if (marker) return this.getForwardMarker(selector, marker.to + 1)
-    return target
-  }
-
-  private async saveMarker(selector: string, to: number, from: number, trades: TradeItem[]) {
-    const marker = this.markerStore.newMarker(selector)
-    marker.to = to
-    marker.from = from
-    marker.newest_time = Math.max(...trades.map(({ time }) => time))
-    marker.oldest_time = Math.min(...trades.map(({ time }) => time))
-
-    await this.markerStore.saveMarker(selector)
-
-    return marker
   }
 }

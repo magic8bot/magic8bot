@@ -1,40 +1,54 @@
-import crypto from 'crypto'
-
-import { dbDriver, Marker } from '@lib'
+import { dbDriver, Marker, TradeItem } from '@lib'
 
 export class MarkerStore {
   private markers: Map<string, Marker> = new Map()
 
-  public newMarker(selector: string) {
-    const marker = this.makeMarker(selector)
-    this.markers.set(selector, marker)
+  public async getNextBackMarker(exchange: string, selector: string) {
+    const marker = this.getMarker(exchange, selector)
+    if (!marker || !marker.from) return null
+
+    const nextMarker = await this.findInRange(exchange, selector, marker.from - 1)
+    if (!nextMarker) return marker.from
+
+    this.setMarker(exchange, selector, nextMarker)
+    return this.getNextBackMarker(exchange, selector)
+  }
+
+  public async getNextForwardMarker(exchange: string, selector: string, target: number) {
+    const marker = await this.findInRange(exchange, selector, target)
+    if (marker) return this.getNextForwardMarker(exchange, selector, marker.to + 1)
+    return target
+  }
+
+  public async saveMarker(exchange: string, selector: string, to: number, from: number, trades: TradeItem[]) {
+    const marker = this.makeMarker(exchange, selector, to, from, trades)
+    this.setMarker(exchange, selector, marker)
+    await dbDriver.marker.save(marker)
 
     return marker
   }
 
-  public getMarker(selector: string) {
-    return this.markers.get(selector)
+  private getMarker(exchange: string, selector: string) {
+    const idStr = this.makeIdStr(exchange, selector)
+    return this.markers.get(idStr)
   }
 
-  public setMarker(selector: string, marker: Marker) {
-    this.markers.set(selector, marker)
+  private setMarker(exchange: string, selector: string, marker: Marker) {
+    const idStr = this.makeIdStr(exchange, selector)
+    this.markers.set(idStr, marker)
   }
 
-  public async saveMarker(selector: string) {
-    const marker = this.markers.get(selector)
-    await dbDriver.marker.save(marker)
+  private async findInRange(exchange: string, selector: string, cursor: number) {
+    return dbDriver.marker.findOne({ exchange, selector, to: { $gte: cursor }, from: { $lte: cursor } })
   }
 
-  public async loadMarkers(selector: string) {
-    return dbDriver.marker.find({ selector }).toArray()
+  private makeMarker(exchange: string, selector: string, to: number, from: number, trades: TradeItem[]) {
+    const newestTime = Math.max(...trades.map(({ time }) => time))
+    const oldestTime = Math.min(...trades.map(({ time }) => time))
+    return { exchange, selector, to, from, oldestTime, newestTime }
   }
 
-  public async findInRange(selector: string, cursor: number) {
-    return dbDriver.marker.findOne({ selector, to: { $gte: cursor }, from: { $lte: cursor } })
-  }
-
-  private makeMarker(selector: string) {
-    const _id = crypto.randomBytes(4).toString('hex')
-    return { _id, selector, to: null, from: null, oldest_time: null, newest_time: null }
+  private makeIdStr(exchange: string, selector: string) {
+    return `${exchange}.${selector}`
   }
 }

@@ -1,19 +1,17 @@
-// Chaikin Money Flow
 export class CMF {
   public static calculate(periods: Record<string, number>[], length: number) {
     if (periods.length >= length) {
       let moneyFlowVolume = 0
       let sumOfVolume = 0
-    
-      periods.slice(0,length).forEach((curr) => {
-        moneyFlowVolume += (curr.volume * (curr.close - curr.low - (curr.high - curr.close))) / (curr.high - curr.low)
-        sumOfVolume += curr.volume
+       periods.slice(0,length).forEach(({close, low, high, volume}) => {
+        moneyFlowVolume += (volume * (close - low - (high - close))) / (high - low)
+        sumOfVolume += volume
+       })
       })
       return moneyFlowVolume / sumOfVolume
     }
   }
-}
-/*
+/**  Chaikin Money Flow
 Steps to calculating Chaikin Money Flow (CMF). 
 The example below is based on 20-periods.
 First, calculate the Money Flow Multiplier for each period. 
@@ -28,3 +26,4 @@ divide by the 20-period sum of volume.
 
 3. 20-period CMF = 20-period Sum of Money Flow Volume / 20 period Sum of Volume
 */
+}

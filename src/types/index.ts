@@ -64,7 +64,7 @@ export interface Base {
 }
 
 export interface StrategyConf extends Partial<Base> {
-  selector: string
+  symbol: string
   strategyName: string
   share: number
 }
@@ -163,7 +163,7 @@ export interface Trade {
   price: number
   side: 'buy' | 'sell'
   id: string
-  selector: string
+  symbol: string
 }
 
 export interface Product {

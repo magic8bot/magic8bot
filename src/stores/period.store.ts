@@ -12,13 +12,13 @@ export class PeriodStore {
   constructor(
     private readonly period: string,
     exchange: string,
-    selector: string,
+    symbol: string,
     strategy: string,
     private readonly lookbackSize = 250
   ) {
-    const eventBusEvent = { exchange, selector, strategy }
+    const eventBusEvent = { exchange, symbol, strategy }
 
-    eventBus.subscribe({ event: EVENT.XCH_TRADE, exchange, selector }, (trade: TradeItem) => this.addTrade(trade))
+    eventBus.subscribe({ event: EVENT.XCH_TRADE, exchange, symbol }, (trade: TradeItem) => this.addTrade(trade))
     this.updateEmitter = eventBus.register({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent })
     this.periodEmitter = eventBus.register({ event: EVENT.PERIOD_NEW, ...eventBusEvent })
   }

@@ -3,7 +3,7 @@ import { EVENT } from './events.enum'
 interface EventBusEvent {
   event: EVENT
   exchange: string
-  selector?: string
+  symbol?: string
   strategy?: string
 }
 
@@ -12,26 +12,26 @@ type EventDataFn = (data: EventData) => void
 
 type EventDataSet = Set<EventDataFn>
 type StrategyMap = Map<string, EventDataSet>
-type SelectorMap = Map<string, StrategyMap>
-type ExchangeMap = Map<string, SelectorMap>
+type SymbolMap = Map<string, StrategyMap>
+type ExchangeMap = Map<string, SymbolMap>
 type EventMap = Map<EVENT, ExchangeMap>
 
 export type EventBusEmitter = (eventData?: Record<string, any>) => any
 
-const optsErr = 'selector is required if strategy is defined'
+const optsErr = 'symbol is required if strategy is defined'
 
 export class EventBus {
   private eventMap: EventMap = new Map()
 
   public register(eventBusEvent: EventBusEvent): EventBusEmitter {
-    if (eventBusEvent.strategy && !eventBusEvent.selector) throw new Error(optsErr)
+    if (eventBusEvent.strategy && !eventBusEvent.symbol) throw new Error(optsErr)
 
     // pop onto next callstack
     return (eventData: EventData) => setImmediate(() => this.emit(eventBusEvent, eventData))
   }
 
   public subscribe(eventBusEvent: EventBusEvent, fn: EventDataFn) {
-    if (eventBusEvent.strategy && !eventBusEvent.selector) throw new Error(optsErr)
+    if (eventBusEvent.strategy && !eventBusEvent.symbol) throw new Error(optsErr)
 
     const set = this.makeSet(eventBusEvent)
     set.add(fn)
@@ -39,21 +39,21 @@ export class EventBus {
     return () => set.delete(fn)
   }
 
-  private emit({ event, exchange, selector = 'all', strategy = 'all' }: EventBusEvent, eventData: EventData) {
-    const set = this.getSet({ event, exchange, selector, strategy })
+  private emit({ event, exchange, symbol = 'all', strategy = 'all' }: EventBusEvent, eventData: EventData) {
+    const set = this.getSet({ event, exchange, symbol, strategy })
     if (!set) return
 
     set.forEach((fn) => fn(eventData))
 
-    if (selector !== 'all') {
-      this.emit({ event, exchange, selector: 'all', strategy: 'all' }, eventData)
+    if (symbol !== 'all') {
+      this.emit({ event, exchange, symbol: 'all', strategy: 'all' }, eventData)
     } else if (strategy !== 'all') {
-      this.emit({ event, exchange, selector, strategy: 'all' }, eventData)
+      this.emit({ event, exchange, symbol, strategy: 'all' }, eventData)
     }
   }
 
-  private makeSet({ event, exchange, selector = 'all', strategy = 'all' }: EventBusEvent) {
-    const set = this.getSet({ event, exchange, selector, strategy })
+  private makeSet({ event, exchange, symbol = 'all', strategy = 'all' }: EventBusEvent) {
+    const set = this.getSet({ event, exchange, symbol, strategy })
     if (set) return set
 
     if (!this.eventMap.has(event)) this.eventMap.set(event, new Map())
@@ -61,25 +61,25 @@ export class EventBus {
     const exchangeMap = this.eventMap.get(event)
     if (!exchangeMap.has(exchange)) exchangeMap.set(exchange, new Map())
 
-    const selectorMap = exchangeMap.get(exchange)
-    if (!selectorMap.has(selector)) selectorMap.set(selector, new Map())
+    const symbolMap = exchangeMap.get(exchange)
+    if (!symbolMap.has(symbol)) symbolMap.set(symbol, new Map())
 
-    const strategyMap = selectorMap.get(selector)
+    const strategyMap = symbolMap.get(symbol)
     if (!strategyMap.has(strategy)) strategyMap.set(strategy, new Set())
 
     return strategyMap.get(strategy)
   }
 
-  private getSet({ event, exchange, selector = 'all', strategy = 'all' }: EventBusEvent) {
+  private getSet({ event, exchange, symbol = 'all', strategy = 'all' }: EventBusEvent) {
     if (!this.eventMap.has(event)) return false
 
     const exchangeMap = this.eventMap.get(event)
     if (!exchangeMap.has(exchange)) return false
 
-    const selectorMap = exchangeMap.get(exchange)
-    if (!selectorMap.has(selector)) return false
+    const symbolMap = exchangeMap.get(exchange)
+    if (!symbolMap.has(symbol)) return false
 
-    const strategyMap = selectorMap.get(selector)
+    const strategyMap = symbolMap.get(symbol)
     if (!strategyMap.has(strategy)) return false
 
     return strategyMap.get(strategy)

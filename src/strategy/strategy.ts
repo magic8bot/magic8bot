@@ -9,15 +9,15 @@ export class StrategyService {
   private periodStore: PeriodStore
   private lastSignal: 'buy' | 'sell' = null
 
-  constructor(exchange: string, selector: string, strategyConf: StrategyConf) {
+  constructor(exchange: string, symbol: string, strategyConf: StrategyConf) {
     const { strategyName, period } = strategyConf
 
-    eventBus.subscribe({ event: EVENT.STRAT_SIGNAL, exchange, selector, strategy: strategyName }, ({ signal }) =>
+    eventBus.subscribe({ event: EVENT.STRAT_SIGNAL, exchange, symbol, strategy: strategyName }, ({ signal }) =>
       this.onSignal(signal)
     )
 
     this.strategy = strategyLoader[strategyName]
-    this.periodStore = new PeriodStore(period, exchange, selector, strategyName)
+    this.periodStore = new PeriodStore(period, exchange, symbol, strategyName)
   }
 
   public get prerollDone() {

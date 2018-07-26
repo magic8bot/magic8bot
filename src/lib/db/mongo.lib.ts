@@ -66,13 +66,13 @@ export class MongoLib {
 
     this.optionCollection.createIndex({ sessionId: 1 })
 
-    this.tradeCollection.createIndex([{ selector: 1 }, { time: 1 }])
+    this.tradeCollection.createIndex([{ symbol: 1 }, { time: 1 }])
 
-    this.markerCollection.createIndex([{ to: 1 }, { from: 1 }, { time: 1 }])
+    this.markerCollection.createIndex([{ exchange: 1 }, { symbol: 1 }, { to: 1 }, { from: 1 }])
 
-    this.orderCollection.createIndex([{ sessionId: 1 }, { selector: 1 }, { time: 1 }])
+    this.orderCollection.createIndex([{ sessionId: 1 }, { symbol: 1 }, { time: 1 }])
 
-    this.walletCollection.createIndex([{ sessionId: 1 }, { exchange: 1 }, { selector: 1 }, { strategy: 1 }])
+    this.walletCollection.createIndex([{ sessionId: 1 }, { exchange: 1 }, { symbol: 1 }, { strategy: 1 }])
   }
 
   private makeConnectionString(

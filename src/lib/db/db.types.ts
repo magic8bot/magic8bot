@@ -14,7 +14,7 @@ export interface TradeItem {
 
 export type TradeCollection = TradeItem & {
   exchange: string
-  selector: string
+  symbol: string
 }
 
 export interface PeriodItem {
@@ -27,7 +27,7 @@ export interface PeriodItem {
 }
 
 export interface Marker {
-  selector: string
+  symbol: string
   exchange: string
   from: number
   to: number
@@ -51,7 +51,7 @@ export interface OrderItem {
 
 export type OrderCollection = OrderItem & {
   sessionId: string
-  selector: string
+  symbol: string
 }
 
 export interface Options {
@@ -89,7 +89,7 @@ export interface Options {
   debug: number
   stats: boolean
   mode: string
-  selector: {
+  symbol: {
     exchange_id: string
     product_id: string
     asset: string
@@ -111,6 +111,6 @@ export interface Wallet {
 export type WalletCollection = Wallet & {
   sessionId: string
   exchange: string
-  selector: string
+  symbol: string
   strategy: string
 }

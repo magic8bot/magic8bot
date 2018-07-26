@@ -5,7 +5,7 @@ import { ExchangeAdapter } from './adapters/base'
 const adapters: Record<string, ExchangeAdapter> = { binance, gdax }
 
 type Adapter = ExchangeAdapter & {
-  fetchTrades: (selector: string, start: number) => Promise<Trade[]>
+  fetchTrades: (symbol: string, start: number) => Promise<Trade[]>
   fetchBalance: () => Promise<Balances>
 }
 
@@ -22,9 +22,9 @@ export const wrapExchange = (exchangeName: string, exchange: Exchange): WrappedE
     scan: adapter.scan,
     getTradeCursor: adapter.getTradeCursor,
 
-    fetchTrades: (selector: string, start: number) => {
+    fetchTrades: (symbol: string, start: number) => {
       const params = adapter.mapTradeParams(start)
-      return exchange.fetchTrades(selector, undefined, undefined, params)
+      return exchange.fetchTrades(symbol, undefined, undefined, params)
     },
 
     fetchBalance: () => {

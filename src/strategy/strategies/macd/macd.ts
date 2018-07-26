@@ -49,12 +49,12 @@ export class Macd extends BaseStrategy<MacdOptions> {
 
   private overbought = false
 
-  constructor(exchange: string, selector: string, options?: Partial<MacdOptions>) {
+  constructor(exchange: string, symbol: string, options?: Partial<MacdOptions>) {
     super()
 
     this.options = { ...this.options, ...options }
 
-    const eventBusEvent = { exchange, selector, strategy: this.name }
+    const eventBusEvent = { exchange, symbol, strategy: this.name }
 
     eventBus.subscribe({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent }, (periods: PeriodItem[]) =>
       this.calculate(periods)

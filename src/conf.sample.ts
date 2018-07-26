@@ -77,23 +77,23 @@ const exchanges: ExchangeConf[] = [
       strategies: [
         // each strategy will inherit from exchange, unless overwritten
         {
-          selector: 'BTC-USD',
+          symbol: 'BTC-USD',
           share: 0.25,
           strategyName: 'ta_macd',
         },
         {
-          selector: 'BCH-USD',
+          symbol: 'BCH-USD',
           share: 0.25,
           strategyName: 'ta_macd',
         },
         {
-          selector: 'LTC-USD',
+          symbol: 'LTC-USD',
           share: 0.25,
           strategyName: 'ta_macd',
         },
         {
           period: '4m',
-          selector: 'ETH-USD',
+          symbol: 'ETH-USD',
           share: 0.25,
           strategyName: 'ta_macd',
         },
@@ -109,7 +109,7 @@ const exchanges: ExchangeConf[] = [
     options: {
       strategies: [
         {
-          selector: 'BTC-USDT',
+          symbol: 'BTC-USDT',
           share: 1,
           strategyName: 'ta_macd',
         },

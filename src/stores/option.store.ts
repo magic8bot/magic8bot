@@ -29,9 +29,9 @@ export class OptionStore {
   }
 
   public mergeOptions(optionsA: Options, optionsB: Options) {
-    const selector = { ...optionsA.selector, ...optionsB.selector }
+    const symbol = { ...optionsA.symbol, ...optionsB.symbol }
 
-    return { ...optionsA, ...optionsB, selector } as Options
+    return { ...optionsA, ...optionsB, symbol } as Options
   }
 
   public async loadOptions() {

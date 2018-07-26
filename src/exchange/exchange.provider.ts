@@ -24,8 +24,8 @@ export class ExchangeProvider {
     })
   }
 
-  public async getTrades(exchangeName: string, selector: string, since: number) {
-    const trades = await this.exchanges.get(exchangeName).fetchTrades(selector.replace('-', '/'), since)
+  public async getTrades(exchangeName: string, symbol: string, since: number) {
+    const trades = await this.exchanges.get(exchangeName).fetchTrades(symbol.replace('-', '/'), since)
 
     return trades.map(({ id, timestamp, amount, price, side }) => {
       return { trade_id: Number(id), time: timestamp, size: amount, price, side } as TradeItem

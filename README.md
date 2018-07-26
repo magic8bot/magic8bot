@@ -2,11 +2,12 @@
 
 ![logo](https://rawgit.com/notvitaliy/magic8bot/master/assets/logo.svg)
 
-## Current Status (UPDATE July 17th '18)
+## Current Status (UPDATE July 17th '18) - PreAlpha (Not ready for live trading)
 
-Magic8bot a crypto trading bot originally based off of zenbot4. It is a complete rewrite and rethinking of the entire platform. The overall goals are:
+Magic8bot a crypto trading bot originally based on Zenbot4. It is a complete rewrite and rethinking of the entire platform. 
+The overall goals are:
 
-- reducing code repitition
+- reducing code repetition 
 - separation of concerns
 - everything in typescript
 - allow multiple strategies to run simultaneously

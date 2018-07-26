@@ -11,10 +11,35 @@ export class WalletStore {
   private sessionId: string = sessionStore.sessionId
   private wallets: Map<string, Wallet> = new Map()
 
-  public addWallet(walletOpts: WalletOpts) {
-    const idStr = this.makeIdStr(walletOpts)
-    if (this.wallets.has(idStr)) return
+  public async initWallet(walletOpts: WalletOpts, share: number) {
+    await this.loadOrNewWallet(walletOpts)
+    this.subcribeToWalletEvents(walletOpts)
+  }
 
+  public async updateWallet(walletOpts: WalletOpts, { currency, asset }: Balance) {
+    const wallet: Wallet = { init: { currency, asset }, current: { currency, asset } }
+    const idStr = this.makeIdStr(walletOpts)
+    this.wallets.set(idStr, wallet)
+
+    await this.saveWallet(walletOpts)
+  }
+
+  private async loadOrNewWallet(walletOpts: WalletOpts) {
+    const wallet = await this.loadWallet(walletOpts)
+    if (!wallet) await this.newWallet(walletOpts)
+  }
+
+  private async newWallet(walletOpts: WalletOpts) {
+    const idStr = this.makeIdStr(walletOpts)
+    this.wallets.set(idStr, { init: { asset: null, currency: null }, current: { asset: null, currency: null } })
+    await this.saveWallet(walletOpts)
+  }
+
+  private async loadWallet({ exchange, symbol, strategy }: WalletOpts) {
+    return dbDriver.wallet.findOne({ sessionId: this.sessionId, exchange, symbol, strategy })
+  }
+
+  private subcribeToWalletEvents(walletOpts: WalletOpts) {
     const { exchange, symbol } = walletOpts
 
     eventBus.subscribe({ event: EVENT.ORDER_START, exchange, symbol }, (order: OrderItem) =>
@@ -32,24 +57,6 @@ export class WalletStore {
     eventBus.subscribe({ event: EVENT.ORDER_COMPLETE, exchange, symbol }, (order: OrderItem) =>
       this.onOrder('complete', walletOpts, order)
     )
-
-    this.wallets.set(idStr, null)
-  }
-
-  public async initWallet(walletOpts: WalletOpts, { currency, asset }: Balance, share: number) {
-    const wallet: Wallet = { init: { currency, asset }, current: { currency, asset } }
-    const idStr = this.makeIdStr(walletOpts)
-    this.wallets.set(idStr, wallet)
-
-    await this.saveWallet(walletOpts)
-  }
-
-  public async loadWallet({ exchange, symbol, strategy }: WalletOpts) {
-    const wallet = await dbDriver.wallet.findOne({ sessionId: this.sessionId, exchange, symbol, strategy })
-
-    const idStr = this.makeIdStr({ exchange, symbol, strategy })
-    const { init, current } = wallet
-    this.wallets.set(idStr, { init, current })
   }
 
   private onOrder(eventType: 'start' | 'cancel' | 'partial' | 'complete', walletOpts: WalletOpts, order: OrderItem) {

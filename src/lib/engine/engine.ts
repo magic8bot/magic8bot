@@ -1,31 +1,32 @@
 import { ExchangeConf, StrategyConf, Base } from '@m8bTypes'
-import { TradeStore, MarkerStore } from '@stores'
+import { TradeStore, MarkerStore, WalletStore } from '@stores'
 import { ExchangeProvider } from '@exchange'
-import { BaseStrategy, strategyLoader } from '@strategy'
+import { StrategyProvider } from '@strategy'
 
 import { Backfiller } from './backfill'
 
 export class Engine {
-  private exchange: string
+  private exchangeName: string
 
   private baseConf: Base
 
   private backfiller: Backfiller
   private backfillers: Map<string, number> = new Map()
 
-  private strategies: Map<string, Set<BaseStrategy>> = new Map()
+  private strategies: Map<string, Set<StrategyProvider>> = new Map()
 
   constructor(
     private readonly exchangeProvider: ExchangeProvider,
+    private readonly walletStore: WalletStore,
     private readonly tradeStore: TradeStore,
     private readonly markerStore: MarkerStore,
     { exchangeName, options: { strategies, base } }: ExchangeConf,
     isPaper: boolean
   ) {
-    this.exchange = exchangeName
+    this.exchangeName = exchangeName
     this.baseConf = base
 
-    this.backfiller = new Backfiller(this.exchange, this.exchangeProvider, this.tradeStore, this.markerStore)
+    this.backfiller = new Backfiller(this.exchangeName, this.exchangeProvider, this.tradeStore, this.markerStore)
 
     const currencyPairDays = this.getBackfillerDays(strategies, base.days)
 
@@ -37,8 +38,10 @@ export class Engine {
     this.backfillers.forEach(async (days, symbol) => {
       await this.backfiller.backfill(symbol, days)
 
-      this.strategies.get(symbol).forEach((strategy) => strategy.prerollDone())
-      this.tick(symbol)
+      this.strategies.get(symbol).forEach((strategy) => {
+        strategy.prerollDone()
+        strategy.tick()
+      })
     })
   }
 
@@ -53,26 +56,21 @@ export class Engine {
   private setupBackfillers(days: number, symbol: string) {
     if (!this.backfillers.has(symbol)) this.backfillers.set(symbol, days)
 
-    this.tradeStore.addSymbol(this.exchange, symbol)
+    this.tradeStore.addSymbol(this.exchangeName, symbol)
   }
 
   private setupStrategies(strategyConf: StrategyConf) {
     const fullConf = this.mergeConfig(strategyConf)
-    const strategy = strategyLoader(fullConf.strategyName)
 
     const { symbol } = fullConf
 
     if (!this.strategies.has(symbol)) this.strategies.set(symbol, new Set())
     const set = this.strategies.get(symbol)
 
-    set.add(new strategy(this.exchange, symbol, strategyConf))
+    set.add(new StrategyProvider(this.walletStore, this.exchangeName, symbol, strategyConf))
   }
 
   private mergeConfig(strategyConf: StrategyConf): StrategyConf {
     return { ...this.baseConf, ...strategyConf }
-  }
-
-  private async tick(symbol: string) {
-    //
   }
 }

@@ -1,16 +1,23 @@
 import { StrategyConf } from '@m8bTypes'
 import { eventBus, EVENT } from '@lib'
-import { PeriodStore } from '@stores'
+import { PeriodStore, WalletStore } from '@stores'
 
 import { strategyLoader, BaseStrategy } from './strategies'
 
-export class StrategyService {
+export class StrategyProvider {
   private strategy: BaseStrategy
+  private strategyName: string
   private periodStore: PeriodStore
   private lastSignal: 'buy' | 'sell' = null
 
-  constructor(exchange: string, symbol: string, strategyConf: StrategyConf) {
+  constructor(
+    private readonly walletStore: WalletStore,
+    private readonly exchange: string,
+    private readonly symbol: string,
+    private readonly strategyConf: StrategyConf
+  ) {
     const { strategyName, period } = strategyConf
+    this.strategyName = strategyName
 
     eventBus.subscribe({ event: EVENT.STRAT_SIGNAL, exchange, symbol, strategy: strategyName }, ({ signal }) =>
       this.onSignal(signal)
@@ -22,6 +29,20 @@ export class StrategyService {
 
   public get prerollDone() {
     return this.strategy.prerollDone
+  }
+
+  public async init() {
+    const walletOpts = {
+      exchange: this.exchange,
+      symbol: this.symbol,
+      strategy: this.strategyName,
+    }
+
+    await this.walletStore.initWallet(walletOpts, this.strategyConf.share)
+  }
+
+  public async tick() {
+    //
   }
 
   private onSignal(signal: 'buy' | 'sell') {

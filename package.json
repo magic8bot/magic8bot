@@ -2,11 +2,11 @@
   "name": "magic8bot",
   "version": "0.0.0-dev",
   "description": "Cryptocurrency trading bot",
-  "bugs": "https://github.com/notvitaliy/magic8bot/issues",
+  "bugs": "https://github.com/magic8bot/magic8bot/issues",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/notvitaliy/magic8bot.git"
+    "url": "https://github.com/magic8bot/magic8bot.git"
   },
   "main": "./magic8bot.js",
   "bin": {

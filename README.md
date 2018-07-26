@@ -4,7 +4,7 @@
 
 ## Current Status (UPDATE July 17th '18) - PreAlpha (Not ready for live trading)
 
-Magic8bot a crypto trading bot originally based on of Zenbot4. It is a complete rewrite and rethinking of the entire platform. 
+Magic8bot a crypto trading bot originally based on Zenbot4. It is a complete rewrite and rethinking of the entire platform. 
 The overall goals are:
 
 - reducing code repetition 

@@ -1,0 +1,13 @@
+# .dockerignore everything
+**
+
+# except
+!/assets/*
+!/config/*
+!/legacy/*
+!/src/*
+!/jest.config.js 
+!/magic8bot.js 
+!/tsconfig.json 
+!/tslint.json
+!/yarn.lock

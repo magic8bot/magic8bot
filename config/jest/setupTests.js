@@ -1,4 +1,4 @@
-global.afterEach(async () => {
+global.beforeEach(async () => {
   const { db } = global
 
   const collections = ['trades', 'sessions', 'options', 'markers', 'orders']

@@ -9,18 +9,23 @@ module.exports = class MongoEnvironment extends NodeEnvironment {
     super(config)
   }
 
-  async setup() {
+  setup() {
     const globalConfig = JSON.parse(fs.readFileSync(globalConfigPath, 'utf-8'))
-
     const { MongoClient } = require('mongodb')
-    const connection = await MongoClient.connect(
+
+    return MongoClient.connect(
       globalConfig.mongoUri,
       { useNewUrlParser: true }
     )
-
-    this.global.db = await connection.db(globalConfig.mongoDBName)
-
-    await super.setup()
+      .then((connection) => {
+        return connection.db(globalConfig.mongoDBName)
+      })
+      .then((db) => {
+        this.global.db = db
+      })
+      .then(() => {
+        super.setup()
+      })
   }
 
   async teardown() {

@@ -21,7 +21,7 @@
     "start:dev": "cross-env NODE_ENV=development node ./magic8bot.js",
     "lint": "tslint -p ./tsconfig.json",
     "lint:fix": "npm run lint -- --fix",
-    "test": "jest --detectOpenHandles"
+    "test": "jest --detectOpenHandles --runInBand --forceExit"
   },
   "dependencies": {
     "@magic8bot/timebucket": "^1.0.0",

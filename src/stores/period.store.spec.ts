@@ -1,7 +1,7 @@
 import { PeriodStore } from './period.store'
 import { time } from '@util'
 import { now, makeNewOrder } from './spec.util'
-import { timebucket } from '@magic8bot/timebucket';
+import { timebucket } from '@magic8bot/timebucket'
 
 describe('PeriodStore', () => {
   let periodStore: PeriodStore
@@ -56,21 +56,28 @@ describe('PeriodStore', () => {
 
   it('check for order of periods', async (done) => {
     const trades = [...Array(4).fill(0)].map((v, i) => makeNewOrder(time(now).sub.m(i + 1))).reverse()
-    trades.forEach((order, index) => {
-      // Create "pseudo"-bucket to map trade time to next minute bucket
-      const bucket = timebucket(trades[index].time)
+
+    const buckets = trades.map((trade) =>
+      timebucket(trade.time)
         .resize('1m')
         .toMilliseconds()
+    )
 
-      periodStore.addTrade(order)
+    periodStore.addTrade(trades[0])
+    expect(periodStore.periods[0].time).toEqual(buckets[0])
 
-      expect(periodStore.periods[0].time).toEqual(bucket)
+    periodStore.addTrade(trades[1])
+    expect(periodStore.periods[0].time).toEqual(buckets[1])
+    expect(periodStore.periods[1].time).toEqual(buckets[1] - 60000)
 
-      // check if prevoius bucket is current bucket minus bucket size (1m)
-      if (index > 1) {
-        expect(periodStore.periods[1].time).toEqual(bucket - 60000)
-      }
-    })
+    periodStore.addTrade(trades[2])
+    expect(periodStore.periods[0].time).toEqual(buckets[2])
+    expect(periodStore.periods[1].time).toEqual(buckets[2] - 60000)
+
+    periodStore.addTrade(trades[3])
+    expect(periodStore.periods[0].time).toEqual(buckets[3])
+    expect(periodStore.periods[1].time).toEqual(buckets[3] - 60000)
+
     done()
   })
 })

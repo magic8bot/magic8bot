@@ -1,5 +1,7 @@
 import { normalizeSymbol } from './normalize-symbol'
 
+const symbolValidator = new RegExp('^([a-z0-9]*).(([A-Z0-9]*)-([A-Z0-9]*))$')
+
 export interface Symbol {
   exchangeId: string
   productId: string
@@ -13,11 +15,12 @@ export const objectifySymbol = (symbol): Symbol => {
 
   if (typeof symbol === 'string') {
     const s = normalizeSymbol(symbol)
-
-    const exchangeId = s.split('.')[0]
-    const productId = s.split('.')[1]
-    const asset = productId.split('-')[0]
-    const currency = productId.split('-')[1]
+    const validatedSymbol = symbolValidator.exec(s)
+    if (validatedSymbol === null || validatedSymbol.length !== 5) {
+      throw new Error(`Symbol ${symbol} (normalized: ${s}) is not valid`)
+    }
+    validatedSymbol.shift()
+    const [exchangeId, productId, asset, currency] = validatedSymbol
 
     rtn = { exchangeId, productId, asset, currency, normalized: s }
   } else if (typeof symbol === 'object') {

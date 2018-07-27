@@ -77,19 +77,21 @@ stop:
 state:
 	docker-compose ps
 
-build:
+destroy:
 	-docker-compose stop
 	-docker-compose rm --force server
 	-docker-compose rm --force mongodb
 	-docker-compose rm --force adminmongo
-	-docker rmi jraviotta/magic8bot:0.0
+	-docker rmi magic8bot:latest
 	-docker rmi mongo
 	-docker rmi adminmongo
 	docker volume prune --force
 	docker system prune --force
+
+build:
+	# up
 	# docker-compose pull
-	# docker build -t magic8bot .
-	# docker-compose up -d --force-recreate
+	docker build -t magic8bot .
 
 shell:
 	docker-compose exec server /bin/sh

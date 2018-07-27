@@ -19,7 +19,7 @@ export const objectifySymbol = (symbol): Symbol => {
     if (validatedSymbol === null || validatedSymbol.length !== 5) {
       throw new Error(`Symbol ${symbol} (normalized: ${s}) is not valid`)
     }
-    validatedSymbol.shift()
+    validatedSymbol.shift() // first item is the string itself and not needed
     const [exchangeId, productId, asset, currency] = validatedSymbol
 
     rtn = { exchangeId, productId, asset, currency, normalized: s }

@@ -61,13 +61,27 @@ list:
 time-sync:
 	docker run --rm --privileged alpine hwclock -s
 
-build-dev:
-	# docker build . -t jraviotta/magic8bot:dev -t jraviotta/magic8bot:0.0 --build-arg "ENV=DEV"
-	docker-compose build
-# todo
+destroy:
+	-docker-compose stop
+	-docker-compose rm --force server
+	-docker-compose rm --force mongodb
+	-docker-compose rm --force adminmongo
+	-docker rmi magic8bot:latest
+	-docker rmi mongo
+	-docker rmi adminmongo
+	docker volume prune --force
+	docker system prune --force
+
+build:
+	docker build -t magic8bot .
+
+shell:
+	docker-compose exec server /bin/sh
+
 up:
 	docker-compose up -d 
 
+# todo
 start:
 	docker-compose start
 
@@ -77,22 +91,6 @@ stop:
 state:
 	docker-compose ps
 
-build:
-	-docker-compose stop
-	-docker-compose rm --force server
-	-docker-compose rm --force mongodb
-	-docker-compose rm --force adminmongo
-	-docker rmi jraviotta/magic8bot:0.0
-	-docker rmi mongo
-	-docker rmi adminmongo
-	docker volume prune --force
-	docker system prune --force
-	# docker-compose pull
-	# docker build -t magic8bot .
-	# docker-compose up -d --force-recreate
-
-shell:
-	docker-compose exec server /bin/sh
 
 shellw:
 	docker exec -it -u root $$(docker-compose ps -q server) /bin/sh

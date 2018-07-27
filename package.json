@@ -34,6 +34,7 @@
     "bollinger-bands": "^3.0.1",
     "ccxt": "^1.12.97",
     "cexio-api-node": "^1.0.8",
+    "codecov": "^3.0.4",
     "colors": "^1.2.1",
     "convnetjs": "^0.3.0",
     "cross-env": "5.2.0",

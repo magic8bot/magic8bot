@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/magic8bot/magic8bot.svg?branch=master)](https://travis-ci.com/magic8bot/magic8bot)
+[![codecov](https://codecov.io/gh/magic8bot/magic8bot/branch/master/graph/badge.svg)](https://codecov.io/gh/magic8bot/magic8bot)
 
 ![logo](https://rawgit.com/magic8bot/magic8bot/master/assets/logo.svg)
 

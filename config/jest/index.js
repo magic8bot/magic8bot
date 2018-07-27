@@ -25,4 +25,6 @@ module.exports = {
     },
   },
   roots: ['<rootDir>/src'],
+  collectCoverage: true,
+  coveragePathIgnorePatterns: ["/node_modules", "/config"]
 }

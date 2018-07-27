@@ -61,22 +61,6 @@ list:
 time-sync:
 	docker run --rm --privileged alpine hwclock -s
 
-build-dev:
-	# docker build . -t jraviotta/magic8bot:dev -t jraviotta/magic8bot:0.0 --build-arg "ENV=DEV"
-	docker-compose build
-# todo
-up:
-	docker-compose up -d 
-
-start:
-	docker-compose start
-
-stop:
-	docker-compose stop
-
-state:
-	docker-compose ps
-
 destroy:
 	-docker-compose stop
 	-docker-compose rm --force server
@@ -89,12 +73,25 @@ destroy:
 	docker system prune --force
 
 build:
-	# up
-	# docker-compose pull
 	docker build -t magic8bot .
 
 shell:
 	docker-compose exec server /bin/sh
+
+up:
+	docker-compose up -d 
+
+# todo
+start:
+	docker-compose start
+
+stop:
+	docker-compose stop
+
+state:
+	docker-compose ps
+
+
 
 shellw:
 	docker exec -it -u root $$(docker-compose ps -q server) /bin/sh

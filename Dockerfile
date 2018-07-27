@@ -7,12 +7,15 @@ RUN apk update && \
     apk add --virtual build-dependencies \
     build-base \
     dos2unix \
-    python3-dev && \
+    python2-dev && python2 && \
     apk add bash
 
 # Add mainfest from host
 WORKDIR /app
 COPY yarn.lock /app/
+COPY package.json /app/
+COPY tsconfig.json /app/
+COPY src /app/src
 
 # Fix files molested by Windows
 RUN find . -type f -print0 | xargs -0 dos2unix \
@@ -27,7 +30,8 @@ RUN find . -type f -print0 | xargs -0 dos2unix \
     && rm -rf ta-lib \
     && rm ta-lib-0.4.0-src.tar.gz \
     # Install app dependencies \
-    && npm i -g yarn && yarn \
+    && npm i -g yarn && yarn install  \
+    && yarn build \
     # Remove build tools
     && apk del build-dependencies \
     && rm -rf /var/cache/apk/*

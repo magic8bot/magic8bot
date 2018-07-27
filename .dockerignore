@@ -6,8 +6,7 @@
 !/config/*
 !/legacy/*
 !/src/*
-!/jest.config.js 
 !/magic8bot.js 
-!/tsconfig.json 
-!/tslint.json
+!/tsconfig.json
 !/yarn.lock
+!/package.json

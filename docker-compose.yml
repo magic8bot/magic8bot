@@ -24,8 +24,7 @@ services:
     expose:
       - 27017
 
-# Remove below comments to use this container. "adminMongo is a Web based user interface (GUI) to handle all your MongoDB connections/databases needs."
-
+# AdminMongo is a Web based user interface for MongoDB administration
   adminmongo:
    image: mrvautin/adminmongo
    links:

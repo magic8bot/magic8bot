@@ -14,3 +14,5 @@ Dockerfile
 LICENSE
 Makefile
 README.md
+jest.config.js
+legacy/

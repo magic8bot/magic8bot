@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     image: magic8bot
     volumes:
-      - /app/
+      - /app
     ports:
       - "9999:9999"
     expose: 

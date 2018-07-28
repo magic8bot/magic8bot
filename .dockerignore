@@ -1,12 +1,16 @@
-# .dockerignore everything
-**
+# Ignore files to keep container slim
 
-# except
-!/assets/*
-!/config/*
-!/legacy/*
-!/src/*
-!/magic8bot.js 
-!/tsconfig.json
-!/yarn.lock
-!/package.json
+.git
+.vscode
+database
+dist
+node_modules
+.dockerignore
+.gitignore
+travis.yml
+CODEOWNERS
+docker-compose.yml
+Dockerfile
+LICENSE
+Makefile
+README.md

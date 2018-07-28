@@ -81,12 +81,12 @@ shell:
 up:
 	docker-compose up -d 
 
+stop:
+	docker-compose stop
+
 # todo
 start:
 	docker-compose start
-
-stop:
-	docker-compose stop
 
 state:
 	docker-compose ps

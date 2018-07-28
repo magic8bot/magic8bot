@@ -2,10 +2,10 @@ import { StrategyConf } from '@m8bTypes'
 import { eventBus, EVENT } from '@lib'
 import { PeriodStore, WalletStore } from '@stores'
 
-import { strategyLoader, BaseStrategy } from './strategies'
+import { BaseStrategy, strategyLoader } from '@strategy'
 import { Balances } from 'ccxt'
 
-export class StrategyProvider {
+export class TradeEngine {
   public strategyName: string
 
   private strategy: BaseStrategy

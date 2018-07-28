@@ -1,9 +1,9 @@
 import { ExchangeConf, StrategyConf, Base } from '@m8bTypes'
 import { TradeStore, MarkerStore, WalletStore } from '@stores'
 import { ExchangeProvider } from '@exchange'
-import { StrategyProvider } from '@strategy'
 
 import { Backfiller } from './backfill'
+import { TradeEngine } from './trade'
 
 export class Engine {
   private exchangeName: string
@@ -13,7 +13,7 @@ export class Engine {
   private backfiller: Backfiller
   private backfillers: Map<string, number> = new Map()
 
-  private strategies: Map<string, Set<StrategyProvider>> = new Map()
+  private tradeEngines: Map<string, Set<TradeEngine>> = new Map()
 
   constructor(
     private readonly exchangeProvider: ExchangeProvider,
@@ -43,13 +43,13 @@ export class Engine {
   private async initWallets() {
     const balances = await this.exchangeProvider.getBalances(this.exchangeName)
 
-    this.strategies.forEach(async (strategies) => strategies.forEach((strategy) => strategy.init(balances)))
+    this.tradeEngines.forEach(async (strategies) => strategies.forEach((strategy) => strategy.init(balances)))
   }
 
   private backfill() {
     this.backfillers.forEach(async (days, symbol) => {
       await this.backfiller.backfill(symbol, days)
-      this.strategies.get(symbol).forEach((strategy) => strategy.run())
+      this.tradeEngines.get(symbol).forEach((strategy) => strategy.run())
     })
   }
 
@@ -72,10 +72,10 @@ export class Engine {
 
     const { symbol } = fullConf
 
-    if (!this.strategies.has(symbol)) this.strategies.set(symbol, new Set())
-    const set = this.strategies.get(symbol)
+    if (!this.tradeEngines.has(symbol)) this.tradeEngines.set(symbol, new Set())
+    const set = this.tradeEngines.get(symbol)
 
-    set.add(new StrategyProvider(this.walletStore, this.exchangeName, symbol, strategyConf))
+    set.add(new TradeEngine(this.walletStore, this.exchangeName, symbol, strategyConf))
   }
 
   private mergeConfig(strategyConf: StrategyConf): StrategyConf {

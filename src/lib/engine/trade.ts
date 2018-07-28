@@ -38,14 +38,12 @@ export class TradeEngine {
     }
 
     const wallet = await this.walletStore.initWallet(walletOpts)
-    // console.log(wallet)
-    // process.exit()
+
     if (!wallet.asset) {
       const [a, b] = this.symbol.split('-')
       const currentWallet = { asset: balances[a].total, currency: balances[b].total }
       await this.walletStore.updateWallet(walletOpts, currentWallet)
     }
-    process.exit()
   }
 
   public run() {

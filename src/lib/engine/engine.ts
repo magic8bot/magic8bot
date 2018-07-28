@@ -43,13 +43,13 @@ export class Engine {
   private async initWallets() {
     const balances = await this.exchangeProvider.getBalances(this.exchangeName)
 
-    this.tradeEngines.forEach(async (strategies) => strategies.forEach((strategy) => strategy.init(balances)))
+    this.tradeEngines.forEach(async (tradeEngines) => tradeEngines.forEach((tradeEngine) => tradeEngine.init(balances)))
   }
 
   private backfill() {
     this.backfillers.forEach(async (days, symbol) => {
       await this.backfiller.backfill(symbol, days)
-      this.tradeEngines.get(symbol).forEach((strategy) => strategy.run())
+      this.tradeEngines.get(symbol).forEach((tradeEngine) => tradeEngine.run())
     })
   }
 

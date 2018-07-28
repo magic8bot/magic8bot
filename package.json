@@ -103,6 +103,7 @@
   ],
   "_moduleAliases": {
     "@lib": "dist/lib/index.js",
+    "@engine": "dist/engine/index.js",
     "@exchange": "dist/exchange/index.js",
     "@strategy": "dist/strategy/index.js",
     "@stores": "dist/stores/index.js",

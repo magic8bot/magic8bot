@@ -1,8 +1,7 @@
 import { ExchangeProvider } from '@exchange'
 import { TradeStore, MarkerStore } from '@stores'
-import { TradeItem } from '../db'
 
-export class Backfiller {
+export class TradeEngine {
   constructor(
     private readonly exchange: string,
     private readonly exchangeProvider: ExchangeProvider,

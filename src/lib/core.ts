@@ -1,4 +1,4 @@
-import { Engine } from './engine'
+import { ExchangeEngine } from '@engine'
 import { sessionStore, TradeStore, MarkerStore, WalletStore } from '@stores'
 import { Conf, ExchangeConf } from '@m8bTypes'
 import { ExchangeProvider } from '@exchange'
@@ -22,7 +22,7 @@ export class Core {
     const markerStore = new MarkerStore()
 
     exchanges.forEach((exchangeConf) => {
-      const engine = new Engine(
+      const engine = new ExchangeEngine(
         exchangeProvider,
         walletStore,
         tradeStore,

@@ -2,31 +2,34 @@ import { ExchangeConf, StrategyConf, Base } from '@m8bTypes'
 import { TradeStore, MarkerStore, WalletStore } from '@stores'
 import { ExchangeProvider } from '@exchange'
 
-import { Backfiller } from './backfill'
 import { TradeEngine } from './trade'
+import { StrategyEngine } from './strategy'
+import { sleep } from '@util'
 
-export class Engine {
+export class ExchangeEngine {
   private exchangeName: string
+  private tradePollInterval: number
 
   private baseConf: Base
 
-  private backfiller: Backfiller
+  private backfiller: TradeEngine
   private backfillers: Map<string, number> = new Map()
 
-  private tradeEngines: Map<string, Set<TradeEngine>> = new Map()
+  private tradeEngines: Map<string, Set<StrategyEngine>> = new Map()
 
   constructor(
     private readonly exchangeProvider: ExchangeProvider,
     private readonly walletStore: WalletStore,
     private readonly tradeStore: TradeStore,
     private readonly markerStore: MarkerStore,
-    { exchangeName, options: { strategies, base } }: ExchangeConf,
+    { exchangeName, tradePollInterval, options: { strategies, base } }: ExchangeConf,
     isPaper: boolean
   ) {
     this.exchangeName = exchangeName
+    this.tradePollInterval = tradePollInterval
     this.baseConf = base
 
-    this.backfiller = new Backfiller(this.exchangeName, this.exchangeProvider, this.tradeStore, this.markerStore)
+    this.backfiller = new TradeEngine(this.exchangeName, this.exchangeProvider, this.tradeStore, this.markerStore)
 
     const currencyPairDays = this.getBackfillerDays(strategies, base.days)
 
@@ -50,6 +53,7 @@ export class Engine {
     this.backfillers.forEach(async (days, symbol) => {
       await this.backfiller.backfill(symbol, days)
       this.tradeEngines.get(symbol).forEach((tradeEngine) => tradeEngine.run())
+      this.tick(symbol)
     })
   }
 
@@ -75,10 +79,16 @@ export class Engine {
     if (!this.tradeEngines.has(symbol)) this.tradeEngines.set(symbol, new Set())
     const set = this.tradeEngines.get(symbol)
 
-    set.add(new TradeEngine(this.walletStore, this.exchangeName, symbol, strategyConf))
+    set.add(new StrategyEngine(this.walletStore, this.exchangeName, symbol, strategyConf))
   }
 
   private mergeConfig(strategyConf: StrategyConf): StrategyConf {
     return { ...this.baseConf, ...strategyConf }
+  }
+
+  private async tick(symbol: string) {
+    await this.backfiller.backfill(symbol, 1)
+    await sleep(this.tradePollInterval)
+    this.tick(symbol)
   }
 }

@@ -27,6 +27,7 @@ export type MongoConf = MongoAuth | MongoConn
 
 export interface Base {
   period: string
+
   min_periods: number
   sell_stop_pct: number
   buy_stop_pct: number
@@ -89,6 +90,7 @@ export interface ExchangeAuth {
 
 export interface ExchangeConf {
   exchangeName: string
+  tradePollInterval: number
   auth: ExchangeAuth
   options: {
     base?: Base

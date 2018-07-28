@@ -5,7 +5,7 @@ import { PeriodStore, WalletStore } from '@stores'
 import { BaseStrategy, strategyLoader } from '@strategy'
 import { Balances } from 'ccxt'
 
-export class TradeEngine {
+export class StrategyEngine {
   public strategyName: string
 
   private strategy: BaseStrategy

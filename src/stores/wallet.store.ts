@@ -1,7 +1,7 @@
 import { dbDriver, Wallet, eventBus, EVENT, OrderItem } from '@lib'
 import { sessionStore } from './session.store'
 
-interface WalletOpts {
+export interface WalletOpts {
   exchange: string
   symbol: string
   strategy: string
@@ -25,6 +25,11 @@ export class WalletStore {
     await this.saveWallet(walletOpts)
   }
 
+  public getWallet(walletOpts: WalletOpts) {
+    const idStr = this.makeIdStr(walletOpts)
+    return this.wallets.get(idStr)
+  }
+
   private async loadOrNewWallet(walletOpts: WalletOpts) {
     const wallet = await this.loadWallet(walletOpts)
     return wallet ? wallet : this.newWallet()
@@ -46,21 +51,21 @@ export class WalletStore {
   }
 
   private subcribeToWalletEvents(walletOpts: WalletOpts) {
-    const { exchange, symbol } = walletOpts
+    const { exchange, symbol, strategy } = walletOpts
 
-    eventBus.subscribe({ event: EVENT.ORDER_START, exchange, symbol }, (order: OrderItem) =>
+    eventBus.subscribe({ event: EVENT.ORDER_START, exchange, symbol, strategy }, (order: OrderItem) =>
       this.onOrder('start', walletOpts, order)
     )
 
-    eventBus.subscribe({ event: EVENT.ORDER_CANCEL, exchange, symbol }, (order: OrderItem) =>
+    eventBus.subscribe({ event: EVENT.ORDER_CANCEL, exchange, symbol, strategy }, (order: OrderItem) =>
       this.onOrder('cancel', walletOpts, order)
     )
 
-    eventBus.subscribe({ event: EVENT.ORDER_PARTIAL, exchange, symbol }, (order: OrderItem) =>
+    eventBus.subscribe({ event: EVENT.ORDER_PARTIAL, exchange, symbol, strategy }, (order: OrderItem) =>
       this.onOrder('partial', walletOpts, order)
     )
 
-    eventBus.subscribe({ event: EVENT.ORDER_COMPLETE, exchange, symbol }, (order: OrderItem) =>
+    eventBus.subscribe({ event: EVENT.ORDER_COMPLETE, exchange, symbol, strategy }, (order: OrderItem) =>
       this.onOrder('complete', walletOpts, order)
     )
   }
@@ -77,18 +82,18 @@ export class WalletStore {
   }
 
   private onOrderStart(wallet: Wallet, order: OrderItem) {
-    if (order.type === 'buy') wallet.currency -= order.size * order.price
+    if (order.side === 'buy') wallet.currency -= order.size * order.price
     else wallet.asset -= order.size
   }
 
   private onOrderCancel(wallet: Wallet, order: OrderItem) {
-    if (order.type === 'buy') wallet.currency += order.size * order.price
+    if (order.side === 'buy') wallet.currency += order.size * order.price
     else wallet.asset += order.size
   }
 
   private onOrderComplete(wallet: Wallet, order: OrderItem) {
-    if (order.type === 'buy') wallet.asset += order.size
-    else wallet.currency += order.size * order.price - order.fee
+    if (order.side === 'buy') wallet.asset += order.size
+    else wallet.currency += order.size * order.price
   }
 
   private async saveWallet({ exchange, symbol, strategy }: WalletOpts) {

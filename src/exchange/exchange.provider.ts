@@ -1,9 +1,17 @@
 import { ExchangeConf, ExchangeAuth } from '@m8bTypes'
 import ccxt from 'ccxt'
 import { WrappedExchange, wrapExchange } from './exchange.wrapper'
-import { TradeItem } from '@lib'
+import { TradeItem, orderType, sideType } from '@lib'
 
 const verbose = false
+
+export interface OrderOpts {
+  symbol: string
+  type: orderType
+  side: sideType
+  amount: number
+  price?: number
+}
 
 export class ExchangeProvider {
   private exchanges: Map<string, WrappedExchange> = new Map()
@@ -38,6 +46,19 @@ export class ExchangeProvider {
 
   public async getOrderbook(exchangeName: string, symbol: string) {
     return this.exchanges.get(exchangeName).fetchOrderBook(this.convertSymbol(symbol))
+  }
+
+  public async placeOrder(exchangeName: string, { symbol, type, side, amount, price }: OrderOpts) {
+    const order = await this.exchanges.get(exchangeName).createOrder(symbol, type, side, amount, price)
+    return {
+      orderId: order.id,
+      price: order.price,
+      size: order.amount,
+      time: order.timestamp,
+      type: order.type,
+      side: order.side,
+      status: order.status,
+    }
   }
 
   public getScan(exchangeName: string) {

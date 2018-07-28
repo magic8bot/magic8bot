@@ -35,22 +35,23 @@ export interface Marker {
   newestTime: number
 }
 
+export type orderType = 'market' | 'limit'
+export type sideType = 'buy' | 'sell'
+
 export interface OrderItem {
-  cancel_after: string
-  execution_time: number
-  fee: number
-  mode: string
-  order_id: string
-  order_type: number
+  orderId: string
   price: number
   size: number
   time: number
-  slippage: number
-  type: 'buy' | 'sell'
+  type: orderType
+  side: sideType
+  status: 'open' | 'closed' | 'canceled'
 }
 
 export type OrderCollection = OrderItem & {
   sessionId: string
+  strategy: string
+  exchange: string
   symbol: string
 }
 

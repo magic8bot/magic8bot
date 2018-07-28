@@ -1,4 +1,4 @@
-import { Exchange, Trade, Balances } from 'ccxt'
+import { Exchange, Trade, Balances, OrderBook } from 'ccxt'
 import { gdax, binance } from './adapters'
 import { ExchangeAdapter } from './adapters/base'
 
@@ -7,6 +7,7 @@ const adapters: Record<string, ExchangeAdapter> = { binance, gdax }
 type Adapter = ExchangeAdapter & {
   fetchTrades: (symbol: string, start: number) => Promise<Trade[]>
   fetchBalance: () => Promise<Balances>
+  fetchOrderBook: (symbol: string) => Promise<OrderBook>
 }
 
 type FilterKeys<T, K extends keyof T> = { [P in keyof T]: P extends K ? never : P }[keyof T]
@@ -29,6 +30,10 @@ export const wrapExchange = (exchangeName: string, exchange: Exchange): WrappedE
 
     fetchBalance: () => {
       return exchange.fetchBalance()
+    },
+
+    fetchOrderBook: (symbol: string) => {
+      return exchange.fetchOrderBook(symbol)
     },
   }
 }

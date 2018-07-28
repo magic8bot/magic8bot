@@ -3,50 +3,64 @@ import { eventBus, EVENT } from '@lib'
 import { PeriodStore, WalletStore } from '@stores'
 
 import { strategyLoader, BaseStrategy } from './strategies'
+import { Balances } from 'ccxt'
 
 export class StrategyProvider {
+  public strategyName: string
+
   private strategy: BaseStrategy
-  private strategyName: string
   private periodStore: PeriodStore
   private lastSignal: 'buy' | 'sell' = null
 
   constructor(
     private readonly walletStore: WalletStore,
-    private readonly exchange: string,
+    private readonly exchangeName: string,
     private readonly symbol: string,
     private readonly strategyConf: StrategyConf
   ) {
     const { strategyName, period } = strategyConf
     this.strategyName = strategyName
 
-    eventBus.subscribe({ event: EVENT.STRAT_SIGNAL, exchange, symbol, strategy: strategyName }, ({ signal }) =>
-      this.onSignal(signal)
+    eventBus.subscribe(
+      { event: EVENT.STRAT_SIGNAL, exchange: exchangeName, symbol, strategy: strategyName },
+      ({ signal }) => this.onSignal(signal)
     )
 
     this.strategy = strategyLoader[strategyName]
-    this.periodStore = new PeriodStore(period, exchange, symbol, strategyName)
+    this.periodStore = new PeriodStore(period, exchangeName, symbol, strategyName)
   }
 
-  public get prerollDone() {
-    return this.strategy.prerollDone
-  }
-
-  public async init() {
+  public async init(balances: Balances) {
     const walletOpts = {
-      exchange: this.exchange,
+      exchange: this.exchangeName,
       symbol: this.symbol,
       strategy: this.strategyName,
     }
 
-    await this.walletStore.initWallet(walletOpts, this.strategyConf.share)
+    const wallet = await this.walletStore.initWallet(walletOpts)
+    // console.log(wallet)
+    // process.exit()
+    if (!wallet.asset) {
+      const [a, b] = this.symbol.split('-')
+      const currentWallet = { asset: balances[a].total, currency: balances[b].total }
+      await this.walletStore.updateWallet(walletOpts, currentWallet)
+    }
+    process.exit()
+  }
+
+  public run() {
+    this.strategy.prerollDone()
+    this.tick()
   }
 
   public async tick() {
     //
   }
 
-  private onSignal(signal: 'buy' | 'sell') {
-    if (!signal || signal === this.lastSignal) return
+  private onSignal(signal: 'buy' | 'sell', force = false) {
+    if (!signal || (signal === this.lastSignal && !force)) return
     this.lastSignal = signal
+
+    // do the trade
   }
 }

@@ -1,4 +1,4 @@
-import { dbDriver, Balance, Wallet, eventBus, EVENT, OrderItem } from '@lib'
+import { dbDriver, Wallet, eventBus, EVENT, OrderItem } from '@lib'
 import { sessionStore } from './session.store'
 
 interface WalletOpts {
@@ -11,13 +11,14 @@ export class WalletStore {
   private sessionId: string = sessionStore.sessionId
   private wallets: Map<string, Wallet> = new Map()
 
-  public async initWallet(walletOpts: WalletOpts, share: number) {
-    await this.loadOrNewWallet(walletOpts)
+  public async initWallet(walletOpts: WalletOpts) {
+    const wallet = await this.loadOrNewWallet(walletOpts)
     this.subcribeToWalletEvents(walletOpts)
+    return wallet
   }
 
-  public async updateWallet(walletOpts: WalletOpts, { currency, asset }: Balance) {
-    const wallet: Wallet = { init: { currency, asset }, current: { currency, asset } }
+  public async updateWallet(walletOpts: WalletOpts, { currency, asset }: Wallet) {
+    const wallet = { currency, asset }
     const idStr = this.makeIdStr(walletOpts)
     this.wallets.set(idStr, wallet)
 
@@ -26,17 +27,22 @@ export class WalletStore {
 
   private async loadOrNewWallet(walletOpts: WalletOpts) {
     const wallet = await this.loadWallet(walletOpts)
-    if (!wallet) await this.newWallet(walletOpts)
+    return wallet ? wallet : this.newWallet()
   }
 
-  private async newWallet(walletOpts: WalletOpts) {
-    const idStr = this.makeIdStr(walletOpts)
-    this.wallets.set(idStr, { init: { asset: null, currency: null }, current: { asset: null, currency: null } })
-    await this.saveWallet(walletOpts)
+  private newWallet(): Wallet {
+    return { asset: null, currency: null }
   }
 
-  private async loadWallet({ exchange, symbol, strategy }: WalletOpts) {
-    return dbDriver.wallet.findOne({ sessionId: this.sessionId, exchange, symbol, strategy })
+  private async loadWallet({ exchange, symbol, strategy }: WalletOpts): Promise<Wallet> {
+    const wallet = await dbDriver.wallet.findOne({ sessionId: this.sessionId, exchange, symbol, strategy })
+    // console.log({ wallet })
+    // process.exit()
+
+    if (!wallet) return null
+
+    const { asset, currency } = wallet
+    return { asset, currency }
   }
 
   private subcribeToWalletEvents(walletOpts: WalletOpts) {
@@ -71,24 +77,25 @@ export class WalletStore {
   }
 
   private onOrderStart(wallet: Wallet, order: OrderItem) {
-    if (order.type === 'buy') wallet.current.currency -= order.size * order.price
-    else wallet.current.asset -= order.size
+    if (order.type === 'buy') wallet.currency -= order.size * order.price
+    else wallet.asset -= order.size
   }
 
   private onOrderCancel(wallet: Wallet, order: OrderItem) {
-    if (order.type === 'buy') wallet.current.currency += order.size * order.price
-    else wallet.current.asset += order.size
+    if (order.type === 'buy') wallet.currency += order.size * order.price
+    else wallet.asset += order.size
   }
 
   private onOrderComplete(wallet: Wallet, order: OrderItem) {
-    if (order.type === 'buy') wallet.current.asset += order.size
-    else wallet.current.currency += order.size * order.price - order.fee
+    if (order.type === 'buy') wallet.asset += order.size
+    else wallet.currency += order.size * order.price - order.fee
   }
 
   private async saveWallet({ exchange, symbol, strategy }: WalletOpts) {
     const idStr = this.makeIdStr({ exchange, symbol, strategy })
+    const time = new Date().getTime()
     const wallet = this.wallets.get(idStr)
-    await dbDriver.wallet.save({ sessionId: this.sessionId, exchange, symbol, strategy, ...wallet })
+    await dbDriver.wallet.save({ sessionId: this.sessionId, exchange, symbol, strategy, time, ...wallet })
   }
 
   private makeIdStr({ exchange, symbol, strategy }: WalletOpts) {

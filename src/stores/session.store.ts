@@ -22,13 +22,12 @@ export class SessionStore {
     await dbDriver.session.save(session)
   }
 
-  public async loadSession(sessionId: string) {
-    this._sessionId = sessionId
+  public async loadSession() {
+    const session = await dbDriver.session.findOne({ $query: {}, $orderBy: { time: -1 } })
+    if (!session) return this.newSession()
 
-    const session = await dbDriver.session.findOne({ sessionId })
-    if (!session) throw new Error(`Invalid session id: ${sessionId}`)
-
-    await dbDriver.session.updateOne({ sessionId }, { $set: { last_run: new Date().getTime() } })
+    this._sessionId = session.sessionId
+    await dbDriver.session.updateOne({ sessionId: session.sessionId }, { $set: { last_run: new Date().getTime() } })
   }
 }
 

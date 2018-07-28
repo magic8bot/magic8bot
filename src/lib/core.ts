@@ -7,13 +7,13 @@ export class Core {
   constructor(private readonly conf: Conf) {}
 
   public async init() {
-    const { exchanges, session_id, reset_profit } = this.conf
+    const { exchanges, reset_profit } = this.conf
 
     // @todo(notVitaliy): Fix this shit... eventually
-    if (!session_id || reset_profit) {
+    if (reset_profit) {
       await sessionStore.newSession()
     } else {
-      await sessionStore.loadSession(session_id)
+      await sessionStore.loadSession()
     }
 
     const exchangeProvider = new ExchangeProvider(exchanges)
@@ -21,7 +21,7 @@ export class Core {
     const tradeStore = new TradeStore()
     const markerStore = new MarkerStore()
 
-    exchanges.forEach(async (exchangeConf) => {
+    exchanges.forEach((exchangeConf) => {
       const engine = new Engine(
         exchangeProvider,
         walletStore,

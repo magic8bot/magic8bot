@@ -66,7 +66,10 @@ export interface Base {
 export interface StrategyConf extends Partial<Base> {
   symbol: string
   strategyName: string
-  share: number
+  share: {
+    asset: number
+    currency: number
+  }
 }
 
 export interface ExchangeAuth {

@@ -98,14 +98,9 @@ export interface Options {
   }
 }
 
-export interface Balance {
+export interface Wallet {
   currency: number
   asset: number
-}
-
-export interface Wallet {
-  init: Balance
-  current: Balance
 }
 
 export type WalletCollection = Wallet & {
@@ -113,4 +108,5 @@ export type WalletCollection = Wallet & {
   exchange: string
   symbol: string
   strategy: string
+  time: number
 }

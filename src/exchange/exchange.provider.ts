@@ -25,7 +25,7 @@ export class ExchangeProvider {
   }
 
   public async getTrades(exchangeName: string, symbol: string, since: number) {
-    const trades = await this.exchanges.get(exchangeName).fetchTrades(symbol.replace('-', '/'), since)
+    const trades = await this.exchanges.get(exchangeName).fetchTrades(this.convertSymbol(symbol), since)
 
     return trades.map(({ id, timestamp, amount, price, side }) => {
       return { trade_id: Number(id), time: timestamp, size: amount, price, side } as TradeItem
@@ -34,6 +34,10 @@ export class ExchangeProvider {
 
   public async getBalances(exchangeName: string) {
     return this.exchanges.get(exchangeName).fetchBalance()
+  }
+
+  public async getOrderbook(exchangeName: string, symbol: string) {
+    return this.exchanges.get(exchangeName).fetchOrderBook(this.convertSymbol(symbol))
   }
 
   public getScan(exchangeName: string) {
@@ -52,5 +56,9 @@ export class ExchangeProvider {
 
   private hasAllReqCreds(auth: ExchangeAuth, reqKeys: string[]) {
     return reqKeys.filter((key) => Boolean(auth[key])).length === reqKeys.length
+  }
+
+  private convertSymbol(symbol: string) {
+    return symbol.replace('-', '/')
   }
 }

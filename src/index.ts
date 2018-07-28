@@ -5,8 +5,28 @@ import { Core, dbDriver, wsServer } from '@lib'
 
 const checkSharePercent = ({ exchanges }: Conf) => {
   exchanges.forEach(({ exchangeName, options: { strategies } }) => {
-    const totalShare = strategies.reduce((acc, { share }) => (acc += share), 0)
-    if (totalShare > 1) throw new Error(`Exchange ${exchangeName} over 100% share at ${totalShare} --- ctrl+c to exit`)
+    const shares: Record<string, number> = {}
+
+    strategies.forEach(({ symbol, share }) => {
+      const [asset, currency] = symbol.split('-')
+      if (!shares[asset]) shares[asset] = 0
+      if (!shares[currency]) shares[currency] = 0
+
+      shares[asset] += share.asset
+      shares[currency] += share.currency
+    })
+
+    const errors = Object.entries(shares)
+      .filter(([key, value]) => value > 1)
+      .reduce((acc, [key, value]) => {
+        acc.push(`${key} @ ${value}`)
+        return acc
+      }, [])
+
+    if (errors.length) {
+      console.error(`Exchange ${exchangeName} ${errors.join(', ')} over 100% share`)
+      process.exit()
+    }
   })
 }
 

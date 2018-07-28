@@ -35,13 +35,21 @@ export class Engine {
   }
 
   public async init() {
+    await this.initWallets()
+
+    this.backfill()
+  }
+
+  private async initWallets() {
+    const balances = await this.exchangeProvider.getBalances(this.exchangeName)
+
+    this.strategies.forEach(async (strategies) => strategies.forEach((strategy) => strategy.init(balances)))
+  }
+
+  private backfill() {
     this.backfillers.forEach(async (days, symbol) => {
       await this.backfiller.backfill(symbol, days)
-
-      this.strategies.get(symbol).forEach((strategy) => {
-        strategy.prerollDone()
-        strategy.tick()
-      })
+      this.strategies.get(symbol).forEach((strategy) => strategy.run())
     })
   }
 

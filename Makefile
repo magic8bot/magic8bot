@@ -1,3 +1,7 @@
+########################################################
+# Configuration options for various Windows environments
+########################################################
+
 # # Check if this is Windows
 # ifneq (,$(findstring WINDOWS,$(PATH)))
 # WINDOWS := True
@@ -25,7 +29,10 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 # Define the full path to this file
 THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
+###########################################################
 # Find or create a home for sensitive environment variables
+###########################################################
+
 # CREDS=$(HOME)/.credentials
 # ifneq ("$(wildcard $(CREDS))","")
 # CREDENTIALS := $(CREDS)
@@ -44,23 +51,36 @@ ARGS = $(filter-out $@,$(MAKECMDGOALS))
 MAKEFLAGS += --silent
 
 #############################
-# List available targets
-#############################
-list:
-	sh -c "echo; $(MAKE) -p no_targets__ | awk -F':' '/^[a-zA-Z0-9][^\$$#\/\\t=]*:([^=]|$$)/ {split(\$$1,A,/ /);for(i in A)print A[i]}' | grep -v '__\$$' | grep -v 'Makefile'| sort"
-
-#############################
 # magic8bot
 #############################
 
 
 #############################
-# Docker machine states
+# Docker commands
 #############################
-# working
-time-sync:
-	docker run --rm --privileged alpine hwclock -s
 
+# list available make commands  
+list:
+	sh -c "echo; $(MAKE) -p no_targets__ | awk -F':' '/^[a-zA-Z0-9][^\$$#\/\\t=]*:([^=]|$$)/ {split(\$$1,A,/ /);for(i in A)print A[i]}' | grep -v '__\$$' | grep -v 'Makefile'| sort"
+
+# build app as defined in docker-compose.yml  
+up:
+	docker-compose up -d
+
+# stop app without losing data  
+stop:
+	docker-compose stop
+
+# start app  
+start:
+	docker-compose start
+
+# build Docker images defined in docker-compose.yml  
+build:
+	docker build -t magic8bot .
+
+# ALL DATA WILL BE DELETED  
+# stop and delete all Docker objects defined in docker-compose.yml  
 destroy:
 	-docker-compose stop
 	-docker-compose rm --force server
@@ -72,26 +92,22 @@ destroy:
 	docker volume prune --force
 	docker system prune --force
 
-build:
-	docker build -t magic8bot .
-
-shell:
-	docker-compose exec server /bin/sh
-
-up:
-	docker-compose up -d 
-
-stop:
-	docker-compose stop
-
-start:
-	docker-compose start
-
+# show status of Docker objects defined in docker-compose.yml  
 state:
 	docker-compose ps
 
+# show Docker logs  
+logs:
+	docker-compose logs $(ARGS)
+
+# open a shell in the application container  
+shell:
+	docker-compose exec server /bin/sh
+
+# open a shell in the application container as admin user  
 shellw:
 	docker exec -it -u root $$(docker-compose ps -q server) /bin/sh
 
-logs:
-	docker-compose logs $(ARGS)
+# sync clock in container with host's clock
+time-sync:
+	docker run --rm --privileged alpine hwclock -s

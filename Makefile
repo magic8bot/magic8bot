@@ -26,12 +26,12 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
 # Find or create a home for sensitive environment variables
-CREDS=$(HOME)/.credentials
-ifneq ("$(wildcard $(CREDS))","")
-CREDENTIALS := $(CREDS)
-else
-$(info $(shell "mkdir" $(CREDS)))
-endif
+# CREDS=$(HOME)/.credentials
+# ifneq ("$(wildcard $(CREDS))","")
+# CREDENTIALS := $(CREDS)
+# else
+# $(info $(shell "mkdir" $(CREDS)))
+# endif
 
 #############################
 # Argument fix workaround
@@ -84,20 +84,14 @@ up:
 stop:
 	docker-compose stop
 
-# todo
 start:
 	docker-compose start
 
 state:
 	docker-compose ps
 
-
 shellw:
 	docker exec -it -u root $$(docker-compose ps -q server) /bin/sh
 
 logs:
 	docker-compose logs $(ARGS)
-
-
-
-

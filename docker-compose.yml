@@ -1,0 +1,42 @@
+version: '3.1'
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: magic8bot
+    volumes:
+      - /app
+    ports:
+      - "9999:9999"
+    expose: 
+      - 9999
+    depends_on:
+      - mongodb
+    environment:
+      - MONGODB_PORT_27017_TCP_ADDR=mongodb
+
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - database:/data/db
+    command: mongod --smallfiles --bind_ip=0.0.0.0 --logpath=/dev/null
+    expose:
+      - 27017
+
+# AdminMongo is a Web based user interface for MongoDB administration
+  adminmongo:
+   image: mrvautin/adminmongo
+   links:
+     - mongodb
+   tty: true
+   ports:
+     - "1234:1234"
+   environment:
+     - CONN_NAME=magic8bot_mongodb
+     - DB_HOST=mongodb
+     - DB_PORT=27017
+   command: "npm start"
+
+volumes: 
+  database:

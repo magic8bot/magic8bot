@@ -14,20 +14,27 @@ export class SessionStore {
     const now = new Date().getTime()
 
     const session: SessionCollection = {
-      last_run: now,
       sessionId: this.sessionId,
-      start_time: now,
+      startTime: now,
+      lastTime: now,
     }
 
     await dbDriver.session.save(session)
   }
 
   public async loadSession() {
-    const session = await dbDriver.session.findOne({ $query: {}, $orderBy: { time: -1 } })
-    if (!session) return this.newSession()
+    const sessions = await dbDriver.session
+      .find({})
+      .sort({ lastTime: -1 })
+      .limit(1)
+      .toArray()
+
+    if (!sessions) return this.newSession()
+
+    const [session] = sessions
 
     this._sessionId = session.sessionId
-    await dbDriver.session.updateOne({ sessionId: session.sessionId }, { $set: { last_run: new Date().getTime() } })
+    await dbDriver.session.updateOne({ sessionId: session.sessionId }, { $set: { lastTime: new Date().getTime() } })
   }
 }
 

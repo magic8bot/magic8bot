@@ -85,7 +85,9 @@ export class ExchangeEngine {
     if (!this.strategyEngines.has(symbol)) this.strategyEngines.set(symbol, new Set())
     const strategyEngines = this.strategyEngines.get(symbol)
 
-    strategyEngines.add(new StrategyEngine(this.walletStore, this.exchangeName, symbol, strategyConf))
+    strategyEngines.add(
+      new StrategyEngine(this.exchangeProvider, this.walletStore, this.exchangeName, symbol, fullConf)
+    )
   }
 
   private mergeConfig(strategyConf: StrategyConf): StrategyConf {

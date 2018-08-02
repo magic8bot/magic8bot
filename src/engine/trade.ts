@@ -23,7 +23,7 @@ export class TradeEngine {
   }
 
   public async tick(symbol: string) {
-    const target = (await this.markerStore.findLatestTradeMarker(this.exchange, symbol)).to
+    const target = (await this.markerStore.findLatestTradeMarker(this.exchange, symbol)).newestTime
 
     await (this.scanType === 'back' ? this.tickBack(symbol, target) : this.scanForward(symbol, target))
     await sleep(this.tradePollInterval)
@@ -40,6 +40,8 @@ export class TradeEngine {
 
     const from = Math.min(...trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
     const { oldestTime } = await this.markerStore.saveMarker(this.exchange, symbol, to, from, trades)
+
+    console.log(`${this.exchange}.${symbol} scanBack`, { now: new Date(oldestTime), end: new Date(end) })
 
     if (oldestTime > end) {
       await this.scanBack(symbol, end)
@@ -58,6 +60,8 @@ export class TradeEngine {
     const to = Math.max(...trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
     const { newestTime } = await this.markerStore.saveMarker(this.exchange, symbol, to, from, trades)
 
+    console.log(`${this.exchange}.${symbol} scanForward`, { now: new Date(newestTime), end: new Date() })
+
     // Always get current time so backfill can catch up to "now"
     if (newestTime < new Date().getTime()) {
       await this.scanForward(symbol, to)
@@ -67,10 +71,11 @@ export class TradeEngine {
   private async tickBack(symbol: string, target: number, lastFrom: number = null) {
     const trades = await this.exchangeProvider.getTrades(this.exchange, symbol, lastFrom)
 
-    const filteredTrades = trades.filter((trade) => {
-      const cursor = this.exchangeProvider.getTradeCursor(this.exchange, trade)
-      return cursor > target
-    })
+    const filteredTrades = trades.filter(({ timestamp }) => timestamp > target)
+
+    console.log(`${this.exchange}.${symbol} Got ${filteredTrades.length} new trade of ${trades.length} fetched.`)
+
+    if (!filteredTrades.length) return
 
     await this.tradeStore.update(this.exchange, symbol, filteredTrades)
 

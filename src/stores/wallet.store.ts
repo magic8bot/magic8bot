@@ -45,7 +45,7 @@ export class WalletStore {
   private async adjustWallet(walletOpts: WalletOpts, adjustment: Adjustment) {
     const idStr = this.makeIdStr(walletOpts)
     const timestamp = new Date().getTime()
-    await dbDriver.wallet.save({ sessionId: this.sessionId, ...walletOpts, timestamp, ...adjustment })
+    await dbDriver.adjustment.save({ sessionId: this.sessionId, ...walletOpts, timestamp, ...adjustment })
 
     const wallet = this.wallets.get(idStr)
 

@@ -40,7 +40,7 @@ export class OrderEngine {
     return this.walletStore.getWallet(this.opts)
   }
 
-  public async executeBuy(quote: number, strength = 1) {
+  public async executeBuy(quote?: number, strength = 1) {
     const { symbol } = this.opts
     const price = quote ? quote : await this.quoteEngine.getBuyPrice()
 
@@ -54,7 +54,7 @@ export class OrderEngine {
     await this.placeOrder(orderOpts)
   }
 
-  public async executeSell(quote: number, strength = 1) {
+  public async executeSell(quote?: number, strength = 1) {
     const { symbol } = this.opts
     const price = quote ? quote : await this.quoteEngine.getSellPrice()
 

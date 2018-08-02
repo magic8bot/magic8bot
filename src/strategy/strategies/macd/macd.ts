@@ -28,7 +28,7 @@ export class Macd extends BaseStrategy<MacdOptions> {
     overboughtRsi: 70,
   }
 
-  public readonly name: string = 'MACD'
+  public readonly name: string = 'macd'
 
   private isPreroll = true
 
@@ -57,9 +57,13 @@ export class Macd extends BaseStrategy<MacdOptions> {
 
     const eventBusEvent = { exchange, symbol, strategy: this.name }
 
-    eventBus.subscribe({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent }, (periods: PeriodItem[]) =>
+    console.log('MACD', eventBusEvent)
+
+    eventBus.subscribe({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent }, (periods: PeriodItem[]) => {
+      // console.log(periods)
+      // process.exit()
       this.calculate(periods)
-    )
+    })
     eventBus.subscribe({ event: EVENT.PERIOD_NEW, ...eventBusEvent }, () => this.onPeriod())
 
     this.signalEmitter = eventBus.register({ event: EVENT.STRAT_SIGNAL, ...eventBusEvent })
@@ -76,6 +80,7 @@ export class Macd extends BaseStrategy<MacdOptions> {
     // prettier-ignore
     const { rsi, periods: [{ history }] } = this
 
+    console.log({ rsi, history })
     this.calcEmitter({ rsi, history })
   }
 

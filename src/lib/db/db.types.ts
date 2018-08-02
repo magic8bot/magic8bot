@@ -2,8 +2,8 @@ import { Order, Trade } from 'ccxt'
 
 export interface SessionCollection {
   sessionId: string
-  start_time: number
-  last_run: number
+  startTime: number
+  lastTime: number
 }
 
 export type TradeCollection = Trade & {

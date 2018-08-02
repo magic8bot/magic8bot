@@ -30,7 +30,13 @@ export class MarkerStore {
   }
 
   public async findLatestTradeMarker(exchange: string, symbol: string) {
-    return dbDriver.marker.findOne({ query: { exchange, symbol }, $orderBy: { newestTime: -1 } })
+    const marker = await dbDriver.marker
+      .find({ exchange, symbol })
+      .sort({ oldestTime: -1 })
+      .limit(1)
+      .toArray()
+
+    return marker.pop()
   }
 
   private getMarker(exchange: string, symbol: string) {

@@ -1,11 +1,16 @@
+import { Trade } from 'ccxt'
 import { timebucket } from '@magic8bot/timebucket'
-import { PeriodItem, TradeItem, eventBus, EventBusEmitter, EVENT } from '@lib'
+import { PeriodItem, eventBus, EventBusEmitter, EVENT } from '@lib'
+
+interface Periods {
+  periods: PeriodItem[]
+}
 
 export class PeriodStore {
   public periods: PeriodItem[] = []
 
-  private updateEmitter: EventBusEmitter
-  private periodEmitter: EventBusEmitter
+  private updateEmitter: EventBusEmitter<Periods>
+  private periodEmitter: EventBusEmitter<Periods>
 
   private tradeEventTimeout: NodeJS.Timer = null
 
@@ -18,18 +23,20 @@ export class PeriodStore {
   ) {
     const eventBusEvent = { exchange, symbol, strategy }
 
-    eventBus.subscribe({ event: EVENT.XCH_TRADE, exchange, symbol }, (trade: TradeItem) => this.addTrade(trade))
+    eventBus.subscribe({ event: EVENT.XCH_TRADE, exchange, symbol }, (trade: Trade) => this.addTrade(trade))
     this.updateEmitter = eventBus.register({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent })
     this.periodEmitter = eventBus.register({ event: EVENT.PERIOD_NEW, ...eventBusEvent })
   }
 
-  public initPeriods(trades: TradeItem[]) {
-    trades.sort(({ time: a }, { time: b }) => (a === b ? 0 : a > b ? 1 : -1)).forEach((trade) => this.addTrade(trade))
+  public initPeriods(trades: Trade[]) {
+    trades
+      .sort(({ timestamp: a }, { timestamp: b }) => (a === b ? 0 : a > b ? 1 : -1))
+      .forEach((trade) => this.addTrade(trade))
   }
 
-  public addTrade(trade: TradeItem) {
-    const { size, price, time } = trade
-    const bucket = timebucket(time)
+  public addTrade(trade: Trade) {
+    const { amount, price, timestamp } = trade
+    const bucket = timebucket(timestamp)
       .resize(this.period)
       .toMilliseconds()
 
@@ -38,12 +45,12 @@ export class PeriodStore {
     this.periods[0].low = Math.min(price, this.periods[0].low)
     this.periods[0].high = Math.max(price, this.periods[0].high)
     this.periods[0].close = price
-    this.periods[0].volume += size
+    this.periods[0].volume += amount
 
     this.emitTrades()
   }
 
-  public newPeriod(bucket: number, { time, size, price }: TradeItem) {
+  public newPeriod(bucket: number, { amount, price }: Trade) {
     // Events are fired on next tick. Speading the array will
     // prevent the new period from being injected.
     this.updateEmitter({ periods: [...this.periods] })
@@ -54,7 +61,7 @@ export class PeriodStore {
       low: price,
       open: price,
       time: bucket,
-      volume: size,
+      volume: amount,
     })
 
     if (this.periods.length >= this.lookbackSize) this.periods.pop()

@@ -1,6 +1,7 @@
 import { Exchange, Trade, Balances, OrderBook, Order } from 'ccxt'
 import { gdax, binance } from './adapters'
 import { ExchangeAdapter } from './adapters/base'
+import { OrderWithTrades } from '@lib'
 
 const adapters: Record<string, ExchangeAdapter> = { binance, gdax }
 
@@ -9,6 +10,8 @@ type Adapter = ExchangeAdapter & {
   fetchBalance: () => Promise<Balances>
   fetchOrderBook: (symbol: string) => Promise<OrderBook>
   createOrder: (symbol: string, type: string, side: string, amount: number, price?: number) => Promise<Order>
+  checkOrder: (orderId: string) => Promise<OrderWithTrades>
+  cancelOrder: (orderId: string) => Promise<void>
 }
 
 type FilterKeys<T, K extends keyof T> = { [P in keyof T]: P extends K ? never : P }[keyof T]
@@ -39,8 +42,16 @@ export const wrapExchange = (exchangeName: string, exchange: Exchange): WrappedE
 
     createOrder: (symbol: string, type: string, side: string, amount: number, price: number) => {
       return !price
-        ? this.exchange.createOrder(symbol, type, side, amount)
-        : this.exchange.createOrder(symbol, type, side, amount, price)
+        ? exchange.createOrder(symbol, type, side, amount)
+        : exchange.createOrder(symbol, type, side, amount, price)
+    },
+
+    checkOrder: (orderId: string): Promise<OrderWithTrades> => {
+      return exchange.fetchOrder(orderId)
+    },
+
+    cancelOrder: (orderId: string): Promise<void> => {
+      return exchange.cancelOrder(orderId)
     },
   }
 }

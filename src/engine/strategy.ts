@@ -37,13 +37,9 @@ export class StrategyEngine {
       strategy: this.strategyName,
     }
 
-    const wallet = await this.walletStore.initWallet(walletOpts)
-
-    if (!wallet.asset) {
-      const [a, b] = this.symbol.split('-')
-      const currentWallet = { asset: balances[a].total, currency: balances[b].total }
-      await this.walletStore.updateWallet(walletOpts, currentWallet)
-    }
+    const [a, c] = this.symbol.split('/')
+    const adjustment = { asset: balances[a].total, currency: balances[c].total }
+    await this.walletStore.initWallet(walletOpts, adjustment)
   }
 
   public run() {

@@ -1,4 +1,4 @@
-import { TradeItem } from '@lib'
+import { Trade } from 'ccxt'
 import { ExchangeAdapter } from './base'
 
 export const gdax: ExchangeAdapter = {
@@ -9,7 +9,7 @@ export const gdax: ExchangeAdapter = {
     return { after }
   },
 
-  getTradeCursor: (trade: TradeItem) => {
-    return trade.trade_id
+  getTradeCursor: (trade: Trade) => {
+    return Number(trade.id)
   },
 }

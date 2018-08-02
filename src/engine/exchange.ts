@@ -8,12 +8,11 @@ import { sleep } from '@util'
 
 export class ExchangeEngine {
   private exchangeName: string
-  private tradePollInterval: number
 
   private baseConf: Base
 
-  private backfiller: TradeEngine
-  private backfillers: Map<string, number> = new Map()
+  private tradeEngine: TradeEngine
+  private tradeEngineOpts: Map<string, number> = new Map()
 
   private strategyEngines: Map<string, Set<StrategyEngine>> = new Map()
 
@@ -26,10 +25,15 @@ export class ExchangeEngine {
     isPaper: boolean
   ) {
     this.exchangeName = exchangeName
-    this.tradePollInterval = tradePollInterval
     this.baseConf = base
 
-    this.backfiller = new TradeEngine(this.exchangeName, this.exchangeProvider, this.tradeStore, this.markerStore)
+    this.tradeEngine = new TradeEngine(
+      this.exchangeName,
+      this.exchangeProvider,
+      this.tradeStore,
+      this.markerStore,
+      tradePollInterval
+    )
 
     const currencyPairDays = this.getBackfillerDays(strategies, base.days)
 
@@ -52,10 +56,10 @@ export class ExchangeEngine {
   }
 
   private backfill() {
-    this.backfillers.forEach(async (days, symbol) => {
-      await this.backfiller.backfill(symbol, days)
+    this.tradeEngineOpts.forEach(async (days, symbol) => {
+      await this.tradeEngine.scan(symbol, days)
       this.strategyEngines.get(symbol).forEach((strategyEngine) => strategyEngine.run())
-      this.tick(symbol)
+      this.tradeEngine.tick(symbol)
     })
   }
 
@@ -68,7 +72,7 @@ export class ExchangeEngine {
   }
 
   private setupBackfillers(days: number, symbol: string) {
-    if (!this.backfillers.has(symbol)) this.backfillers.set(symbol, days)
+    if (!this.tradeEngineOpts.has(symbol)) this.tradeEngineOpts.set(symbol, days)
 
     this.tradeStore.addSymbol(this.exchangeName, symbol)
   }
@@ -86,11 +90,5 @@ export class ExchangeEngine {
 
   private mergeConfig(strategyConf: StrategyConf): StrategyConf {
     return { ...this.baseConf, ...strategyConf }
-  }
-
-  private async tick(symbol: string) {
-    await this.backfiller.backfill(symbol, 1)
-    await sleep(this.tradePollInterval)
-    this.tick(symbol)
   }
 }

@@ -8,7 +8,7 @@ const checkSharePercent = ({ exchanges }: Conf) => {
     const shares: Record<string, number> = {}
 
     strategies.forEach(({ symbol, share }) => {
-      const [asset, currency] = symbol.split('-')
+      const [asset, currency] = symbol.split('/')
       if (!shares[asset]) shares[asset] = 0
       if (!shares[currency]) shares[currency] = 0
 

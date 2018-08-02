@@ -1,14 +1,13 @@
 import { ExchangeConf, ExchangeAuth } from '@m8bTypes'
-import ccxt from 'ccxt'
+import ccxt, { Trade } from 'ccxt'
 import { WrappedExchange, wrapExchange } from './exchange.wrapper'
-import { TradeItem, orderType, sideType } from '@lib'
 
 const verbose = false
 
 export interface OrderOpts {
   symbol: string
-  type: orderType
-  side: sideType
+  type: 'market' | 'limit'
+  side: 'buy' | 'sell'
   amount: number
   price?: number
 }
@@ -33,11 +32,7 @@ export class ExchangeProvider {
   }
 
   public async getTrades(exchangeName: string, symbol: string, since: number) {
-    const trades = await this.exchanges.get(exchangeName).fetchTrades(this.convertSymbol(symbol), since)
-
-    return trades.map(({ id, timestamp, amount, price, side }) => {
-      return { trade_id: Number(id), time: timestamp, size: amount, price, side } as TradeItem
-    })
+    return this.exchanges.get(exchangeName).fetchTrades(symbol, since)
   }
 
   public async getBalances(exchangeName: string) {
@@ -45,27 +40,26 @@ export class ExchangeProvider {
   }
 
   public async getOrderbook(exchangeName: string, symbol: string) {
-    return this.exchanges.get(exchangeName).fetchOrderBook(this.convertSymbol(symbol))
+    return this.exchanges.get(exchangeName).fetchOrderBook(symbol)
   }
 
-  public async placeOrder(exchangeName: string, { symbol, type, side, amount, price }: OrderOpts) {
-    const order = await this.exchanges.get(exchangeName).createOrder(symbol, type, side, amount, price)
-    return {
-      orderId: order.id,
-      price: order.price,
-      size: order.amount,
-      time: order.timestamp,
-      type: order.type,
-      side: order.side,
-      status: order.status,
-    }
+  public placeOrder(exchangeName: string, { symbol, type, side, amount, price }: OrderOpts) {
+    return this.exchanges.get(exchangeName).createOrder(symbol, type, side, amount, price)
+  }
+
+  public async checkOrder(exchangeName: string, orderId: string) {
+    return this.exchanges.get(exchangeName).checkOrder(orderId)
+  }
+
+  public async cancelOrder(exchangeName: string, orderId: string) {
+    return this.exchanges.get(exchangeName).cancelOrder(orderId)
   }
 
   public getScan(exchangeName: string) {
     return this.exchanges.get(exchangeName).scan
   }
 
-  public getTradeCursor(exchangeName: string, trade: TradeItem) {
+  public getTradeCursor(exchangeName: string, trade: Trade) {
     return this.exchanges.get(exchangeName).getTradeCursor(trade)
   }
 
@@ -77,9 +71,5 @@ export class ExchangeProvider {
 
   private hasAllReqCreds(auth: ExchangeAuth, reqKeys: string[]) {
     return reqKeys.filter((key) => Boolean(auth[key])).length === reqKeys.length
-  }
-
-  private convertSymbol(symbol: string) {
-    return symbol.replace('-', '/')
   }
 }

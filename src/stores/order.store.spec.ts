@@ -1,53 +1,34 @@
 import { OrderStore } from './order.store'
+import { OrderWithTrades } from '@lib'
 
-// Keep TS happy.
-const type: 'buy' | 'sell' = 'buy'
-
-const orderItem = {
-  cancel_after: '1m',
-  execution_time: 4,
-  fee: 5,
-  mode: 'live',
-  order_id: 'test',
-  order_type: 5,
+const order: OrderWithTrades = {
+  id: 'test',
   price: 5,
-  size: 5,
-  time: 5,
-  slippage: 5,
-  type,
+  amount: 5,
+  timestamp: 5,
+  type: 'market',
+  status: 'open',
+  side: 'buy',
+  info: null,
+  datetime: null,
+  symbol: 'test',
+  cost: 25,
+  filled: 0,
+  remaining: 5,
+  fee: 0,
 }
 
 describe('OrderStore', () => {
   let orderStore: OrderStore
 
   beforeEach(() => {
-    orderStore = new OrderStore('test')
+    orderStore = new OrderStore({ exchange: 'test', symbol: 'test', strategy: 'test' })
   })
 
   it('should save new orders', async (done) => {
     expect(async () => {
-      await orderStore.newOrder(orderItem)
+      await orderStore.newOrder(order)
       done()
     }).not.toThrowError()
-  })
-
-  it('should not leak between tests', async (done) => {
-    await orderStore.loadOrders()
-    const orders = orderStore.orders
-
-    expect(orders.length).toEqual(0)
-
-    done()
-  })
-
-  // @todo(notVitaliy): Figure out why this test is flaky
-  it('should load previous orders', async (done) => {
-    await orderStore.newOrder(orderItem)
-    await orderStore.loadOrders()
-    const orders = orderStore.orders
-
-    expect(orders.length).toEqual(1)
-
-    done()
   })
 })

@@ -1,7 +1,8 @@
-import { dbDriver, TradeItem, eventBus, EventBusEmitter, EVENT } from '@lib'
+import { Trade } from 'ccxt'
+import { dbDriver, eventBus, EventBusEmitter, EVENT } from '@lib'
 
 export class TradeStore {
-  public tradesMap: Map<string, Set<TradeItem>> = new Map()
+  public tradesMap: Map<string, Set<Trade>> = new Map()
   private emitters: Map<string, EventBusEmitter> = new Map()
 
   public addSymbol(exchange: string, symbol: string) {
@@ -22,7 +23,7 @@ export class TradeStore {
     this.tradesMap.set(idStr, new Set(trades))
   }
 
-  public async update(exchange: string, symbol: string, newTrades: TradeItem[]) {
+  public async update(exchange: string, symbol: string, newTrades: Trade[]) {
     await dbDriver.trade.insertMany(newTrades.map((trade) => ({ ...trade, exchange, symbol })))
 
     const idStr = this.makeIdStr(exchange, symbol)

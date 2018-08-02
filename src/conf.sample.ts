@@ -28,6 +28,9 @@ const base: Base = {
   ...sim,
   days: 7,
   period: '1m',
+  markDn: 0,
+  markUp: 0,
+  orderPollInterval: 500,
 
   // BELOW NOT IMPLEMENTED
   avg_slippage_pct: 0.045,
@@ -39,15 +42,12 @@ const base: Base = {
   exact_buy_orders: false,
   exact_sell_orders: false,
   keep_lookback_periods: 50000,
-  markdown_buy_pct: 0,
-  markup_sell_pct: 0,
   max_buy_loss_pct: 5,
   max_sell_loss_pct: 5,
   max_slippage_pct: 5,
   min_periods: 1,
   min_prev_trades: 0,
   order_adjust_time: 500,
-  order_poll_time: 500,
   order_type: 'maker',
   poll_trades: 300,
   post_only: true,
@@ -72,6 +72,7 @@ const exchanges: ExchangeConf[] = [
       passphrase: '',
       websocketURI: 'wss://ws-feed.pro.coinbase.com',
     },
+    tradePollInterval: 400,
     exchangeName: 'gdax',
     options: {
       strategies: [
@@ -117,6 +118,7 @@ const exchanges: ExchangeConf[] = [
       key: '',
       secret: '',
     },
+    tradePollInterval: 400,
     exchangeName: 'binance',
     options: {
       strategies: [

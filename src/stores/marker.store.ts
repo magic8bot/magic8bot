@@ -1,4 +1,5 @@
-import { dbDriver, Marker, TradeItem } from '@lib'
+import { Trade } from 'ccxt'
+import { dbDriver, Marker } from '@lib'
 
 export class MarkerStore {
   private markers: Map<string, Marker> = new Map()
@@ -20,12 +21,16 @@ export class MarkerStore {
     return target
   }
 
-  public async saveMarker(exchange: string, symbol: string, to: number, from: number, trades: TradeItem[]) {
+  public async saveMarker(exchange: string, symbol: string, to: number, from: number, trades: Trade[]) {
     const marker = this.makeMarker(exchange, symbol, to, from, trades)
     this.setMarker(exchange, symbol, marker)
     await dbDriver.marker.save(marker)
 
     return marker
+  }
+
+  public async findLatestTradeMarker(exchange: string, symbol: string) {
+    return dbDriver.marker.findOne({ query: { exchange, symbol }, $orderBy: { newestTime: -1 } })
   }
 
   private getMarker(exchange: string, symbol: string) {
@@ -42,9 +47,9 @@ export class MarkerStore {
     return dbDriver.marker.findOne({ exchange, symbol, to: { $gte: cursor }, from: { $lte: cursor } })
   }
 
-  private makeMarker(exchange: string, symbol: string, to: number, from: number, trades: TradeItem[]) {
-    const newestTime = Math.max(...trades.map(({ time }) => time))
-    const oldestTime = Math.min(...trades.map(({ time }) => time))
+  private makeMarker(exchange: string, symbol: string, to: number, from: number, trades: Trade[]) {
+    const newestTime = Math.max(...trades.map(({ timestamp }) => timestamp))
+    const oldestTime = Math.min(...trades.map(({ timestamp }) => timestamp))
     return { exchange, symbol, to, from, oldestTime, newestTime }
   }
 

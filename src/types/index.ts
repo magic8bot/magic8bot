@@ -26,7 +26,11 @@ interface MongoConn extends MongoBase {
 export type MongoConf = MongoAuth | MongoConn
 
 export interface Base {
+  days: number
   period: string
+  markDn: number
+  markUp: number
+  orderPollInterval: number
 
   min_periods: number
   sell_stop_pct: number
@@ -39,13 +43,9 @@ export interface Base {
   order_adjust_time: number
   max_sell_loss_pct: number
   max_buy_loss_pct: number
-  order_poll_time: number
   wait_for_settlement: number
-  markdown_buy_pct: number
-  markup_sell_pct: number
   order_type: string
   post_only: boolean
-  days: number
   keep_lookback_periods: number
   poll_trades: number
   rsi_periods: number
@@ -178,4 +178,8 @@ export interface Product {
   max_size: string
   increment: string
   label: string
+}
+
+export interface SignalEvent {
+  signal: 'buy' | 'sell'
 }

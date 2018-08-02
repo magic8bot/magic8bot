@@ -65,7 +65,7 @@ list:
 
 # build app as defined in docker-compose.yml  
 up:
-	docker-compose up -d
+	docker-compose up -d 
 
 # stop app without losing data  
 stop:

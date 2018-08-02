@@ -9,7 +9,7 @@ RUN apk update && \
     python2-dev && python2 && \
     apk add bash
 
-# Change to app direcotry
+# Change to app directory
 WORKDIR /app
 
 # Fetch and compile ta-lib
@@ -34,9 +34,6 @@ RUN  sed -i "s|host: 'localhost'|host: 'mongodb'|g" src/conf.sample.ts
 RUN yarn install && yarn build 
 # Remove build tools
 RUN apk del build-dependencies && rm -rf /var/cache/apk/*
-
-# Expose a port
-EXPOSE 9999
 
 ENTRYPOINT ["tail", "-f", "/dev/null"]
 

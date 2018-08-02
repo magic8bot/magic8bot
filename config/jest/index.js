@@ -12,6 +12,7 @@ module.exports = {
   moduleDirectories: ['node_modules', 'src'],
   moduleNameMapper: {
     '^@lib$': '<rootDir>/src/lib/index.ts',
+    '^@engine$': '<rootDir>/src/engine/index.ts',
     '^@exchange$': '<rootDir>/src/exchange/index.ts',
     '^@strategy$': '<rootDir>/src/strategy/index.ts',
     '^@stores$': '<rootDir>/src/stores/index.ts',

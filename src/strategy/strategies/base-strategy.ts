@@ -11,4 +11,10 @@ export class BaseStrategy<T = any> {
 
   // tslint:disable-next-line:no-empty
   public prerollDone() {}
+
+  // tslint:disable-next-line:no-empty
+  public async init() {}
+
+  // tslint:disable-next-line:no-empty
+  public async tick() {}
 }

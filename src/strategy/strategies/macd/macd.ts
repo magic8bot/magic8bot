@@ -1,6 +1,7 @@
 import { eventBus, EVENT, EventBusEmitter, PeriodItem } from '@lib'
 import { EMA, RSI } from '../../indicators'
 import { BaseStrategy } from '../base-strategy'
+import { SignalEvent } from '@m8bTypes'
 
 export interface MacdOptions {
   period: string
@@ -39,8 +40,8 @@ export class Macd extends BaseStrategy<MacdOptions> {
   private emaLong: number = null
   private emaMacd: number = null
 
-  private signalEmitter: EventBusEmitter
-  private calcEmitter: EventBusEmitter
+  private signalEmitter: EventBusEmitter<SignalEvent>
+  private calcEmitter: EventBusEmitter<{ rsi: number; history: number }>
 
   private periods: {
     macd: number

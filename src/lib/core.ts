@@ -1,5 +1,5 @@
-import { Engine } from './engine'
-import { sessionStore, TradeStore, MarkerStore } from '@stores'
+import { ExchangeEngine } from '@engine'
+import { sessionStore, TradeStore, MarkerStore, WalletStore } from '@stores'
 import { Conf, ExchangeConf } from '@m8bTypes'
 import { ExchangeProvider } from '@exchange'
 
@@ -7,22 +7,24 @@ export class Core {
   constructor(private readonly conf: Conf) {}
 
   public async init() {
-    const { exchanges, session_id, reset_profit } = this.conf
+    const { exchanges, reset_profit } = this.conf
 
     // @todo(notVitaliy): Fix this shit... eventually
-    if (!session_id || reset_profit) {
+    if (reset_profit) {
       await sessionStore.newSession()
     } else {
-      await sessionStore.loadSession(session_id)
+      await sessionStore.loadSession()
     }
 
     const exchangeProvider = new ExchangeProvider(exchanges)
+    const walletStore = new WalletStore()
     const tradeStore = new TradeStore()
     const markerStore = new MarkerStore()
 
-    exchanges.forEach(async (exchangeConf) => {
-      const engine = new Engine(
+    exchanges.forEach((exchangeConf) => {
+      const engine = new ExchangeEngine(
         exchangeProvider,
+        walletStore,
         tradeStore,
         markerStore,
         this.mergeConfig(exchangeConf),

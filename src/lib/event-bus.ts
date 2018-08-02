@@ -16,7 +16,7 @@ type SymbolMap = Map<string, StrategyMap>
 type ExchangeMap = Map<string, SymbolMap>
 type EventMap = Map<EVENT, ExchangeMap>
 
-export type EventBusEmitter = (eventData?: Record<string, any>) => any
+export type EventBusEmitter<T = Record<string, any>> = (eventData?: T) => any
 
 const optsErr = 'symbol is required if strategy is defined'
 

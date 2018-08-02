@@ -1,27 +1,49 @@
-import { dbDriver, OrderItem } from '@lib'
+import { dbDriver, OrderWithTrades } from '@lib'
 import { sessionStore } from './session.store'
+import { Order } from 'ccxt'
+
+interface Opts {
+  exchange: string
+  symbol: string
+  strategy: string
+}
 
 export class OrderStore {
-  public orders: OrderItem[] = []
+  private openOrders: Map<string, OrderWithTrades> = new Map()
   private readonly sessionId = sessionStore.sessionId
+  private readonly exchange: string
+  private readonly symbol: string
+  private readonly strategy: string
 
-  constructor(private readonly symbol: string) {}
-
-  public async newOrder(order: OrderItem) {
-    this.orders.push(order)
-
-    await dbDriver.order.save({
-      ...order,
-      symbol: this.symbol,
-      sessionId: this.sessionId,
-    })
+  constructor(opts: Opts) {
+    const { exchange, symbol, strategy } = opts
+    this.exchange = exchange
+    this.symbol = symbol
+    this.strategy = strategy
   }
 
-  public async loadOrders() {
-    const { sessionId, symbol } = this
-    this.orders = await dbDriver.order
-      .find({ sessionId, symbol })
-      .sort({ time: -1 })
-      .toArray()
+  public async newOrder(order: Order | OrderWithTrades) {
+    this.openOrders.set(order.id, order as OrderWithTrades)
+
+    const { sessionId, exchange, symbol, strategy } = this
+
+    await dbDriver.order.insertOne({ ...order, sessionId, exchange, symbol, strategy })
+  }
+
+  public getOpenOrder(id: string) {
+    return this.openOrders.get(id)
+  }
+
+  public closeOpenOrder(id: string) {
+    this.openOrders.delete(id)
+  }
+
+  public updateOrder(order: OrderWithTrades) {
+    this.openOrders.set(order.id, order)
+  }
+
+  public async saveOrder(order: OrderWithTrades) {
+    const { id, ...updatedOrder } = order
+    return dbDriver.order.updateOne({ id }, updatedOrder)
   }
 }

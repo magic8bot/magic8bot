@@ -37,6 +37,10 @@ class DbDriver {
   get wallet() {
     return this.db.wallet
   }
+
+  get adjustment() {
+    return this.db.adjustment
+  }
 }
 
 export const dbDriver = new DbDriver()

@@ -1,4 +1,4 @@
-import { TradeItem } from '@lib'
+import { Trade } from 'ccxt'
 import { ExchangeAdapter } from './base'
 import { time } from '@util'
 
@@ -11,7 +11,7 @@ export const binance: ExchangeAdapter = {
     return { startTime, endTime }
   },
 
-  getTradeCursor: (trade: TradeItem) => {
-    return trade.time
+  getTradeCursor: (trade: Trade) => {
+    return trade.timestamp
   },
 }

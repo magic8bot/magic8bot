@@ -1,9 +1,16 @@
 import { ExchangeConf, ExchangeAuth } from '@m8bTypes'
-import ccxt from 'ccxt'
+import ccxt, { Trade } from 'ccxt'
 import { WrappedExchange, wrapExchange } from './exchange.wrapper'
-import { TradeItem } from '@lib'
 
 const verbose = false
+
+export interface OrderOpts {
+  symbol: string
+  type: 'market' | 'limit'
+  side: 'buy' | 'sell'
+  amount: number
+  price?: number
+}
 
 export class ExchangeProvider {
   private exchanges: Map<string, WrappedExchange> = new Map()
@@ -25,22 +32,34 @@ export class ExchangeProvider {
   }
 
   public async getTrades(exchangeName: string, symbol: string, since: number) {
-    const trades = await this.exchanges.get(exchangeName).fetchTrades(symbol.replace('-', '/'), since)
-
-    return trades.map(({ id, timestamp, amount, price, side }) => {
-      return { trade_id: Number(id), time: timestamp, size: amount, price, side } as TradeItem
-    })
+    return this.exchanges.get(exchangeName).fetchTrades(symbol, since)
   }
 
   public async getBalances(exchangeName: string) {
     return this.exchanges.get(exchangeName).fetchBalance()
   }
 
+  public async getOrderbook(exchangeName: string, symbol: string) {
+    return this.exchanges.get(exchangeName).fetchOrderBook(symbol)
+  }
+
+  public placeOrder(exchangeName: string, { symbol, type, side, amount, price }: OrderOpts) {
+    return this.exchanges.get(exchangeName).createOrder(symbol, type, side, amount, price)
+  }
+
+  public async checkOrder(exchangeName: string, orderId: string) {
+    return this.exchanges.get(exchangeName).checkOrder(orderId)
+  }
+
+  public async cancelOrder(exchangeName: string, orderId: string) {
+    return this.exchanges.get(exchangeName).cancelOrder(orderId)
+  }
+
   public getScan(exchangeName: string) {
     return this.exchanges.get(exchangeName).scan
   }
 
-  public getTradeCursor(exchangeName: string, trade: TradeItem) {
+  public getTradeCursor(exchangeName: string, trade: Trade) {
     return this.exchanges.get(exchangeName).getTradeCursor(trade)
   }
 

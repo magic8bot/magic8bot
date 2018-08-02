@@ -1,18 +1,12 @@
+import { Order, Trade } from 'ccxt'
+
 export interface SessionCollection {
   sessionId: string
   start_time: number
   last_run: number
 }
 
-export interface TradeItem {
-  trade_id: number
-  time: number
-  size: number
-  price: number
-  side: 'buy' | 'sell'
-}
-
-export type TradeCollection = TradeItem & {
+export type TradeCollection = Trade & {
   exchange: string
   symbol: string
 }
@@ -35,22 +29,23 @@ export interface Marker {
   newestTime: number
 }
 
-export interface OrderItem {
-  cancel_after: string
-  execution_time: number
-  fee: number
-  mode: string
-  order_id: string
-  order_type: number
-  price: number
-  size: number
-  time: number
-  slippage: number
-  type: 'buy' | 'sell'
+interface Fee {
+  cost: number
+  currency: string
+  rate: number
 }
 
-export type OrderCollection = OrderItem & {
+export type TradeWithFee = Trade & { fee: Fee }
+
+export type OrderWithTrades = Order & {
+  trades?: TradeWithFee[]
+  fee: Fee
+}
+
+export type OrderCollection = OrderWithTrades & {
   sessionId: string
+  strategy: string
+  exchange: string
   symbol: string
 }
 
@@ -98,14 +93,9 @@ export interface Options {
   }
 }
 
-export interface Balance {
+export interface Wallet {
   currency: number
   asset: number
-}
-
-export interface Wallet {
-  init: Balance
-  current: Balance
 }
 
 export type WalletCollection = Wallet & {
@@ -113,4 +103,15 @@ export type WalletCollection = Wallet & {
   exchange: string
   symbol: string
   strategy: string
+  time: number
+}
+
+export type Adjustment = Wallet
+
+export type AdjustmentCollection = Adjustment & {
+  sessionId: string
+  exchange: string
+  symbol: string
+  strategy: string
+  time: number
 }

@@ -7,7 +7,7 @@ dist
 node_modules
 .dockerignore
 .gitignore
-travis.yml
+.travis.yml
 CODEOWNERS
 docker-compose.yml
 Dockerfile
@@ -16,3 +16,4 @@ Makefile
 README.md
 jest.config.js
 legacy/
+codecov.yml

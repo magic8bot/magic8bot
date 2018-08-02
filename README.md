@@ -46,20 +46,22 @@ Purple: Blunt end of line is directly injected into the arrow end of line
 
 ### Docker Integration
 
-Magic8bot can be run in a container. This is advantageous to users who don't want to install node dependencies locally or want to deploy the app on a server. The only prerequisite is Docker.  
+Magic8bot can be run in a container. This is advantageous to users who don't want to install node dependencies locally or want to deploy the app on a server. The only prerequisite is Docker. Note that `port 80` must be available.  
 
 #### Docker installation
 
-* Install [Docker](https://www.docker.com/community-edition)  
-* Download or clone magic8bot to your machine
-* Copy `src/conf.sample.ts` to `src/conf.ts`  
-* In `src/conf.ts` change `mongoconf` host from `localhost` to `mongodb`  
-* From the root of the repo directory, execute the `up` command as described below
+- Install [Docker](https://www.docker.com/community-edition)  
+- Download or clone magic8bot to your machine
+- Copy `.env-sample` to `.env`
+- From the root of the repo directory, execute the `up` command as described below
 
 #### Docker Usage
 
 Interacting with an instance of magic8bot running in a container can be cumbersome. A `Makefile` is provided to simplify executing commands. WSL, Linux and Mac users will likely be able to use this feature without difficulty. Most Windows users will need to install `Make`.  
 Once `make --v` can be executed successfully, Docker commands can be run with the syntax `make -- <command> <arguments>`. The two dashes are annoying but necessary to enable arguments that begin with a hyphen.  Available commands can be listed with `make list`.  Alternatively, Docker commands can be run as listed in the make targets. For example, `make up` == `docker-compose up -d`  
+
+[Traefik](https://traefik.io/) is implemented as a reverse-proxy / load balancer. This configuration requires that `port 80` is available. For more information about the issue see [this question](https://stackoverflow.com/questions/1430141/port-80-is-being-used-by-system-pid-4-what-is-that).  
+TLDR: Windows users can run `net stop http` in Powershell as an admin.
 
 **The following commands are supported:**  
 
@@ -81,7 +83,7 @@ make build
 
 # stop and delete all local Docker objects but keep downloaded images
 # ALL DATA WILL BE DELETED
-re-build
+rebuild
 
 # stop and delete all Docker objects defined in docker-compose.yml  
 # ALL DATA WILL BE DELETED
@@ -89,6 +91,9 @@ make destroy
 
 # show status of Docker objects defined in docker-compose.yml  
 make state  
+
+# Prune unused volumes and images
+make prune
 
 # show Docker logs  
 make logs  
@@ -101,6 +106,49 @@ make shellw
 
 # sync clock in container with host's clock
 make time-sync  
+```
+
+#### Docker configuration  
+
+Configuration variables for the app are set in `.env`.  
+
+
+```bash
+# Database defaults
+MONGO_USER=admin
+MONGO_PASS=password
+
+# you should not need to change these
+MONGO_HOST=localhost
+MONGO_PORT=27017
+MONGO_DB=magic8bot
+```  
+
+The database credentials are also used to secure a login form for the docker services. To generate a new connection string after changing the defaults set for `MONGO_USER` and `MONGO_PASS`, replace the value in `BASIC_AUTH` with the output of the following command substituting your new username and password for `<my-user>` and `<password>`.
+
+```bash
+echo $(htpasswd -nb <my-user> <password>)  
+```
+
+#### Traefik configuration for Docker users  
+
+```bash
+BASIC_AUTH=admin:$apr1$ug5symze$iJSOWbYv8bK.7GSVyC6Bh/
+TRAEFIK_DOMAIN=docker.localhost
+TRAEFIK_NETWORK=magic8bot_web
+```
+
+The service address are set with `TRAEFIK_DOMAIN`. For example:  
+
+```bash
+# Magic8bot
+magic8bot.docker.localhost  
+
+# Adminmongo
+db.docker.localhost  
+
+# Traefik
+traefik.docker.localhost
 ```
 
 ## Donate

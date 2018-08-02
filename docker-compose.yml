@@ -1,20 +1,59 @@
-version: '3.1'
+version: '3.5'
 services:
+
+  traefik:
+    container_name: traefik
+    image: traefik
+    command: --web --docker --docker.domain=${TRAEFIK_DOMAIN} --logLevel=DEBUG
+    restart: always
+    networks:
+      - web
+    ports:
+      - "80:80"
+      - "8080:8080"
+    expose:
+      - 80
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+      - /dev/null:/traefik.toml
+    labels:
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:traefik.${TRAEFIK_DOMAIN}"
+      - "traefik.frontend.auth.basic=${BASIC_AUTH}"
+      - "traefik.port=8080"
+
+  # TESTING SERVICE - This service can be deleted when m8b has a front-end. 
+  whoami:
+    image: emilevauge/whoami # A container that exposes an API to show its IP address
+    networks:
+      - web
+    labels:
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:whoami.${TRAEFIK_DOMAIN}"
+      - "traefik.frontend.auth.basic=${BASIC_AUTH}"
+
   server:
+    container_name: magic8bot
     build:
       context: .
       dockerfile: Dockerfile
     image: magic8bot
-    volumes:
-      - /app
-    ports:
-      - "9999:9999"
-    expose: 
-      - 9999
     depends_on:
       - mongodb
+    volumes:
+      - /app
+    networks:
+      - web
+      - internal
+    labels: 
+      - "traefik.docker.network=${TRAEFIK_NETWORK}"
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:magic8bot.${TRAEFIK_DOMAIN}"
+      - "traefik.frontend.auth.basic=${BASIC_AUTH}"
     environment:
-      - MONGODB_PORT_27017_TCP_ADDR=mongodb
+      - MONGODB_PORT_27017_TCP_ADDR=${MONGO_HOST}
 
   mongodb:
     image: mongo:latest
@@ -22,21 +61,38 @@ services:
       - database:/data/db
     command: mongod --smallfiles --bind_ip=0.0.0.0 --logpath=/dev/null
     expose:
-      - 27017
+      - ${MONGO_PORT}
+    networks: 
+      - internal
+    labels:
+      - "traefik.enable=false"
 
 # AdminMongo is a Web based user interface for MongoDB administration
   adminmongo:
-   image: mrvautin/adminmongo
-   links:
-     - mongodb
-   tty: true
-   ports:
-     - "1234:1234"
-   environment:
-     - CONN_NAME=magic8bot_mongodb
-     - DB_HOST=mongodb
-     - DB_PORT=27017
-   command: "npm start"
+    image: mrvautin/adminmongo
+    links:
+      - mongodb
+    networks:
+      - web
+      - internal
+    labels:
+      - "traefik.backend=adminmongo"
+      - "traefik.docker.network=${TRAEFIK_NETWORK}"
+      - "traefik.frontend.rule=Host:db.${TRAEFIK_DOMAIN}"
+      - "traefik.enable=true"
+      - "traefik.frontend.auth.basic=${BASIC_AUTH}"
+      - "traefik.port=1234"
+    environment:
+      - CONN_NAME=magic8bot_mongodb
+      - DB_HOST=mongodb
+      - DB_PORT=${MONGO_PORT}
+    command: "npm start"
 
 volumes: 
   database:
+
+networks:
+  web:
+    driver: bridge
+  internal:
+    external: false

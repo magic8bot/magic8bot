@@ -1,6 +1,7 @@
 import { TradeStore } from './trade.store'
 import { now, makeNewOrder } from './spec.util'
 import { time } from '@util'
+import { Trade } from 'ccxt'
 
 describe('TradeStore', () => {
   let tradeStore: TradeStore
@@ -21,7 +22,7 @@ describe('TradeStore', () => {
     tradeStore.addSymbol('test', 'test')
     const trades = [...Array(9).fill(0)].map((v, i) => makeNewOrder(time(now).sub.s(i * 10))).reverse()
 
-    await tradeStore.update('test', 'test', trades)
+    await tradeStore.insertTrades('test', 'test', trades as Trade[])
 
     expect(tradeStore.tradesMap.get('test.test').size).toEqual(9)
 

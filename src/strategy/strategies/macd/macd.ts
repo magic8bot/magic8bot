@@ -59,11 +59,9 @@ export class Macd extends BaseStrategy<MacdOptions> {
 
     console.log('MACD', eventBusEvent)
 
-    eventBus.subscribe({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent }, (periods: PeriodItem[]) => {
-      // console.log(periods)
-      // process.exit()
+    eventBus.subscribe({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent }, (periods: PeriodItem[]) =>
       this.calculate(periods)
-    })
+    )
     eventBus.subscribe({ event: EVENT.PERIOD_NEW, ...eventBusEvent }, () => this.onPeriod())
 
     this.signalEmitter = eventBus.register({ event: EVENT.STRAT_SIGNAL, ...eventBusEvent })
@@ -71,6 +69,8 @@ export class Macd extends BaseStrategy<MacdOptions> {
   }
 
   public calculate(periods: PeriodItem[]) {
+    if (!periods.length) return
+
     this.checkOverbought(periods)
     this.getEmaShort(periods)
     this.getEmaLong(periods)
@@ -129,7 +129,7 @@ export class Macd extends BaseStrategy<MacdOptions> {
       signal = 'sell'
     }
 
-    if (!signal) {
+    if (!signal && this.periods.length > 1) {
       const [{ history }, { history: lastHistory }] = this.periods
 
       if (history && lastHistory) {
@@ -141,7 +141,7 @@ export class Macd extends BaseStrategy<MacdOptions> {
       }
     }
 
-    this.signalEmitter({ signal })
+    if (signal) this.signalEmitter({ signal })
     this.newPeriod()
 
     return signal

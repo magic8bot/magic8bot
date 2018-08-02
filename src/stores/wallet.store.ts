@@ -22,10 +22,14 @@ export class WalletStore {
   }
 
   private async loadOrNewWallet(walletOpts: WalletOpts, adjustment: Adjustment) {
-    const wallet = await this.loadWallet(walletOpts)
-    if (wallet) return wallet
-
     const idStr = this.makeIdStr(walletOpts)
+
+    const wallet = await this.loadWallet(walletOpts)
+    if (wallet) {
+      this.wallets.set(idStr, wallet)
+      return wallet
+    }
+
     this.wallets.set(idStr, { asset: 0, currency: 0 })
     await this.adjustWallet(walletOpts, adjustment)
   }

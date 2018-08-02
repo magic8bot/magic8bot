@@ -58,6 +58,7 @@ export class ExchangeEngine {
   private backfill() {
     this.tradeEngineOpts.forEach(async (days, symbol) => {
       await this.tradeEngine.scan(symbol, days)
+      await this.tradeStore.loadTrades(this.exchangeName, symbol)
       this.strategyEngines.get(symbol).forEach((strategyEngine) => strategyEngine.run())
       this.tradeEngine.tick(symbol)
     })

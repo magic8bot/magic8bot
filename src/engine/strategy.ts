@@ -59,10 +59,11 @@ export class StrategyEngine {
   }
 
   private onSignal(signal: 'buy' | 'sell', force = false) {
+    console.log({ signal })
     if (!signal || (signal === this.lastSignal && !force)) return
     this.lastSignal = signal
 
     if (signal === 'buy') this.orderEngine.executeBuy()
-    else this.orderEngine.executeSell()
+    else if (signal === 'sell') this.orderEngine.executeSell()
   }
 }

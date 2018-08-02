@@ -15,11 +15,12 @@ export class TradeEngine {
     this.scanType = this.exchangeProvider.getScan(this.exchange)
   }
 
-  public scan(symbol: string, days: number) {
+  public async scan(symbol: string, days: number) {
     const now = new Date().getTime()
     const target = now - 86400000 * days
 
-    return this.scanType === 'back' ? this.scanBack(symbol, target) : this.scanForward(symbol, target)
+    await (this.scanType === 'back' ? this.scanBack(symbol, target) : this.scanForward(symbol, target))
+    await this.tradeStore.loadTrades(this.exchange, symbol)
   }
 
   public async tick(symbol: string) {
@@ -27,6 +28,7 @@ export class TradeEngine {
 
     await (this.scanType === 'back' ? this.tickBack(symbol, target) : this.scanForward(symbol, target))
     await sleep(this.tradePollInterval)
+    await this.tradeStore.loadTrades(this.exchange, symbol)
     await this.tick(symbol)
   }
 
@@ -36,7 +38,7 @@ export class TradeEngine {
 
     const trades = await this.exchangeProvider.getTrades(this.exchange, symbol, to)
 
-    await this.tradeStore.update(this.exchange, symbol, trades)
+    await this.tradeStore.insertTrades(this.exchange, symbol, trades)
 
     const from = Math.min(...trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
     const { oldestTime } = await this.markerStore.saveMarker(this.exchange, symbol, to, from, trades)
@@ -55,7 +57,7 @@ export class TradeEngine {
 
     if (!trades.length) return
 
-    await this.tradeStore.update(this.exchange, symbol, trades)
+    await this.tradeStore.insertTrades(this.exchange, symbol, trades)
 
     const to = Math.max(...trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
     const { newestTime } = await this.markerStore.saveMarker(this.exchange, symbol, to, from, trades)
@@ -77,7 +79,7 @@ export class TradeEngine {
 
     if (!filteredTrades.length) return
 
-    await this.tradeStore.update(this.exchange, symbol, filteredTrades)
+    await this.tradeStore.insertTrades(this.exchange, symbol, filteredTrades)
 
     const from = Math.min(...filteredTrades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
     const to = Math.max(...filteredTrades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))

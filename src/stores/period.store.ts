@@ -2,15 +2,11 @@ import { Trade } from 'ccxt'
 import { timebucket } from '@magic8bot/timebucket'
 import { PeriodItem, eventBus, EventBusEmitter, EVENT } from '@lib'
 
-interface Periods {
-  periods: PeriodItem[]
-}
-
 export class PeriodStore {
   public periods: PeriodItem[] = []
 
-  private updateEmitter: EventBusEmitter<Periods>
-  private periodEmitter: EventBusEmitter<Periods>
+  private updateEmitter: EventBusEmitter<PeriodItem[]>
+  private periodEmitter: EventBusEmitter<PeriodItem[]>
 
   private tradeEventTimeout: NodeJS.Timer = null
 
@@ -54,7 +50,7 @@ export class PeriodStore {
   public newPeriod(bucket: number, { amount, price }: Trade) {
     // Events are fired on next tick. Speading the array will
     // prevent the new period from being injected.
-    this.updateEmitter({ periods: [...this.periods] })
+    this.updateEmitter([...this.periods])
 
     this.periods.unshift({
       close: price,
@@ -73,7 +69,7 @@ export class PeriodStore {
   private emitTrades() {
     clearTimeout(this.tradeEventTimeout)
     this.tradeEventTimeout = setTimeout(() => {
-      this.updateEmitter({ periods: [...this.periods] })
+      this.updateEmitter([...this.periods])
     }, 100)
   }
 }

@@ -29,7 +29,7 @@ export class SessionStore {
       .limit(1)
       .toArray()
 
-    if (!sessions) return this.newSession()
+    if (!sessions || !sessions.length) return this.newSession()
 
     const [session] = sessions
 

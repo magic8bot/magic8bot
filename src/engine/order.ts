@@ -37,7 +37,9 @@ export class OrderEngine {
   }
 
   get wallet() {
-    return this.walletStore.getWallet(this.opts)
+    const wallet = this.walletStore.getWallet(this.opts)
+    console.log({ wallet })
+    return wallet
   }
 
   public async executeBuy(quote?: number, strength = 1) {
@@ -68,11 +70,12 @@ export class OrderEngine {
   }
 
   private async placeOrder(orderOpts: OrderOpts) {
-    const { exchange } = this.opts
-    const order = await this.exchangeProvider.placeOrder(exchange, orderOpts)
-    await this.orderStore.newOrder(order)
+    console.log('Placing order:', orderOpts)
+    // const { exchange } = this.opts
+    // const order = await this.exchangeProvider.placeOrder(exchange, orderOpts)
+    // await this.orderStore.newOrder(order)
 
-    await this.checkOrder(order.id)
+    // await this.checkOrder(order.id)
   }
 
   private async checkOrder(id: string) {

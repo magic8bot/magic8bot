@@ -79,22 +79,37 @@ start:
 build:
 	docker build -t magic8bot .
 
-# ALL DATA WILL BE DELETED  
+# stop and delete all local Docker objects but keep downloaded images
+# ALL DATA WILL BE DELETED
+re-build:
+	-docker-compose down --rmi local -v
+	docker-compose up -d --build
+
 # stop and delete all Docker objects defined in docker-compose.yml  
+# ALL DATA WILL BE DELETED 
 destroy:
 	-docker-compose stop
 	-docker-compose rm --force server
 	-docker-compose rm --force mongodb
 	-docker-compose rm --force adminmongo
-	-docker rmi magic8bot:latest
+	-docker rmi magic8bot
 	-docker rmi mongo
-	-docker rmi adminmongo
+	-docker rmi mrvautin/adminmongo
+	-docker rmi node:10-alpine
 	docker volume prune --force
 	docker system prune --force
 
 # show status of Docker objects defined in docker-compose.yml  
 state:
+	@echo
+	@echo ***Containers***
 	docker-compose ps
+	@echo
+	@echo ***Volumes***
+	docker volume ls 
+	@echo
+	@echo ***Networks***
+	docker network ls 
 
 # show Docker logs  
 logs:

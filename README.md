@@ -79,8 +79,12 @@ make start
 # build Docker images defined in docker-compose.yml  
 make build  
 
-# ALL DATA WILL BE DELETED  
+# stop and delete all local Docker objects but keep downloaded images
+# ALL DATA WILL BE DELETED
+re-build
+
 # stop and delete all Docker objects defined in docker-compose.yml  
+# ALL DATA WILL BE DELETED
 make destroy  
 
 # show status of Docker objects defined in docker-compose.yml  

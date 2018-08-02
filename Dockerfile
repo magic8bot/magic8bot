@@ -9,7 +9,7 @@ RUN apk update && \
     python2-dev && python2 && \
     apk add bash
 
-# Change to app direcotry
+# Change to app directory
 WORKDIR /app
 
 # Fetch and compile ta-lib
@@ -35,8 +35,5 @@ RUN find . -type f -print0 | xargs -0 dos2unix \
     # Remove build tools
     && apk del build-dependencies \
     && rm -rf /var/cache/apk/*
-
-# Expose a port
-EXPOSE 9999
 
 ENTRYPOINT ["tail", "-f", "/dev/null"]

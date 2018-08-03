@@ -1,3 +1,45 @@
+##########################
+# General purpose commands
+##########################
+
+# Argument fix workaround
+######################################
+# To use arguments with make, execute:
+# make -- <command> <args>
+######################################
+%:
+	@:
+ARGS = $(filter-out $@,$(MAKECMDGOALS))
+MAKEFLAGS += --silent
+
+# Get the root dir of this file
+ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
+# Define the full path to this file
+THIS_FILE := $(lastword $(MAKEFILE_LIST))
+
+# list available make commands
+list:
+	sh -c "echo; $(MAKE) -p no_targets__ | awk -F':' '/^[a-zA-Z0-9][^\$$#\/\\t=]*:([^=]|$$)/ {split(\$$1,A,/ /);for(i in A)print A[i]}' | grep -v '__\$$' | grep -v 'Makefile'| sort"
+
+# Find or create a home for sensitive environment variables
+# CREDS=$(HOME)/.credentials
+# ifneq ("$(wildcard $(CREDS))","")
+# CREDENTIALS := $(CREDS)
+# else
+# $(info $(shell "mkdir" $(CREDS)))
+# endif
+
+# create .env from .env-sample if .env does not exist
+FILE := $(ROOT_DIR)/.env
+FILE_TEMPLATE := $(ROOT_DIR)/.env-sample
+ifneq ("$(wildcard $(FILE))","")
+# $(info "file exists")
+else
+# $(info "file does not exist")
+$(shell "cp" $(FILE_TEMPLATE) $(FILE))
+endif
+
 ########################################################
 # Configuration options for various Windows environments
 ########################################################
@@ -23,45 +65,14 @@
 # HOME := $(subst \,/,$(HOME))
 # endif
 
-# Get the root dir of this file
-ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-
-# Define the full path to this file
-THIS_FILE := $(lastword $(MAKEFILE_LIST))
-
-###########################################################
-# Find or create a home for sensitive environment variables
-###########################################################
-
-# CREDS=$(HOME)/.credentials
-# ifneq ("$(wildcard $(CREDS))","")
-# CREDENTIALS := $(CREDS)
-# else
-# $(info $(shell "mkdir" $(CREDS)))
-# endif
-
 #############################
-# Argument fix workaround
-# To use arguments with make, execute:
-# make -- <command> <args>
-#############################
-%:
-	@:
-ARGS = $(filter-out $@,$(MAKECMDGOALS))
-MAKEFLAGS += --silent
-
-#############################
-# magic8bot
+# Application commands
 #############################
 
 
 #############################
 # Docker commands
 #############################
-
-# list available make commands  
-list:
-	sh -c "echo; $(MAKE) -p no_targets__ | awk -F':' '/^[a-zA-Z0-9][^\$$#\/\\t=]*:([^=]|$$)/ {split(\$$1,A,/ /);for(i in A)print A[i]}' | grep -v '__\$$' | grep -v 'Makefile'| sort"
 
 # build app as defined in docker-compose.yml  
 up:
@@ -96,6 +107,7 @@ destroy:
 	-docker rmi mongo
 	-docker rmi mrvautin/adminmongo
 	-docker rmi node:10-alpine
+	-docker rmi traefik:latest
 	docker volume prune --force
 	docker system prune --force
 
@@ -103,7 +115,7 @@ destroy:
 state:
 	@echo
 	@echo ***Containers***
-	docker-compose ps
+	docker ps
 	@echo
 	@echo ***Volumes***
 	docker volume ls 

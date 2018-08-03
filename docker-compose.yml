@@ -4,35 +4,33 @@ services:
     container_name: traefik
     image: traefik
     command: --web --docker --docker.domain=${TRAEFIK_DOMAIN} --logLevel=DEBUG
+    restart: always
     networks:
-      - webgateway
-      - internal
+      - web
     ports:
       - "80:80"
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
       - /dev/null:/traefik.toml
-    labels:
-      - "traefik.enable=false"
 
   server:
     build:
       context: .
       dockerfile: Dockerfile
     image: magic8bot
-    volumes:
-      - /app
-    ports:
-      - "9999:9999"
-    networks:
-      - webgateway
-      - internal
-    labels: 
-      - "traefik.enable=true"
-      - "traefik.frontend.rule=Host:${TRAEFIK_HOST_M8B}"
     depends_on:
       - mongodb
+    volumes:
+      - /app
+    networks:
+      - web
+      - internal
+    labels: 
+      - "traefik.docker.network=web"
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:${TRAEFIK_HOST_M8B}"
+      - "traefik.frontend.auth.basic=${BASIC_AUTH_M8B}"
     environment:
       - MONGODB_PORT_27017_TCP_ADDR=mongodb
 
@@ -49,32 +47,36 @@ services:
       - "traefik.enable=false"
 
 # AdminMongo is a Web based user interface for MongoDB administration
+# This configuration is not safe for production use
   adminmongo:
     image: mrvautin/adminmongo
     links:
       - mongodb
-    ports:
-      - "1234:1234"
     networks:
-      - webgateway
+      - web
       - internal
+    ports:
+      - "1234:1234" # Danger this bypasses traefik routing to avoid password and login
+    expose:
+      - 1234
     labels:
-      - "traefik.enable=true"
-      - "traefik.frontend.rule=Host:${TRAEFIK_HOST_DB}"
-      - "traefik.frontend.auth.basic=${BASIC_AUTH_DB}"
       - "traefik.backend=adminmongo"
+      - "traefik.docker.network=${TRAEFIK_NETWORK}"
+      - "traefik.frontend.rule=Host:${TRAEFIK_HOST_DB}"
+      - "traefik.enable=true"
+      - "traefik.frontend.auth.basic=${BASIC_AUTH_DB}"
+      - "traefik.port=1234"
     environment:
       - CONN_NAME=magic8bot_mongodb
       - DB_HOST=mongodb
       - DB_PORT=27017
     command: "npm start"
 
-
 volumes: 
   database:
 
 networks:
-  webgateway:
+  web:
     driver: bridge
   internal:
     external: false

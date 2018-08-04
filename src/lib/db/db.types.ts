@@ -1,4 +1,5 @@
 import { Order, Trade } from 'ccxt'
+import { Filter } from '@m8bTypes'
 
 export interface SessionCollection {
   sessionId: string
@@ -37,7 +38,7 @@ interface Fee {
 
 export type TradeWithFee = Trade & { fee: Fee }
 
-export type OrderWithTrades = Order & {
+export type OrderWithTrades = Filter<Order, 'fee'> & {
   trades?: TradeWithFee[]
   fee: Fee
 }

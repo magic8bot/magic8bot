@@ -2,6 +2,7 @@ import { Exchange, Trade, Balances, OrderBook, Order } from 'ccxt'
 import { gdax, binance } from './adapters'
 import { ExchangeAdapter } from './adapters/base'
 import { OrderWithTrades } from '@lib'
+import { Filter } from '@m8bTypes'
 
 const adapters: Record<string, ExchangeAdapter> = { binance, gdax }
 
@@ -13,9 +14,6 @@ type Adapter = ExchangeAdapter & {
   checkOrder: (orderId: string) => Promise<OrderWithTrades>
   cancelOrder: (orderId: string) => Promise<void>
 }
-
-type FilterKeys<T, K extends keyof T> = { [P in keyof T]: P extends K ? never : P }[keyof T]
-type Filter<T, K extends keyof T> = Pick<T, FilterKeys<T, K>>
 
 export type WrappedExchange = Filter<Adapter, 'mapTradeParams'>
 

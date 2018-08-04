@@ -1,4 +1,4 @@
-import { Average } from './average';
+import { Average } from './average'
 
 /**
  * @description Commodity Channel Index
@@ -30,7 +30,7 @@ export class CCI {
     }
 
     private static calculateTP({ high, low, close }: Record<string, number>) {
-        return (high + low + close) / 3;
+        return (high + low + close) / 3
     }
 
 }

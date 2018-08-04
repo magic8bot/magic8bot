@@ -1,5 +1,5 @@
-import { candles } from './spec.helper';
-import { CCI } from './cci';
+import { candles } from './spec.helper'
+import { CCI } from './cci'
 
 describe('CCI', () => {
 

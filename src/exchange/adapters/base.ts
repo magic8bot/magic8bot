@@ -1,5 +1,5 @@
 import { Trade } from 'ccxt'
-import WebSocket from 'ws';
+import WebSocket from 'ws'
 
 export interface ExchangeAdapter {
   scan: 'back' | 'forward'
@@ -14,7 +14,7 @@ export interface StreamExchangeAdapter {
 
 export class StreamExchange {
 
-  private connection: WebSocket;
+  private connection: WebSocket
   constructor(
     private websocketEndpoint: string,
     private exchangeAdapter: StreamExchangeAdapter,
@@ -27,7 +27,7 @@ export class StreamExchange {
   }
 
   public open() {
-    this.connection = new WebSocket(this.websocketEndpoint);
+    this.connection = new WebSocket(this.websocketEndpoint)
     this.initHandlers()
   }
 

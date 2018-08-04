@@ -24,7 +24,7 @@ jest.mock('../../indicators/ema', () => {
 })
 
 import { Macd } from './macd'
-import { candles } from '../../indicators/spec.helper';
+import { candles } from '../../indicators/spec.helper'
 
 describe('Macd', () => {
   let macd: Macd

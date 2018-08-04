@@ -1,5 +1,5 @@
-import { candles } from './spec.helper';
-import { Lowest } from './lowest';
+import { candles } from './spec.helper'
+import { Lowest } from './lowest'
 
 describe('Lowest', () => {
     it('should calculate the highest close (default)', () => {
@@ -10,7 +10,7 @@ describe('Lowest', () => {
         expect(Lowest.calculate(candles.slice(0, 5), 4, 'open')).toEqual(17.74)
     })
 
-    it ('should return null, if not enough data', () => {
+    it('should return null, if not enough data', () => {
         expect(Lowest.calculate(candles.slice(0, 3), 4, 'close')).toBeNull()
     })
 })

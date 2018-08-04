@@ -24,6 +24,7 @@ jest.mock('../../indicators/ema', () => {
 })
 
 import { Macd } from './macd'
+import { candles } from '../../indicators/spec.helper'
 
 describe('Macd', () => {
   let macd: Macd
@@ -126,7 +127,7 @@ describe('Macd', () => {
     macd.getEmaLong = jest.fn()
     macd.calculateMacd = jest.fn()
 
-    macd.calculate([])
+    macd.calculate(candles.slice(0, 1))
 
     expect(macd.checkOverbought).toHaveBeenCalledTimes(1)
     expect(macd.getEmaShort).toHaveBeenCalledTimes(1)

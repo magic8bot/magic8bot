@@ -57,8 +57,6 @@ export class Macd extends BaseStrategy<MacdOptions> {
 
     const eventBusEvent = { exchange, symbol, strategy: this.name }
 
-    console.log('MACD', eventBusEvent)
-
     eventBus.subscribe({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent }, (periods: PeriodItem[]) =>
       this.calculate(periods)
     )

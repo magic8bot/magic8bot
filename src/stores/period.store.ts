@@ -19,7 +19,6 @@ export class PeriodStore {
   ) {
     const eventBusEvent = { exchange, symbol, strategy }
 
-    console.log('PERIOD STORE', eventBusEvent)
     eventBus.subscribe({ event: EVENT.XCH_TRADE, exchange, symbol }, (trade: Trade) => this.addTrade(trade))
     this.updateEmitter = eventBus.register({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent })
     this.periodEmitter = eventBus.register({ event: EVENT.PERIOD_NEW, ...eventBusEvent })

@@ -17,15 +17,4 @@ describe('TradeStore', () => {
 
     done()
   })
-
-  it('should update a symbol with trades', async (done) => {
-    tradeStore.addSymbol('test', 'test')
-    const trades = [...Array(9).fill(0)].map((v, i) => makeNewOrder(time(now).sub.s(i * 10))).reverse()
-
-    await tradeStore.insertTrades('test', 'test', trades as Trade[])
-
-    expect(tradeStore.tradesMap.get('test.test').size).toEqual(9)
-
-    done()
-  })
 })

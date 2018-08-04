@@ -183,3 +183,6 @@ export interface Product {
 export interface SignalEvent {
   signal: 'buy' | 'sell'
 }
+
+export type FilterKeys<T, K extends keyof T> = { [P in keyof T]: P extends K ? never : P }[keyof T]
+export type Filter<T, K extends keyof T> = Pick<T, FilterKeys<T, K>>

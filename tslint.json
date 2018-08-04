@@ -45,7 +45,7 @@
     "ordered-imports": false,
     "prefer-const": true,
     "quotemark": [true, "single", "avoid-escape"],
-    "semicolon": false,
+    "semicolon": [true, "never"],
     "space-within-parens": true,
     "trailing-comma": [
       true,

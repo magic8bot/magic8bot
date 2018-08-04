@@ -1,5 +1,5 @@
-import { candles } from './spec.helper';
-import { Average } from './average';
+import { candles } from './spec.helper'
+import { Average } from './average'
 
 describe('Average', () => {
     it('should calculate the highest close (default)', () => {

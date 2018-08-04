@@ -1,3 +1,4 @@
+import { EventBusListener } from '@magic8bot/event-bus'
 import { dbDriver, Wallet, eventBus, EVENT, Adjustment } from '@lib'
 import { sessionStore } from './session.store'
 
@@ -41,9 +42,11 @@ export class WalletStore {
   }
 
   private subcribeToWalletEvents(walletOpts: WalletOpts) {
-    eventBus.subscribe({ event: EVENT.WALLET_ADJUST, ...walletOpts }, (adjustment: Adjustment) =>
-      this.adjustWallet(walletOpts, adjustment)
-    )
+    const { exchange, symbol, strategy } = walletOpts
+    const walletListener: EventBusListener<Adjustment> =
+      eventBus.get(EVENT.WALLET_ADJUST)(exchange)(symbol)(strategy).listen
+
+    walletListener((adjustment: Adjustment) => this.adjustWallet(walletOpts, adjustment))
   }
 
   private async adjustWallet(walletOpts: WalletOpts, adjustment: Adjustment) {

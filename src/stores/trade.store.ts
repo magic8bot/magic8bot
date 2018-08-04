@@ -1,16 +1,17 @@
 import { Trade } from 'ccxt'
-import { dbDriver, eventBus, EventBusEmitter, EVENT } from '@lib'
+import { EventBusEmitter } from '@magic8bot/event-bus'
+import { dbDriver, eventBus, EVENT } from '@lib'
 
 export class TradeStore {
   public tradesMap: Map<string, number> = new Map()
-  private emitters: Map<string, EventBusEmitter> = new Map()
+  private emitters: Map<string, EventBusEmitter<Trade>> = new Map()
 
   public addSymbol(exchange: string, symbol: string) {
     const idStr = this.makeIdStr(exchange, symbol)
     if (this.tradesMap.has(idStr)) return
 
     this.tradesMap.set(idStr, 0)
-    this.emitters.set(idStr, eventBus.register({ event: EVENT.XCH_TRADE, exchange, symbol }))
+    this.emitters.set(idStr, eventBus.get(EVENT.XCH_TRADE)(exchange)(symbol).emit)
   }
 
   public async loadTrades(exchange: string, symbol: string) {

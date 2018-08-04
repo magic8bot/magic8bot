@@ -1,11 +1,13 @@
+import { Balances } from 'ccxt'
+import { EventBusListener } from '@magic8bot/event-bus'
+
 import { StrategyConf } from '@m8bTypes'
 import { eventBus, EVENT } from '@lib'
 import { PeriodStore, WalletStore } from '@stores'
-
 import { BaseStrategy, strategyLoader } from '@strategy'
-import { Balances } from 'ccxt'
-import { OrderEngine } from './order'
 import { ExchangeProvider } from '@exchange'
+
+import { OrderEngine } from './order'
 
 export class StrategyEngine {
   public strategyName: string
@@ -14,6 +16,8 @@ export class StrategyEngine {
   private periodStore: PeriodStore
   private orderEngine: OrderEngine
   private lastSignal: 'buy' | 'sell' = null
+
+  private signalListener: EventBusListener<{ signal: 'buy' | 'sell' }>
 
   constructor(
     private readonly exchangeProvider: ExchangeProvider,
@@ -25,10 +29,8 @@ export class StrategyEngine {
     const { strategyName, period } = strategyConf
     this.strategyName = strategyName
 
-    eventBus.subscribe(
-      { event: EVENT.STRAT_SIGNAL, exchange: exchangeName, symbol, strategy: strategyName },
-      ({ signal }) => this.onSignal(signal)
-    )
+    this.signalListener = eventBus.get(EVENT.STRAT_SIGNAL)(exchangeName)(symbol)(strategyName).listen
+    this.signalListener(({ signal }) => this.onSignal(signal))
 
     this.strategy = new (strategyLoader(strategyName))(this.exchangeName, this.symbol, this.strategyConf)
     this.periodStore = new PeriodStore(period, exchangeName, symbol, strategyName)

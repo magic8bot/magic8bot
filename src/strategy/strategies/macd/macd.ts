@@ -1,4 +1,5 @@
-import { eventBus, EVENT, EventBusEmitter, PeriodItem } from '@lib'
+import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
+import { eventBus, EVENT, PeriodItem } from '@lib'
 import { EMA, RSI } from '../../indicators'
 import { BaseStrategy } from '../base-strategy'
 import { SignalEvent } from '@m8bTypes'
@@ -55,15 +56,16 @@ export class Macd extends BaseStrategy<MacdOptions> {
 
     this.options = { ...this.options, ...options }
 
-    const eventBusEvent = { exchange, symbol, strategy: this.name }
+    const periodUpdateListener: EventBusListener<PeriodItem[]> =
+      eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol)(this.name).listen
+    const periodNewListener: EventBusListener<void> =
+      eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol)(this.name).listen
 
-    eventBus.subscribe({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent }, (periods: PeriodItem[]) =>
-      this.calculate(periods)
-    )
-    eventBus.subscribe({ event: EVENT.PERIOD_NEW, ...eventBusEvent }, () => this.onPeriod())
+    periodUpdateListener((periods) => this.calculate(periods))
+    periodNewListener(() => this.onPeriod())
 
-    this.signalEmitter = eventBus.register({ event: EVENT.STRAT_SIGNAL, ...eventBusEvent })
-    this.calcEmitter = eventBus.register({ event: EVENT.STRAT_CALC, ...eventBusEvent })
+    this.signalEmitter = eventBus.get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(this.name).emit
+    this.calcEmitter = eventBus.get(EVENT.STRAT_CALC)(exchange)(symbol)(this.name).emit
   }
 
   public calculate(periods: PeriodItem[]) {

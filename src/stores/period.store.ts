@@ -1,6 +1,7 @@
 import { Trade } from 'ccxt'
 import { timebucket } from '@magic8bot/timebucket'
-import { PeriodItem, eventBus, EventBusEmitter, EVENT } from '@lib'
+import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
+import { PeriodItem, eventBus, EVENT } from '@lib'
 
 export class PeriodStore {
   public periods: PeriodItem[] = []
@@ -19,9 +20,11 @@ export class PeriodStore {
   ) {
     const eventBusEvent = { exchange, symbol, strategy }
 
-    eventBus.subscribe({ event: EVENT.XCH_TRADE, exchange, symbol }, (trade: Trade) => this.addTrade(trade))
-    this.updateEmitter = eventBus.register({ event: EVENT.PERIOD_UPDATE, ...eventBusEvent })
-    this.periodEmitter = eventBus.register({ event: EVENT.PERIOD_NEW, ...eventBusEvent })
+    const tradeListener: EventBusListener<Trade> = eventBus.get(EVENT.XCH_TRADE)(exchange)(symbol).listen
+    tradeListener((trade: Trade) => this.addTrade(trade))
+
+    this.updateEmitter = eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol).emit
+    this.updateEmitter = eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol).emit
   }
 
   public initPeriods(trades: Trade[]) {

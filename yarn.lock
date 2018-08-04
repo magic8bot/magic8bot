@@ -16,6 +16,10 @@
     esutils "^2.0.2"
     js-tokens "^3.0.0"
 
+"@magic8bot/event-bus@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@magic8bot/event-bus/-/event-bus-1.0.3.tgz#e0c83650f31332f33f71a4ac0dd7982f8806fae9"
+
 "@magic8bot/timebucket@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@magic8bot/timebucket/-/timebucket-1.0.0.tgz#621c623020c3be48af002c9bb3b93e184caa620b"

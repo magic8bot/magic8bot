@@ -1,5 +1,6 @@
+import { EventBusEmitter } from '@magic8bot/event-bus'
 import { WalletStore, OrderStore } from '@stores'
-import { EventBusEmitter, EVENT, eventBus, OrderWithTrades, Adjustment, TradeWithFee } from '@lib'
+import { EVENT, eventBus, OrderWithTrades, Adjustment, TradeWithFee } from '@lib'
 import { ExchangeProvider, OrderOpts } from '@exchange'
 import { StrategyConf } from '@m8bTypes'
 import { QuoteEngine } from './quote'
@@ -33,7 +34,7 @@ export class OrderEngine {
 
     this.orderPollInterval = strategyConf.orderPollInterval
 
-    this.adjustWallet = eventBus.register({ event: EVENT.ORDER_PARTIAL, ...this.opts })
+    this.adjustWallet = eventBus.get(EVENT.ORDER_PARTIAL)(exchange)(symbol)(strategyConf.strategyName).emit
   }
 
   get wallet() {

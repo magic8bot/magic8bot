@@ -18,13 +18,11 @@ export class PeriodStore {
     strategy: string,
     private readonly lookbackSize = 250
   ) {
-    const eventBusEvent = { exchange, symbol, strategy }
-
     const tradeListener: EventBusListener<Trade> = eventBus.get(EVENT.XCH_TRADE)(exchange)(symbol).listen
     tradeListener((trade: Trade) => this.addTrade(trade))
 
     this.updateEmitter = eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol).emit
-    this.updateEmitter = eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol).emit
+    this.periodEmitter = eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol).emit
   }
 
   public initPeriods(trades: Trade[]) {

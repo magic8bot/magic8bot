@@ -31,7 +31,7 @@ export class TradeStore {
   public async insertTrades(exchange: string, symbol: string, newTrades: Trade[]) {
     try {
       await dbDriver.trade.insertMany(newTrades.map((trade) => ({ ...trade, exchange, symbol })), { ordered: false })
-    } catch {
+    } catch (e) {
       // ヽ(。_°)ノ
     }
   }

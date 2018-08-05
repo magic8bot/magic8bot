@@ -8,6 +8,7 @@ import { BaseStrategy, strategyLoader } from '@strategy'
 import { ExchangeProvider } from '@exchange'
 
 import { OrderEngine } from './order'
+import { logger } from '@util'
 
 export class StrategyEngine {
   public strategyName: string
@@ -55,7 +56,7 @@ export class StrategyEngine {
   }
 
   private onSignal(signal: 'buy' | 'sell', force = false) {
-    console.log({ signal })
+    logger.info({ signal })
     if (!signal || (signal === this.lastSignal && !force)) return
     this.lastSignal = signal
 

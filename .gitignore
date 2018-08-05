@@ -9,3 +9,4 @@ coverage
 .vscode
 config/jest/globalConfig.json
 database
+*.log

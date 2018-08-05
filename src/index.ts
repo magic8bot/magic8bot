@@ -4,6 +4,7 @@ import semver from 'semver'
 import { magic8bot } from './conf'
 import { Conf } from '@m8bTypes'
 import { Core, dbDriver, wsServer, eventBus, EVENT } from '@lib'
+import { logger } from '@util'
 
 const checkSharePercent = ({ exchanges }: Conf) => {
   exchanges.forEach(({ exchangeName, options: { strategies } }) => {
@@ -39,6 +40,8 @@ if (semver.gt('10.0.0', process.versions.node)) {
 
 const run = async () => {
   try {
+    logger.info('Starting magic8bot...')
+
     checkSharePercent(magic8bot.conf)
 
     await dbDriver.connect(

@@ -155,4 +155,6 @@ export const magic8bot: Magic8bot = {
   port: 3000,
   srcRoot: null,
   version: null,
+  loggerLevel: 'debug',
+  loggerFile: 'magic8bot.log',
 }

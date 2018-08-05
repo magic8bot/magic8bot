@@ -1,10 +1,11 @@
 import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
-import { WalletStore, OrderStore } from '@stores'
+import { WalletStore, OrderStore, ORDER_STATE } from '@stores'
 import { EVENT, eventBus, OrderWithTrades, Adjustment, TradeWithFee } from '@lib'
 import { ExchangeProvider, OrderOpts } from '@exchange'
 import { StrategyConf } from '@m8bTypes'
 import { QuoteEngine } from './quote'
 import { sleep } from '@util'
+import { OrderNotFound } from 'ccxt'
 
 export class OrderEngine {
   private opts: {
@@ -14,7 +15,7 @@ export class OrderEngine {
   }
   private quoteEngine: QuoteEngine
 
-  private adjustWallet: EventBusEmitter<Adjustment>
+  private emitWalletAdjusment: EventBusEmitter<Adjustment>
   private orderStore: OrderStore
 
   private orderPollInterval: number
@@ -28,7 +29,7 @@ export class OrderEngine {
 
     this.orderPollInterval = strategyConf.orderPollInterval
 
-    this.adjustWallet = eventBus.get(EVENT.WALLET_ADJUST)(exchange)(symbol)(strategyConf.strategyName).emit
+    this.emitWalletAdjusment = eventBus.get(EVENT.WALLET_ADJUST)(exchange)(symbol)(strategyConf.strategyName).emit
 
     const panicListner: EventBusListener<void> = eventBus.get(EVENT.PANIC).listen
 
@@ -55,8 +56,11 @@ export class OrderEngine {
     // @todo(notVitaliy): Add support for market
     const orderOpts: OrderOpts = { symbol, price, amount, type: 'limit', side: 'buy' }
 
-    const { id } = await this.placeOrder(orderOpts)
-    this.adjustWallet({ asset: 0, currency: -(amount * price) })
+    const order = await this.placeOrder(orderOpts)
+    if (!order) return
+
+    const { id } = order
+    this.emitWalletAdjusment({ asset: 0, currency: -(amount * price) })
 
     await this.checkOrder(id)
   }
@@ -70,8 +74,11 @@ export class OrderEngine {
     // @todo(notVitaliy): Add support for market
     const orderOpts: OrderOpts = { symbol, price, amount, type: 'limit', side: 'sell' }
 
-    const { id } = await this.placeOrder(orderOpts)
-    this.adjustWallet({ asset: -amount, currency: 0 })
+    const order = await this.placeOrder(orderOpts)
+    if (!order) return
+
+    const { id } = order
+    this.emitWalletAdjusment({ asset: -amount, currency: 0 })
 
     await this.checkOrder(id)
   }
@@ -81,6 +88,8 @@ export class OrderEngine {
 
     const { exchange } = this.opts
     const order = await this.exchangeProvider.placeOrder(exchange, orderOpts)
+    if (!order || !order.id) return false
+
     await this.orderStore.newOrder(order)
 
     return order
@@ -91,7 +100,6 @@ export class OrderEngine {
 
     const { exchange } = this.opts
     const order = await this.exchangeProvider.checkOrder(exchange, id)
-    console.log(order)
 
     await this.updateOrder(order)
 
@@ -99,51 +107,59 @@ export class OrderEngine {
   }
 
   private async updateOrder(order: OrderWithTrades) {
-    const openOrder = this.orderStore.getOpenOrder(order.id)
+    this.adjustWallet(order)
 
+    this.orderStore.updateOrder(order)
+    await this.orderStore.saveOrder(order)
+  }
+
+  private adjustWallet(order: OrderWithTrades) {
+    // @todo(notVitaliy): Adjust for fees
+    const openOrder = this.orderStore.getOpenOrder(order.id)
     const adjustment = { asset: 0, currency: 0 }
+
     if (order.side === 'buy') {
       adjustment.asset = order.filled - openOrder.filled
     } else {
       adjustment.currency = order.cost - openOrder.cost
     }
 
-    if (adjustment.asset || adjustment.currency) this.adjustWallet(adjustment)
-    this.orderStore.updateOrder(order)
-    await this.orderStore.saveOrder(order)
+    if (adjustment.asset || adjustment.currency) this.emitWalletAdjusment(adjustment)
   }
 
   private async adjustOrder(id: string) {
-    const { price, side, remaining } = this.orderStore.getOpenOrder(id)
+    const { price, side } = this.orderStore.getOpenOrder(id)
     const { exchange, symbol } = this.opts
-    const quote = this.exchangeProvider.priceToPrecision(exchange, symbol, await (side === 'buy' ? this.quoteEngine.getBuyPrice() : this.quoteEngine.getSellPrice()))
+
+    const rawQuote = side === 'buy' ? await this.quoteEngine.getBuyPrice() : await this.quoteEngine.getSellPrice()
+    const quote = this.exchangeProvider.priceToPrecision(exchange, symbol, rawQuote)
 
     // Order slipped
     if (Number(quote) !== Number(price)) {
-      await this.exchangeProvider.cancelOrder(exchange, id)
-
-      // Refund the wallet
-      const adjustment = side === 'buy' ? { asset: 0, currency: price * remaining } : { asset: remaining, currency: 0 }
-      this.adjustWallet(adjustment)
+      await this.cancelOrder(id)
       return side === 'buy' ? this.executeBuy(quote) : this.executeSell(quote)
     }
 
     return this.checkOrder(id)
   }
 
-  private calculateAdjustmentFromTrades(trades: TradeWithFee[]) {
-    const adjustment = { asset: 0, currency: 0 }
-    if (!trades.length) return adjustment
+  private async cancelOrder(id: string) {
+    const { price, side, remaining } = this.orderStore.getOpenOrder(id)
+    const { exchange } = this.opts
+    try {
+      this.orderStore.updateOrderState(id, ORDER_STATE.PENDING_CANCEL)
+      await this.exchangeProvider.cancelOrder(exchange, id)
+      this.orderStore.updateOrderState(id, ORDER_STATE.CANCELED)
 
-    return trades.reduce((adj, { side, amount, fee, symbol }) => {
-      if (side === 'buy') adj.asset += amount
-      else adj.currency += amount
-
-      const [asset] = symbol.split('/')
-      if (fee.currency === asset) adj.asset -= fee.cost
-      else adj.currency -= fee.cost
-
-      return adj
-    }, adjustment)
+      // Refund the wallet
+      const adjustment = side === 'buy' ? { asset: 0, currency: price * remaining } : { asset: remaining, currency: 0 }
+      this.emitWalletAdjusment(adjustment)
+    } catch (e) {
+      if (e instanceof OrderNotFound) {
+        this.orderStore.updateOrderState(id, ORDER_STATE.DONE)
+      } else {
+        this.orderStore.updateOrderState(id, ORDER_STATE.CANCELED)
+      }
+    }
   }
 }

@@ -39,11 +39,13 @@ export class ExchangeErrorHandler {
   }
 
   private handleExchangeError(e: ExchangeError): RecoverRetry {
+    // Bubble up the error
+    if (e instanceof InvalidOrder) throw e
+
     if (e instanceof NotSupported) return this.handleNotSupported(e)
     if (e instanceof AuthenticationError) return this.handleAuthenticationError(e)
     if (e instanceof InvalidNonce) return this.handleInvalidNonce(e)
     if (e instanceof InsufficientFunds) return this.handleInsufficientFunds(e)
-    if (e instanceof InvalidOrder) return this.handleInvalidOrder(e)
     return this.handleError(e)
   }
 
@@ -60,25 +62,6 @@ export class ExchangeErrorHandler {
   }
 
   private handleInsufficientFunds(e: InsufficientFunds): RecoverRetry {
-    return { recover: true, retry: false }
-  }
-
-  private handleInvalidOrder(e: InvalidOrder): RecoverRetry {
-    if (e instanceof OrderNotFound) return this.handleOrderNotFound(e)
-    if (e instanceof OrderNotCached) return this.handleOrderNotCached(e)
-    if (e instanceof CancelPending) return this.handleCancelPending(e)
-    return this.handleError(e)
-  }
-
-  private handleOrderNotFound(e: OrderNotFound): RecoverRetry {
-    return { recover: true, retry: false }
-  }
-
-  private handleOrderNotCached(e: OrderNotCached): RecoverRetry {
-    return { recover: true, retry: false }
-  }
-
-  private handleCancelPending(e: CancelPending): RecoverRetry {
     return { recover: true, retry: false }
   }
 

@@ -32,7 +32,7 @@ export class ExchangeWrapper {
     return this.exchange.fetchOrderBook(symbol)
   }
 
-  public createOrder(symbol: string, type: string, side: string, amount: number, price: number) {
+  public createOrder(symbol: string, type: string, side: string, amount: number, price: number): Promise<Order> {
     return this.exchange.createOrder(symbol, type, side, amount, price)
   }
 

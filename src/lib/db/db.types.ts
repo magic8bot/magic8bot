@@ -19,6 +19,7 @@ export interface PeriodItem {
   low: number
   close: number
   volume: number
+  bucket: number
 }
 
 export interface Marker {

@@ -180,8 +180,10 @@ export interface Product {
   label: string
 }
 
+export type Signal = 'buy' | 'sell'
+
 export interface SignalEvent {
-  signal: 'buy' | 'sell'
+  signal: Signal
 }
 
 export type FilterKeys<T, K extends keyof T> = { [P in keyof T]: P extends K ? never : P }[keyof T]

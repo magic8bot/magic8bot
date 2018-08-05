@@ -19,13 +19,7 @@ export class OrderEngine {
 
   private orderPollInterval: number
 
-  constructor(
-    private readonly exchangeProvider: ExchangeProvider,
-    private readonly walletStore: WalletStore,
-    strategyConf: StrategyConf,
-    exchange: string,
-    symbol: string
-  ) {
+  constructor(private readonly exchangeProvider: ExchangeProvider, private readonly walletStore: WalletStore, strategyConf: StrategyConf, exchange: string, symbol: string) {
     const { markUp, markDn } = strategyConf
     this.quoteEngine = new QuoteEngine(this.exchangeProvider, exchange, symbol, markUp, markDn)
 
@@ -72,11 +66,11 @@ export class OrderEngine {
 
   private async placeOrder(orderOpts: OrderOpts) {
     console.log('Placing order:', orderOpts)
-    // const { exchange } = this.opts
-    // const order = await this.exchangeProvider.placeOrder(exchange, orderOpts)
-    // await this.orderStore.newOrder(order)
+    const { exchange } = this.opts
+    const order = await this.exchangeProvider.placeOrder(exchange, orderOpts)
+    await this.orderStore.newOrder(order)
 
-    // await this.checkOrder(order.id)
+    await this.checkOrder(order.id)
   }
 
   private async checkOrder(id: string) {
@@ -91,7 +85,7 @@ export class OrderEngine {
   }
 
   private async updateOrder(order: OrderWithTrades) {
-    if (!order.trades.length) return
+    if (!order.trades || !order.trades.length) return
 
     const openOrder = this.orderStore.getOpenOrder(order.id)
     if (!openOrder.trades) openOrder.trades = []

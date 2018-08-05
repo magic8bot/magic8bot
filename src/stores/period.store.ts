@@ -11,13 +11,7 @@ export class PeriodStore {
 
   private tradeEventTimeout: NodeJS.Timer = null
 
-  constructor(
-    private readonly period: string,
-    exchange: string,
-    symbol: string,
-    strategy: string,
-    private readonly lookbackSize = 250
-  ) {
+  constructor(private readonly period: string, exchange: string, symbol: string, strategy: string, private readonly lookbackSize = 250) {
     const tradeListener: EventBusListener<Trade> = eventBus.get(EVENT.XCH_TRADE)(exchange)(symbol).listen
     tradeListener((trade: Trade) => this.addTrade(trade))
 
@@ -26,9 +20,7 @@ export class PeriodStore {
   }
 
   public initPeriods(trades: Trade[]) {
-    trades
-      .sort(({ timestamp: a }, { timestamp: b }) => (a === b ? 0 : a > b ? 1 : -1))
-      .forEach((trade) => this.addTrade(trade))
+    trades.sort(({ timestamp: a }, { timestamp: b }) => (a === b ? 0 : a > b ? 1 : -1)).forEach((trade) => this.addTrade(trade))
   }
 
   public addTrade(trade: Trade) {
@@ -48,7 +40,7 @@ export class PeriodStore {
   }
 
   public newPeriod(bucket: number, { amount, price }: Trade) {
-    // Events are fired on next tick. Speading the array will
+    // Events are fired on next tick. Spreading the array will
     // prevent the new period from being injected.
     this.updateEmitter([...this.periods])
 
@@ -59,6 +51,7 @@ export class PeriodStore {
       open: price,
       time: bucket,
       volume: amount,
+      bucket,
     })
 
     if (this.periods.length >= this.lookbackSize) this.periods.pop()

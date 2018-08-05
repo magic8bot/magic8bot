@@ -6,7 +6,9 @@ import { Filter } from '@m8bTypes'
 
 const adapters: Record<string, ExchangeAdapter> = { binance, gdax }
 
-type Adapter = ExchangeAdapter & {
+export interface WrappedExchange {
+  scan: 'back' | 'forward'
+  getTradeCursor: (trade: Trade) => number
   fetchTrades: (symbol: string, start: number) => Promise<Trade[]>
   fetchBalance: () => Promise<Balances>
   fetchOrderBook: (symbol: string) => Promise<OrderBook>
@@ -14,8 +16,6 @@ type Adapter = ExchangeAdapter & {
   checkOrder: (orderId: string) => Promise<OrderWithTrades>
   cancelOrder: (orderId: string) => Promise<void>
 }
-
-export type WrappedExchange = Filter<Adapter, 'mapTradeParams'>
 
 export const wrapExchange = (exchangeName: string, exchange: Exchange): WrappedExchange => {
   if (!(exchangeName in adapters)) throw new Error(`No adapter for ${exchangeName}.`)
@@ -39,9 +39,9 @@ export const wrapExchange = (exchangeName: string, exchange: Exchange): WrappedE
     },
 
     createOrder: (symbol: string, type: string, side: string, amount: number, price: number) => {
-      return !price
-        ? exchange.createOrder(symbol, type, side, amount)
-        : exchange.createOrder(symbol, type, side, amount, price)
+      const roundedAmount = adapter.roundOrderAmount(amount)
+      if (!price) return exchange.createOrder(symbol, type, side, roundedAmount)
+      return exchange.createOrder(symbol, type, side, roundedAmount, price)
     },
 
     checkOrder: (orderId: string): Promise<OrderWithTrades> => {

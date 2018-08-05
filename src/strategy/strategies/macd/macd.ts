@@ -2,7 +2,7 @@ import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
 import { eventBus, EVENT, PeriodItem } from '@lib'
 import { EMA, RSI } from '../../indicators'
 import { BaseStrategy } from '../base-strategy'
-import { SignalEvent } from '@m8bTypes'
+import { SignalEvent, Signal } from '@m8bTypes'
 
 export interface MacdOptions {
   period: string
@@ -16,16 +16,27 @@ export interface MacdOptions {
   overboughtRsi: number
 }
 
+interface MacdPeriod {
+  macd: number
+  signal: number
+  emaShort: number
+  emaLong: number
+  emaMacd: number
+  rsi: number
+  avgGain: number
+  avgLoss: number
+}
+
 export class Macd extends BaseStrategy<MacdOptions> {
   public options: MacdOptions = {
-    period: '1h',
+    period: '1m',
     minPeriods: 52,
     emaShortPeriod: 12,
     emaLongPeriod: 26,
     signalPeriod: 9,
     upTrendThreshold: 0,
     downTrendThreshold: 0,
-    overboughtRsiPeriods: 25,
+    overboughtRsiPeriods: 14,
     overboughtRsi: 70,
   }
 
@@ -33,21 +44,21 @@ export class Macd extends BaseStrategy<MacdOptions> {
 
   private isPreroll = true
 
-  private rsi = 0
-  private avgGain = 0
-  private avgLoss = 0
-
-  private emaShort: number = null
-  private emaLong: number = null
-  private emaMacd: number = null
-
   private signalEmitter: EventBusEmitter<SignalEvent>
-  private calcEmitter: EventBusEmitter<{ rsi: number; history: number }>
+  private calcEmitter: EventBusEmitter<{ rsi: number; signal: number }>
 
-  private periods: {
-    macd: number
-    history: number
-  }[] = [{ macd: null, history: null }]
+  private periods: MacdPeriod[] = [
+    {
+      macd: null,
+      signal: null,
+      emaShort: null,
+      emaLong: null,
+      emaMacd: null,
+      rsi: null,
+      avgGain: null,
+      avgLoss: null,
+    },
+  ]
 
   private overbought = false
 
@@ -56,10 +67,8 @@ export class Macd extends BaseStrategy<MacdOptions> {
 
     this.options = { ...this.options, ...options }
 
-    const periodUpdateListener: EventBusListener<PeriodItem[]> =
-      eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol)(this.name).listen
-    const periodNewListener: EventBusListener<void> =
-      eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol)(this.name).listen
+    const periodUpdateListener: EventBusListener<PeriodItem[]> = eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol)(this.name).listen
+    const periodNewListener: EventBusListener<void> = eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol)(this.name).listen
 
     periodUpdateListener((periods) => this.calculate(periods))
     periodNewListener(() => this.onPeriod())
@@ -78,68 +87,47 @@ export class Macd extends BaseStrategy<MacdOptions> {
     this.calculateMacd()
 
     // prettier-ignore
-    const { rsi, periods: [{ history }] } = this
-
-    console.log({ rsi, history })
-    this.calcEmitter({ rsi, history })
+    const { periods: [{ signal, rsi }] } = this
+    const [{ bucket }] = periods
+    if (signal && rsi) console.log({ bucket, rsi: rsi.toPrecision(4), signal: signal.toPrecision(6) })
+    this.calcEmitter({ rsi, signal })
   }
 
   public calculateMacd() {
-    if (this.emaShort && this.emaLong) {
-      const macd = this.emaShort - this.emaLong
+    if (this.periods[0].emaShort && this.periods[0].emaLong) {
+      const macd = this.periods[0].emaShort - this.periods[0].emaLong
       this.periods[0].macd = macd
       this.getEmaMacd()
-      if (this.emaMacd) {
-        this.periods[0].history = macd - this.emaMacd
+      if (this.periods[0].emaMacd) {
+        this.periods[0].signal = macd - this.periods[0].emaMacd
       }
     }
   }
 
   public getEmaShort(periods: PeriodItem[]) {
-    this.emaShort = EMA.calculate(this.emaShort, periods as any, this.options.emaShortPeriod)
+    this.periods[0].emaShort = EMA.calculate(this.periods[1].emaShort, periods as any, this.options.emaShortPeriod)
   }
 
   public getEmaLong(periods: PeriodItem[]) {
-    this.emaLong = EMA.calculate(this.emaLong, periods as any, this.options.emaLongPeriod)
+    this.periods[0].emaLong = EMA.calculate(this.periods[1].emaLong, periods as any, this.options.emaLongPeriod)
   }
 
   public getEmaMacd() {
-    this.emaMacd = EMA.calculate(this.emaMacd, this.periods, this.options.signalPeriod, 'macd')
+    this.periods[0].emaMacd = EMA.calculate(this.periods[1].emaMacd, this.periods as any, this.options.signalPeriod, 'macd')
   }
 
   public checkOverbought(periods: PeriodItem[]) {
-    const { rsi, avgGain, avgLoss } = RSI.calculate(
-      this.avgGain,
-      this.avgLoss,
-      periods,
-      this.options.overboughtRsiPeriods
-    )
+    const { rsi, avgGain, avgLoss } = RSI.calculate(this.periods[1].avgGain, this.periods[1].avgLoss, periods, this.options.overboughtRsiPeriods)
 
-    this.rsi = rsi
-    this.avgGain = avgGain
-    this.avgLoss = avgLoss
+    this.periods[0].rsi = rsi
+    this.periods[0].avgGain = avgGain
+    this.periods[0].avgLoss = avgLoss
     this.overbought = !this.isPreroll && rsi >= this.options.overboughtRsi && !this.overbought
   }
 
   public onPeriod() {
-    let signal = null
-
-    if (!this.isPreroll && this.rsi && this.overbought) {
-      this.overbought = false
-      signal = 'sell'
-    }
-
-    if (!signal && this.periods.length > 1) {
-      const [{ history }, { history: lastHistory }] = this.periods
-
-      if (history && lastHistory) {
-        const { upTrendThreshold } = this.options
-        if (history - upTrendThreshold > 0 && lastHistory - upTrendThreshold <= 0) signal = 'buy'
-
-        const { downTrendThreshold } = this.options
-        if (history + downTrendThreshold < 0 && lastHistory + downTrendThreshold >= 0) signal = 'sell'
-      }
-    }
+    // console.log('[=================New Period=================]')
+    const signal = this.isPreroll ? null : this.overboughtSell() ? 'sell' : this.getSignal()
 
     if (signal) this.signalEmitter({ signal })
     this.newPeriod()
@@ -147,8 +135,41 @@ export class Macd extends BaseStrategy<MacdOptions> {
     return signal
   }
 
+  public getSignal() {
+    return this.periods.length <= 1 ? null : this.getMacdSignal(this.periods[0].signal, this.periods[1].signal)
+  }
+
+  public getMacdSignal(signal: number, lastSignal: number): Signal {
+    return this.isBuy(signal, lastSignal) ? 'buy' : this.isSell(signal, lastSignal) ? 'sell' : null
+  }
+
+  public isSell(signal: number, lastSignal: number) {
+    const { downTrendThreshold } = this.options
+    return signal + downTrendThreshold < 0 && lastSignal + downTrendThreshold >= 0
+  }
+
+  public isBuy(signal: number, lastSignal: number) {
+    const { upTrendThreshold } = this.options
+    return signal - upTrendThreshold > 0 && lastSignal - upTrendThreshold <= 0
+  }
+
+  public overboughtSell() {
+    const isOverbought = this.overbought ? true : false
+    this.overbought = false
+    return isOverbought
+  }
+
   public newPeriod() {
-    this.periods.push({ macd: null, history: null })
+    this.periods.unshift({
+      macd: null,
+      signal: null,
+      emaShort: null,
+      emaLong: null,
+      emaMacd: null,
+      rsi: null,
+      avgGain: null,
+      avgLoss: null,
+    })
   }
 
   public prerollDone() {

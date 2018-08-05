@@ -35,13 +35,7 @@ export class StrategyEngine {
     this.strategy = new (strategyLoader(strategyName))(this.exchangeName, this.symbol, this.strategyConf)
     this.periodStore = new PeriodStore(period, exchangeName, symbol, strategyName)
 
-    this.orderEngine = new OrderEngine(
-      this.exchangeProvider,
-      this.walletStore,
-      this.strategyConf,
-      this.exchangeName,
-      this.symbol
-    )
+    this.orderEngine = new OrderEngine(this.exchangeProvider, this.walletStore, this.strategyConf, this.exchangeName, this.symbol)
   }
 
   public async init(balances: Balances) {
@@ -52,7 +46,7 @@ export class StrategyEngine {
     }
 
     const [a, c] = this.symbol.split('/')
-    const adjustment = { asset: balances[a].total, currency: balances[c].total }
+    const adjustment = { asset: balances[a].total * this.strategyConf.share.asset, currency: balances[c].total * this.strategyConf.share.currency }
     await this.walletStore.initWallet(walletOpts, adjustment)
   }
 

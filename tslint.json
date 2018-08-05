@@ -29,6 +29,7 @@
     "interface-over-type-literal": true,
     "jsdoc-format": true,
     "linebreak-style": [true, "CR"],
+    "max-line-length": [true, 180],
     "no-inferrable-types": true,
     "no-internal-module": true,
     "no-null-keyword": false,

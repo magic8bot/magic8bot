@@ -49,6 +49,7 @@ export class SAR {
     private startAccel: number
     private accel: number
     private maxAccel: number
+    
     constructor(periods: Record<string, number>[], startAccel: number, accel: number, maxAccel: number) {
         this.af = startAccel
         this.ep = periods[0].high
@@ -57,7 +58,8 @@ export class SAR {
         this.startAccel = startAccel
         this.accel = accel
         this.maxAccel = maxAccel
-     }
+    }
+
     public calculate(periods: Record<string, number>[]): number {
         if (periods.length < 2) {
             return null

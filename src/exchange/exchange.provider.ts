@@ -1,6 +1,8 @@
 import { ExchangeConf, ExchangeAuth } from '@m8bTypes'
-import ccxt, { Trade } from 'ccxt'
+import ccxt, { Trade, BaseError, NotSupported, AuthenticationError } from 'ccxt'
 import { ExchangeWrapper } from './exchange.wrapper'
+import { ExchangeErrorHandler } from './exchange.error'
+import { sleep } from '@util'
 
 const verbose = false
 
@@ -14,6 +16,7 @@ export interface OrderOpts {
 
 export class ExchangeProvider {
   private exchanges: Map<string, ExchangeWrapper> = new Map()
+  private errorHandler = new ExchangeErrorHandler()
 
   constructor(exchangeConfs: ExchangeConf[]) {
     exchangeConfs.forEach(({ auth, exchangeName }) => {
@@ -24,6 +27,7 @@ export class ExchangeProvider {
 
       if (!this.hasAllReqCreds(auth, reqKeys)) {
         throw new Error(`${exchangeName} missing required credentials. Requires: ${reqKeys.join(', ')}`)
+        process.exit()
       }
 
       const exchange = new ccxt[exchangeName]({ ...auth, enableRateLimit: true, verbose })
@@ -31,29 +35,35 @@ export class ExchangeProvider {
     })
   }
 
-  public async getTrades(exchangeName: string, symbol: string, since: number) {
-    return this.exchanges.get(exchangeName).fetchTrades(symbol, since)
+  public getTrades(exchangeName: string, symbol: string, since: number) {
+    const fn = () => this.exchanges.get(exchangeName).fetchTrades(symbol, since)
+    return this.retry(fn)
   }
 
-  public async getBalances(exchangeName: string) {
-    return this.exchanges.get(exchangeName).fetchBalance()
+  public getBalances(exchangeName: string) {
+    const fn = () => this.exchanges.get(exchangeName).fetchBalance()
+    return this.retry(fn)
   }
 
-  public async getOrderbook(exchangeName: string, symbol: string) {
-    return this.exchanges.get(exchangeName).fetchOrderBook(symbol)
+  public getOrderbook(exchangeName: string, symbol: string) {
+    const fn = () => this.exchanges.get(exchangeName).fetchOrderBook(symbol)
+    return this.retry(fn)
   }
 
   public placeOrder(exchangeName: string, { symbol, type, side, amount, price }: OrderOpts) {
     console.log({ amount, price, cost: amount * price })
-    return this.exchanges.get(exchangeName).createOrder(symbol, type, side, amount, price)
+    const fn = () => this.exchanges.get(exchangeName).createOrder(symbol, type, side, amount, price)
+    return this.retry(fn)
   }
 
-  public async checkOrder(exchangeName: string, orderId: string) {
-    return this.exchanges.get(exchangeName).checkOrder(orderId)
+  public checkOrder(exchangeName: string, orderId: string) {
+    const fn = () => this.exchanges.get(exchangeName).checkOrder(orderId)
+    return this.retry(fn)
   }
 
-  public async cancelOrder(exchangeName: string, orderId: string) {
-    return this.exchanges.get(exchangeName).cancelOrder(orderId)
+  public cancelOrder(exchangeName: string, orderId: string) {
+    const fn = () => this.exchanges.get(exchangeName).cancelOrder(orderId)
+    return this.retry(fn)
   }
 
   public getScan(exchangeName: string) {
@@ -70,6 +80,26 @@ export class ExchangeProvider {
 
   public priceToPrecision(exchangeName: string, symbol: string, price: number) {
     return this.exchanges.get(exchangeName).priceToPrecision(symbol, price)
+  }
+
+  private async retry(fn: () => void, attempt = 0) {
+    if (attempt > 5) return
+
+    try {
+      return await fn()
+    } catch (e) {
+      if (this.errorHandler.catch(e)) {
+        const backoff = this.getExponentialBackoff(attempt)
+        await sleep(backoff)
+        return this.retry(fn, attempt + 1)
+      }
+    }
+  }
+
+  private getExponentialBackoff(attempt: number) {
+    return Array(attempt)
+      .fill(3)
+      .reduce((acc, curr) => acc * curr, 50)
   }
 
   private getReqCreds(requiredCredentials: Record<string, boolean>) {

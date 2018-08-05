@@ -1,7 +1,9 @@
+import readline from 'readline'
+
 import semver from 'semver'
 import { magic8bot } from './conf'
 import { Conf } from '@m8bTypes'
-import { Core, dbDriver, wsServer } from '@lib'
+import { Core, dbDriver, wsServer, eventBus, EVENT } from '@lib'
 
 const checkSharePercent = ({ exchanges }: Conf) => {
   exchanges.forEach(({ exchangeName, options: { strategies } }) => {
@@ -34,6 +36,24 @@ if (semver.gt('10.0.0', process.versions.node)) {
   console.error('You are running a node.js version older than 10.x.x, please upgrade via https://nodejs.org/en/')
   process.exit(1)
 }
+
+readline.emitKeypressEvents(process.stdin)
+process.stdin.setRawMode(true)
+
+process.stdin.on('keypress', (str, { ctrl, name }) => {
+  console.log({ name, ctrl })
+  if (name === 'c' && ctrl) process.exit()
+
+  if (name === 'b') {
+    eventBus
+      .get(EVENT.STRAT_SIGNAL)('gdax')('BTC/USD')('macd')
+      .emit({ signal: 'buy' })
+  } else if (name === 's') {
+    eventBus
+      .get(EVENT.STRAT_SIGNAL)('gdax')('BTC/USD')('macd')
+      .emit({ signal: 'sell' })
+  }
+})
 
 const run = async () => {
   try {

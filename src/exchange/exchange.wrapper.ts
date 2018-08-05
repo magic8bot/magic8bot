@@ -12,6 +12,7 @@ export class ExchangeWrapper {
   constructor(exchangeName: string, private readonly exchange: Exchange) {
     if (!(exchangeName in adapters)) throw new Error(`No adapter for ${exchangeName}.`)
     this.adapter = adapters[exchangeName]
+    this.scan = this.adapter.scan
   }
 
   public getTradeCursor(trade: Trade) {

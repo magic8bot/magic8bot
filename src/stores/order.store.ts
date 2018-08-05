@@ -44,6 +44,6 @@ export class OrderStore {
 
   public async saveOrder(order: OrderWithTrades) {
     const { id, ...updatedOrder } = order
-    return dbDriver.order.updateOne({ id }, updatedOrder)
+    return dbDriver.order.updateOne({ id }, { $set: { ...updatedOrder } })
   }
 }

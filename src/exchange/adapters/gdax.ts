@@ -12,8 +12,4 @@ export const gdax: ExchangeAdapter = {
   getTradeCursor: (trade: Trade) => {
     return Number(trade.id)
   },
-
-  roundOrderAmount: (amount: number) => {
-    return Math.round(amount * 100000000) / 100000000
-  },
 }

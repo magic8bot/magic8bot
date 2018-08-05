@@ -15,6 +15,7 @@ export interface WrappedExchange {
   createOrder: (symbol: string, type: string, side: string, amount: number, price?: number) => Promise<Order>
   checkOrder: (orderId: string) => Promise<OrderWithTrades>
   cancelOrder: (orderId: string) => Promise<void>
+  priceToPrecision: (symbol: string, amount: number) => number
 }
 
 export const wrapExchange = (exchangeName: string, exchange: Exchange): WrappedExchange => {
@@ -39,9 +40,7 @@ export const wrapExchange = (exchangeName: string, exchange: Exchange): WrappedE
     },
 
     createOrder: (symbol: string, type: string, side: string, amount: number, price: number) => {
-      const roundedAmount = adapter.roundOrderAmount(amount)
-      if (!price) return exchange.createOrder(symbol, type, side, roundedAmount)
-      return exchange.createOrder(symbol, type, side, roundedAmount, price)
+      return exchange.createOrder(symbol, type, side, amount, price)
     },
 
     checkOrder: (orderId: string): Promise<OrderWithTrades> => {
@@ -50,6 +49,10 @@ export const wrapExchange = (exchangeName: string, exchange: Exchange): WrappedE
 
     cancelOrder: (orderId: string): Promise<void> => {
       return exchange.cancelOrder(orderId)
+    },
+
+    priceToPrecision: (symbol: string, amount: number) => {
+      return exchange.priceToPrecision(symbol, amount)
     },
   }
 }

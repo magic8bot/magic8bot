@@ -14,8 +14,4 @@ export const binance: ExchangeAdapter = {
   getTradeCursor: (trade: Trade) => {
     return trade.timestamp
   },
-
-  roundOrderAmount: (amount: number) => {
-    return amount
-  },
 }

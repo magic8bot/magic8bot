@@ -34,8 +34,8 @@ export class Macd extends BaseStrategy<MacdOptions> {
     emaShortPeriod: 12,
     emaLongPeriod: 26,
     signalPeriod: 9,
-    upTrendThreshold: 0,
-    downTrendThreshold: 0,
+    upTrendThreshold: 0.5,
+    downTrendThreshold: 0.5,
     overboughtRsiPeriods: 14,
     overboughtRsi: 70,
   }

@@ -81,6 +81,7 @@
     "@types/moment": "^2.13.0",
     "@types/mongodb": "^3.1.0",
     "@types/mongodb-memory-server": "^1.8.0",
+    "@types/semver": "^5.5.0",
     "@types/ws": "^5.1.2",
     "jest": "^23.4.1",
     "jest-environment-node": "^23.4.0",

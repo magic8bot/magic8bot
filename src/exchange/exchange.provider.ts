@@ -44,6 +44,7 @@ export class ExchangeProvider {
   }
 
   public placeOrder(exchangeName: string, { symbol, type, side, amount, price }: OrderOpts) {
+    console.log({ amount, price, cost: amount * price })
     return this.exchanges.get(exchangeName).createOrder(symbol, type, side, amount, price)
   }
 
@@ -61,6 +62,14 @@ export class ExchangeProvider {
 
   public getTradeCursor(exchangeName: string, trade: Trade) {
     return this.exchanges.get(exchangeName).getTradeCursor(trade)
+  }
+
+  public amountToPrecision(amount: number) {
+    return Math.floor(amount * 100000000) / 100000000
+  }
+
+  public priceToPrecision(exchangeName: string, symbol: string, price: number) {
+    return this.exchanges.get(exchangeName).priceToPrecision(symbol, price)
   }
 
   private getReqCreds(requiredCredentials: Record<string, boolean>) {

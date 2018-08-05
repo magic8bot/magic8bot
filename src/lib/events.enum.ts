@@ -3,6 +3,7 @@ export enum EVENT {
   ORDER_COMPLETE = 'order_complete',
   ORDER_PARTIAL = 'order_partial',
   ORDER_START = 'order_start',
+  PANIC = 'panic',
   PERIOD_NEW = 'period_new',
   PERIOD_UPDATE = 'period_update',
   STRAT_CALC = 'strat_calc',

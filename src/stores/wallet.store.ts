@@ -43,21 +43,21 @@ export class WalletStore {
 
   private subcribeToWalletEvents(walletOpts: WalletOpts) {
     const { exchange, symbol, strategy } = walletOpts
-    const walletListener: EventBusListener<Adjustment> =
-      eventBus.get(EVENT.WALLET_ADJUST)(exchange)(symbol)(strategy).listen
+    const walletListener: EventBusListener<Adjustment> = eventBus.get(EVENT.WALLET_ADJUST)(exchange)(symbol)(strategy).listen
 
     walletListener((adjustment: Adjustment) => this.adjustWallet(walletOpts, adjustment))
   }
 
   private async adjustWallet(walletOpts: WalletOpts, adjustment: Adjustment) {
     const idStr = this.makeIdStr(walletOpts)
-    const timestamp = new Date().getTime()
-    await dbDriver.adjustment.save({ sessionId: this.sessionId, ...walletOpts, timestamp, ...adjustment })
 
     const wallet = this.wallets.get(idStr)
 
     wallet.asset += adjustment.asset
     wallet.currency += adjustment.currency
+
+    const timestamp = new Date().getTime()
+    await dbDriver.adjustment.save({ sessionId: this.sessionId, ...walletOpts, timestamp, ...adjustment })
 
     this.saveWallet(walletOpts)
   }
@@ -66,7 +66,7 @@ export class WalletStore {
     const idStr = this.makeIdStr(walletOpts)
     const timestamp = new Date().getTime()
     const wallet = this.wallets.get(idStr)
-    await dbDriver.wallet.save({ sessionId: this.sessionId, ...walletOpts, timestamp, ...wallet })
+    await dbDriver.wallet.updateOne({ sessionId: this.sessionId, ...walletOpts }, { $set: { timestamp, ...wallet } }, { upsert: true })
   }
 
   private makeIdStr({ exchange, symbol, strategy }: WalletOpts) {

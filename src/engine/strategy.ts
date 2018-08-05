@@ -47,7 +47,7 @@ export class StrategyEngine {
 
     const [a, c] = this.symbol.split('/')
     const adjustment = { asset: balances[a].total * this.strategyConf.share.asset, currency: balances[c].total * this.strategyConf.share.currency }
-    await this.walletStore.initWallet(walletOpts, adjustment)
+    await this.walletStore.initWallet(walletOpts, { ...adjustment, type: 'init' })
   }
 
   public run() {

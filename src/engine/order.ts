@@ -60,7 +60,7 @@ export class OrderEngine {
     if (!order) return
 
     const { id } = order
-    this.emitWalletAdjusment({ asset: 0, currency: -(amount * price) })
+    this.emitWalletAdjusment({ asset: 0, currency: -(amount * price), type: 'newOrder' })
 
     await this.checkOrder(id)
   }
@@ -78,7 +78,7 @@ export class OrderEngine {
     if (!order) return
 
     const { id } = order
-    this.emitWalletAdjusment({ asset: -amount, currency: 0 })
+    this.emitWalletAdjusment({ asset: -amount, currency: 0, type: 'newOrder' })
 
     await this.checkOrder(id)
   }
@@ -124,7 +124,7 @@ export class OrderEngine {
       adjustment.currency = order.cost - openOrder.cost
     }
 
-    if (adjustment.asset || adjustment.currency) this.emitWalletAdjusment(adjustment)
+    if (adjustment.asset || adjustment.currency) this.emitWalletAdjusment({ ...adjustment, type: 'fillOrder' })
   }
 
   private async adjustOrder(id: string) {
@@ -153,7 +153,7 @@ export class OrderEngine {
 
       // Refund the wallet
       const adjustment = side === 'buy' ? { asset: 0, currency: price * remaining } : { asset: remaining, currency: 0 }
-      this.emitWalletAdjusment(adjustment)
+      this.emitWalletAdjusment({ ...adjustment, type: 'cancelOrder' })
     } catch (e) {
       if (e instanceof OrderNotFound) {
         this.orderStore.updateOrderState(id, ORDER_STATE.DONE)

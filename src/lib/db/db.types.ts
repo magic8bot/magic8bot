@@ -108,7 +108,9 @@ export type WalletCollection = Wallet & {
   time: number
 }
 
-export type Adjustment = Wallet
+export type Adjustment = Wallet & {
+  type: 'init' | 'newOrder' | 'cancelOrder' | 'fillOrder'
+}
 
 export type AdjustmentCollection = Adjustment & {
   sessionId: string

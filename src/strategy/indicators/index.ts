@@ -6,3 +6,5 @@ export * from './cmf'
 export * from './highest'
 export * from './lowest'
 export * from './average'
+export * from './sar'
+

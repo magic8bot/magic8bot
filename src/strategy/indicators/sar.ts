@@ -49,7 +49,7 @@ export class SAR {
     private startAccel: number
     private accel: number
     private maxAccel: number
-    constructor(periods: Record<string, number>[], tartAccel: number, accel: number, maxAccel: number) {
+    constructor(periods: Record<string, number>[], startAccel: number, accel: number, maxAccel: number) {
         this.af = startAccel
         this.ep = periods[0].high
         this.sar = 0

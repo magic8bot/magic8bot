@@ -1,6 +1,6 @@
 import { ExchangeConf, ExchangeAuth } from '@m8bTypes'
 import ccxt, { Trade } from 'ccxt'
-import { WrappedExchange, wrapExchange } from './exchange.wrapper'
+import { ExchangeWrapper } from './exchange.wrapper'
 
 const verbose = false
 
@@ -13,7 +13,7 @@ export interface OrderOpts {
 }
 
 export class ExchangeProvider {
-  private exchanges: Map<string, WrappedExchange> = new Map()
+  private exchanges: Map<string, ExchangeWrapper> = new Map()
 
   constructor(exchangeConfs: ExchangeConf[]) {
     exchangeConfs.forEach(({ auth, exchangeName }) => {
@@ -27,7 +27,7 @@ export class ExchangeProvider {
       }
 
       const exchange = new ccxt[exchangeName]({ ...auth, enableRateLimit: true, verbose })
-      this.exchanges.set(exchangeName, wrapExchange(exchangeName, exchange))
+      this.exchanges.set(exchangeName, new ExchangeWrapper(exchangeName, exchange))
     })
   }
 

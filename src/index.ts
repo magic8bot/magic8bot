@@ -37,24 +37,6 @@ if (semver.gt('10.0.0', process.versions.node)) {
   process.exit(1)
 }
 
-readline.emitKeypressEvents(process.stdin)
-process.stdin.setRawMode(true)
-
-process.stdin.on('keypress', (str, { ctrl, name }) => {
-  console.log({ name, ctrl })
-  if (name === 'c' && ctrl) process.exit()
-
-  if (name === 'b') {
-    eventBus
-      .get(EVENT.STRAT_SIGNAL)('gdax')('BTC/USD')('macd')
-      .emit({ signal: 'buy' })
-  } else if (name === 's') {
-    eventBus
-      .get(EVENT.STRAT_SIGNAL)('gdax')('BTC/USD')('macd')
-      .emit({ signal: 'sell' })
-  }
-})
-
 const run = async () => {
   try {
     checkSharePercent(magic8bot.conf)

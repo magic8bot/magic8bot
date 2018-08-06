@@ -1,6 +1,8 @@
 language: node_js
 node_js:
   - "10"
+before_script:
+  - cp src/conf.sample.ts src/conf.ts
 script:
   - yarn lint
   - yarn test

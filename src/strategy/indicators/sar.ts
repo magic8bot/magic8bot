@@ -41,61 +41,57 @@
  * the prior two periods' highs. Should SAR be below one of those highs,
  * use the highest of the two for SAR.
  */
-export class SAR {
-    private af: number
-    private ep: number
-    private sar: number
-    private uptrend: boolean
-    private startAccel: number
-    private accel: number
-    private maxAccel: number
-    
-    constructor(periods: Record<string, number>[], startAccel: number, accel: number, maxAccel: number) {
-        this.af = startAccel
-        this.ep = periods[0].high
-        this.sar = 0
-        this.uptrend = true
-        this.startAccel = startAccel
-        this.accel = accel
-        this.maxAccel = maxAccel
-    }
+export interface SarOptions {
+    af: number
+    ep: number
+    sar: number
+    uptrend: boolean
+}
 
-    public calculate(periods: Record<string, number>[]): number {
+export class SAR {
+    public static calculate(sarState: SarOptions, periods: Record<string, number>[], startAccel = 0.02, accel = 0.02, maxAccel = 0.2): number {
         if (periods.length < 2) {
             return null
         }
-
-        if (this.uptrend) {
-            if (this.sar <= periods[0].high) {
-                this.uptrend = false
-                this.ep = Math.max(periods[0].high, periods[1].high)
-                this.af = this.startAccel
+        // Determine trend and adjust Acceleration Factor (af) based on pervious state
+        // if previous sar is less then the current high its a downtrend
+        // if previous sar is greater then current high its a uptrend 
+        // set any new Extreme Points (ep)
+        if (sarState.uptrend) {
+            if (sarState.sar <= periods[0].high) {
+                sarState.uptrend = false
+                sarState.ep = Math.max(periods[0].high, periods[1].high)
+                sarState.af = startAccel
             } else {
-                this.ep = Math.min(periods[0].low, periods[0].low, this.ep)
-                this.af += this.accel
+                sarState.ep = Math.min(periods[0].low, periods[1].low, sarState.ep)
+                sarState.af += accel
             }
         } else {
-            if (this.sar >= periods[0].high) {
-                this.uptrend = true
-                this.ep = Math.min(periods[0].low, periods[1].low)
-                this.af = this.startAccel
+            if (sarState.sar >= periods[0].high) {
+                sarState.uptrend = true
+                sarState.ep = Math.min(periods[0].low, periods[1].low)
+                sarState.af = startAccel
             } else {
-                this.ep = Math.max(periods[0].high, periods[1].high, this.ep)
-                this.af += this.accel
+                sarState.ep = Math.max(periods[0].high, periods[1].high, sarState.ep)
+                sarState.af += accel
             }
         }
-        if (this.af > this.maxAccel) {
-            this.af = this.maxAccel
+        // make sure af is within limits
+        if (sarState.af > maxAccel) {
+            sarState.af = maxAccel
         }
-        if (this.uptrend) {
-             this.sar += (this.af * (this.ep - this.sar))
+        // check trend and perform the correct formula
+        // if uptrend else its downtrend
+        if (sarState.uptrend) {
+             sarState.sar += (sarState.af * (sarState.ep - sarState.sar))
         } else {
-             this.sar -= (this.af * (this.sar - this.ep))
+             sarState.sar -= (sarState.af * (sarState.sar - sarState.ep))
         }
-
-        if ((periods[0].high > this.sar) || periods[1].high > this.sar)  {
-            this.sar = Math.max(periods[0].high, periods[1].high)
+        // sar cannot be higher then the current high of last 2 periods
+        // else sar equals the high of last 2 periods
+        if (Math.max(periods[0].high, periods[1].high) > sarState.sar) {
+            sarState.sar = Math.max(periods[0].high, periods[1].high)
         }
-        return this.sar
+        return sarState.sar
     }
 }

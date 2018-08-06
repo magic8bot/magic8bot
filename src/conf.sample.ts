@@ -78,7 +78,7 @@ const exchanges: ExchangeConf[] = [
       strategies: [
         // each strategy will inherit from exchange, unless overwritten
         {
-          symbol: 'BTC-USD',
+          symbol: 'BTC/USD',
           share: {
             asset: 1,
             currency: 0.25,
@@ -86,7 +86,7 @@ const exchanges: ExchangeConf[] = [
           strategyName: 'macd',
         },
         {
-          symbol: 'BCH-USD',
+          symbol: 'BCH/USD',
           share: {
             asset: 1,
             currency: 0.25,
@@ -94,7 +94,7 @@ const exchanges: ExchangeConf[] = [
           strategyName: 'macd',
         },
         {
-          symbol: 'LTC-USD',
+          symbol: 'LTC/USD',
           share: {
             asset: 1,
             currency: 0.25,
@@ -103,7 +103,7 @@ const exchanges: ExchangeConf[] = [
         },
         {
           period: '4m',
-          symbol: 'ETH-USD',
+          symbol: 'ETH/USD',
           share: {
             asset: 1,
             currency: 0.25,
@@ -123,7 +123,7 @@ const exchanges: ExchangeConf[] = [
     options: {
       strategies: [
         {
-          symbol: 'BTC-USDT',
+          symbol: 'BTC/USDT',
           share: {
             asset: 1,
             currency: 1,

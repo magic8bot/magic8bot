@@ -67,9 +67,9 @@ const exchanges: ExchangeConf[] = [
     // each exchange will inherit from base, unless overwritten
     auth: {
       apiURI: 'https://api.pro.coinbase.com',
-      b64secret: '',
-      key: '',
-      passphrase: '',
+      secret: '',
+      apiKey: '',
+      password: '',
       websocketURI: 'wss://ws-feed.pro.coinbase.com',
     },
     tradePollInterval: 400,
@@ -115,7 +115,7 @@ const exchanges: ExchangeConf[] = [
   },
   {
     auth: {
-      key: '',
+      apiKey: '',
       secret: '',
     },
     tradePollInterval: 400,

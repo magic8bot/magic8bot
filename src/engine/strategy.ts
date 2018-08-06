@@ -1,4 +1,4 @@
-import { Balances } from 'ccxt'
+import { Balances, Balance } from 'ccxt'
 import { EventBusListener } from '@magic8bot/event-bus'
 
 import { StrategyConf } from '@m8bTypes'
@@ -46,7 +46,10 @@ export class StrategyEngine {
     }
 
     const [a, c] = this.symbol.split('/')
-    const adjustment = { asset: balances[a].total * this.strategyConf.share.asset, currency: balances[c].total * this.strategyConf.share.currency }
+    const assetBalance = balances[a] ? balances[a] : { free: 0, total: 0, used: 0 } as Balance
+    const currencyBalance = balances[c] ? balances[c] : { free: 0, total: 0, used: 0 } as Balance
+
+    const adjustment = { asset: assetBalance.total * this.strategyConf.share.asset, currency: currencyBalance.total * this.strategyConf.share.currency }
     await this.walletStore.initWallet(walletOpts, { ...adjustment, type: 'init' })
   }
 

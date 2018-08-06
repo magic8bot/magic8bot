@@ -26,17 +26,17 @@ RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz \
 # Bind mounts on WSL are flaky 
 # so we must copy into a volume.
 COPY . /app
+RUN  sed -i "s|host: 'localhost'|host: 'mongodb'|g" src/conf.sample.ts
 
 # Fix files molested by Windows
-RUN find . -type f -print0 | xargs -0 dos2unix \
-    && npm i -g yarn \
-    && yarn install \
-    && yarn build \
-    # Remove build tools
-    && apk del build-dependencies \
-    && rm -rf /var/cache/apk/*
+RUN find . -type f -print0 | xargs -0 dos2unix && npm i -g yarn
+# Install dependencies and build the bot
+RUN yarn install && yarn build 
+# Remove build tools
+RUN apk del build-dependencies && rm -rf /var/cache/apk/*
 
 # Expose a port
 EXPOSE 9999
 
 ENTRYPOINT ["tail", "-f", "/dev/null"]
+

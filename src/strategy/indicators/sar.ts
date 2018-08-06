@@ -55,7 +55,7 @@ export class SAR {
         }
         // Determine trend and adjust Acceleration Factor (af) based on pervious state
         // if previous sar is less then the current high its a downtrend
-        // if previous sar is greater then current high its a uptrend 
+        // if previous sar is greater then current high its a uptrend
         // set any new Extreme Points (ep)
         if (sarState.uptrend) {
             if (sarState.sar <= periods[0].high) {

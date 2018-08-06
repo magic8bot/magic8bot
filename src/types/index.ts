@@ -74,14 +74,14 @@ export interface StrategyConf extends Partial<Base> {
 }
 
 export interface ExchangeAuth {
-  key?: string
-  secret?: string
-  username?: string
-  apiKey?: string
-  b64secret?: string
+  apiKey: string
+  secret: string
+  uid?: string
+  login?: string
   password?: string
-  passphrase?: string
-  wallet?: string
+  twofa?: string
+  privateKey?: string
+  walletAdress?: string
   client_id?: string
   sandbox?: boolean
   apiURI?: string

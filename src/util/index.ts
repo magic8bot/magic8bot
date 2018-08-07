@@ -1,6 +1,7 @@
 export * from './async'
 export * from './format'
 export * from './helpers'
+export * from './logger'
 export * from './ma-type'
 export * from './normalize-symbol'
 export * from './notify'

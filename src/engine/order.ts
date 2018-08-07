@@ -1,6 +1,6 @@
 import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
 import { WalletStore, OrderStore, ORDER_STATE } from '@stores'
-import { EVENT, eventBus, OrderWithTrades, Adjustment, TradeWithFee } from '@lib'
+import { EVENT, eventBus, OrderWithTrades, Adjustment } from '@lib'
 import { ExchangeProvider, OrderOpts } from '@exchange'
 import { StrategyConf } from '@m8bTypes'
 import { QuoteEngine } from './quote'

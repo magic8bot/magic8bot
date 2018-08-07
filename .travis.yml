@@ -8,3 +8,5 @@ script:
   - yarn test
 after_success:
   - codecov
+branches:
+  - master

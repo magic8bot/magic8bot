@@ -9,4 +9,5 @@ script:
 after_success:
   - codecov
 branches:
-  - master
+  only:
+    - master

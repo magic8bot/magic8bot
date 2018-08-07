@@ -72,6 +72,7 @@ const mockStrategyConf: any = {
 }
 
 import { OrderEngine } from './order'
+import { InsufficientFunds } from 'ccxt'
 
 describe('OrderEngine', () => {
   let orderEngine: OrderEngine
@@ -97,11 +98,11 @@ describe('OrderEngine', () => {
     const emitWalletAdjusment = jest.fn()
     const checkOrder = jest.fn()
     // @ts-ignore
-    orderEngine.checkOrder = checkOrder
+    orderEngine.placeOrder = placeOrder
     // @ts-ignore
     orderEngine.emitWalletAdjusment = emitWalletAdjusment
     // @ts-ignore
-    orderEngine.placeOrder = placeOrder
+    orderEngine.checkOrder = checkOrder
 
     await orderEngine.executeBuy()
 
@@ -110,11 +111,11 @@ describe('OrderEngine', () => {
 
     expect(mockPriceToPrecision).toHaveBeenCalledTimes(2)
     expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
-    expect(checkOrder).toHaveBeenCalledTimes(1)
     expect(emitWalletAdjusment).toHaveBeenCalledTimes(1)
     expect(emitWalletAdjusment).toHaveBeenCalledWith(expectedAdjustment)
     expect(placeOrder).toHaveBeenCalledTimes(1)
     expect(placeOrder).toHaveBeenCalledWith(expectedOrderOpts)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
   })
 
   test('executes a sell', async () => {
@@ -124,11 +125,11 @@ describe('OrderEngine', () => {
     const emitWalletAdjusment = jest.fn()
     const checkOrder = jest.fn()
     // @ts-ignore
-    orderEngine.checkOrder = checkOrder
+    orderEngine.placeOrder = placeOrder
     // @ts-ignore
     orderEngine.emitWalletAdjusment = emitWalletAdjusment
     // @ts-ignore
-    orderEngine.placeOrder = placeOrder
+    orderEngine.checkOrder = checkOrder
 
     await orderEngine.executeSell()
 
@@ -137,10 +138,54 @@ describe('OrderEngine', () => {
 
     expect(mockPriceToPrecision).toHaveBeenCalledTimes(1)
     expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
-    expect(checkOrder).toHaveBeenCalledTimes(1)
-    expect(emitWalletAdjusment).toHaveBeenCalledTimes(1)
-    expect(emitWalletAdjusment).toHaveBeenCalledWith(expectedAdjustment)
     expect(placeOrder).toHaveBeenCalledTimes(1)
     expect(placeOrder).toHaveBeenCalledWith(expectedOrderOpts)
+    expect(emitWalletAdjusment).toHaveBeenCalledTimes(1)
+    expect(emitWalletAdjusment).toHaveBeenCalledWith(expectedAdjustment)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
+  test('does not adjust wallet if execute buy fails', async () => {
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    const placeOrder = jest.fn().mockReturnValue(false)
+    const emitWalletAdjusment = jest.fn()
+    const checkOrder = jest.fn()
+    // @ts-ignore
+    orderEngine.placeOrder = placeOrder
+    // @ts-ignore
+    orderEngine.emitWalletAdjusment = emitWalletAdjusment
+    // @ts-ignore
+    orderEngine.checkOrder = checkOrder
+
+    await orderEngine.executeBuy()
+
+    expect(mockPriceToPrecision).toHaveBeenCalledTimes(2)
+    expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledTimes(1)
+    expect(emitWalletAdjusment).toHaveBeenCalledTimes(0)
+    expect(checkOrder).toHaveBeenCalledTimes(0)
+  })
+
+  test('does not adjust wallet if execute sell fails', async () => {
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice)
+    mockAmountToPrecision.mockReturnValueOnce(mockAsset)
+    const placeOrder = jest.fn().mockReturnValue(false)
+    const emitWalletAdjusment = jest.fn()
+    const checkOrder = jest.fn()
+    // @ts-ignore
+    orderEngine.placeOrder = placeOrder
+    // @ts-ignore
+    orderEngine.emitWalletAdjusment = emitWalletAdjusment
+    // @ts-ignore
+    orderEngine.checkOrder = checkOrder
+
+    await orderEngine.executeSell()
+
+    expect(mockPriceToPrecision).toHaveBeenCalledTimes(1)
+    expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledTimes(1)
+    expect(emitWalletAdjusment).toHaveBeenCalledTimes(0)
   })
 })

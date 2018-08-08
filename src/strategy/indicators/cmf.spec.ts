@@ -2,11 +2,17 @@ import { CMF } from './cmf'
 import { candles } from './spec.helper'
 
 describe('CMF', () => {
-  xit('should calculate the correct cmf', () => {
-    const cmf = CMF.calculate(candles.slice(0, 19), 20)
-    // @todo(notVitaliy): Figure out what this value should actually be
-    expect(cmf).toEqual(1.099868227)
+  it('should calculate the correct cmf #1', () => {
+    const cmf = CMF.calculate(candles.slice(1, 5), 4)
+    expect(cmf).toEqual(0.03171615179761807)
   })
 
-  // @todo(notVitaliy): Add a second test to confirm with different candles
+  it('should calculate the correct cmf #2', () => {
+    const cmf = CMF.calculate(candles.slice(0, 5), 5)
+    expect(cmf).toEqual(0.07017615060043429)
+  })
+
+  it('should return null, if not enough data', () => {
+    expect(CMF.calculate(candles.slice(0, 1), 4)).toBeNull()
+  })
 })

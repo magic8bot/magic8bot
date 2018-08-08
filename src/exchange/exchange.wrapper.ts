@@ -45,6 +45,6 @@ export class ExchangeWrapper {
   }
 
   public priceToPrecision(symbol: string, amount: number) {
-    return this.exchange.priceToPrecision(symbol, amount)
+    return Number(this.exchange.priceToPrecision(symbol, amount))
   }
 }

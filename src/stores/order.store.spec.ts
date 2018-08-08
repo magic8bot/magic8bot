@@ -1,5 +1,6 @@
-import { OrderStore } from './order.store'
+import { OrderStore, ORDER_STATE } from './order.store'
 import { OrderWithTrades } from '@lib'
+import { dbDriver } from '../lib/db/db-driver.lib'
 
 const order: OrderWithTrades = {
   id: 'test',
@@ -35,4 +36,49 @@ describe('OrderStore', () => {
       done()
     }).not.toThrowError()
   })
+
+  it('should return open order', async (done) => {
+    expect(async () => {
+      await orderStore.newOrder(order)
+      expect(orderStore.getOpenOrder(order.id).status).toEqual('open')
+      done()
+    }).not.toThrowError()
+  })
+
+  it('should return order pending state', async (done) => {
+    expect(async () => {
+      await orderStore.newOrder(order)
+      expect(orderStore.getOrderState(order.id)).toEqual(ORDER_STATE.PENDING)
+      done()
+    }).not.toThrowError()
+  })
+
+  it('should test update order', async (done) => {
+    expect(async () => {
+      await orderStore.newOrder(order)
+      order.status = 'closed'
+      orderStore.updateOrder(order)
+      expect(orderStore.getOrderState(order.id)).toEqual(ORDER_STATE.DONE)
+
+      done()
+    }).not.toThrowError()
+  })
+
+  it('should return all pending orders order', async (done) => {
+    expect(async () => {
+      await orderStore.newOrder(order)
+      expect(orderStore.getAllPendingOrders()).toEqual(['test'])
+      done()
+    }).not.toThrowError()
+  })
+
+  it('should close the open order', async (done) => {
+    expect(async () => {
+      await orderStore.newOrder(order)
+      orderStore.closeOpenOrder(order.id)
+      expect(orderStore.getOpenOrder(order.id)).toBeUndefined()
+      done()
+    }).not.toThrowError()
+  })
+
 })

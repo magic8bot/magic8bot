@@ -72,7 +72,6 @@ const mockStrategyConf: any = {
 }
 
 import { OrderEngine } from './order'
-import { InsufficientFunds } from 'ccxt'
 
 describe('OrderEngine', () => {
   let orderEngine: OrderEngine

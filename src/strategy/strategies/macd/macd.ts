@@ -1,8 +1,9 @@
-import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
+import { EventBusEmitter } from '@magic8bot/event-bus'
 import { eventBus, EVENT, PeriodItem } from '@lib'
 import { EMA, RSI } from '../../indicators'
 import { BaseStrategy } from '../base-strategy'
 import { SignalEvent, Signal } from '@m8bTypes'
+import { logger } from '../../../util/logger'
 
 export interface MacdOptions {
   period: string
@@ -39,11 +40,6 @@ export class Macd extends BaseStrategy<MacdOptions> {
     overboughtRsiPeriods: 14,
     overboughtRsi: 70,
   }
-
-  public readonly name: string = 'macd'
-
-  private isPreroll = true
-
   private signalEmitter: EventBusEmitter<SignalEvent>
   private calcEmitter: EventBusEmitter<{ rsi: number; signal: number }>
 
@@ -63,15 +59,9 @@ export class Macd extends BaseStrategy<MacdOptions> {
   private overbought = false
 
   constructor(exchange: string, symbol: string, options?: Partial<MacdOptions>) {
-    super()
+    super('macd', exchange, symbol)
 
     this.options = { ...this.options, ...options }
-
-    const periodUpdateListener: EventBusListener<PeriodItem[]> = eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol)(this.name).listen
-    const periodNewListener: EventBusListener<void> = eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol)(this.name).listen
-
-    periodUpdateListener((periods) => this.calculate(periods))
-    periodNewListener(() => this.onPeriod())
 
     this.signalEmitter = eventBus.get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(this.name).emit
     this.calcEmitter = eventBus.get(EVENT.STRAT_CALC)(exchange)(symbol)(this.name).emit
@@ -89,7 +79,9 @@ export class Macd extends BaseStrategy<MacdOptions> {
     // prettier-ignore
     const { periods: [{ signal, rsi }] } = this
     const [{ bucket }] = periods
-    if (signal && rsi) console.log({ bucket, rsi: rsi.toPrecision(4), signal: signal.toPrecision(6) })
+    if (signal && rsi) {
+      logger.silly(`calculated: ${JSON.stringify({ bucket, rsi: rsi.toPrecision(4), signal: signal.toPrecision(6) })}`)
+    }
     this.calcEmitter({ rsi, signal })
   }
 
@@ -126,9 +118,8 @@ export class Macd extends BaseStrategy<MacdOptions> {
   }
 
   public onPeriod() {
-    // console.log('[=================New Period=================]')
     const signal = this.isPreroll ? null : this.overboughtSell() ? 'sell' : this.getSignal()
-
+    logger.verbose(`Period finished => Signal: ${signal === null ? 'no signal' : signal}`)
     if (signal) this.signalEmitter({ signal })
     this.newPeriod()
 
@@ -170,9 +161,5 @@ export class Macd extends BaseStrategy<MacdOptions> {
       avgGain: null,
       avgLoss: null,
     })
-  }
-
-  public prerollDone() {
-    this.isPreroll = false
   }
 }

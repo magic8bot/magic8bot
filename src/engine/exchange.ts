@@ -4,7 +4,6 @@ import { ExchangeProvider } from '@exchange'
 
 import { TradeEngine } from './trade'
 import { StrategyEngine } from './strategy'
-import { sleep } from '@util'
 import { logger } from '../util/logger'
 
 export class ExchangeEngine {
@@ -60,6 +59,7 @@ export class ExchangeEngine {
     this.tradeEngineOpts.forEach(async (days, symbol) => {
       await this.tradeEngine.scan(symbol, days)
       await this.tradeStore.loadTrades(this.exchangeName, symbol)
+      logger.info(`Backfill for ${this.exchangeName} on ${symbol} completed.`)
       this.strategyEngines.get(symbol).forEach((strategyEngine) => strategyEngine.run())
       this.tradeEngine.tick(symbol)
     })

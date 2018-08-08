@@ -14,7 +14,7 @@ export class QuoteEngine {
     const { bids: [[quote]] } = await this.orderBook()
 
     const markDn = quote * this.markDn
-    return quote + markDn
+    return quote - markDn
   }
 
   public async getSellPrice() {

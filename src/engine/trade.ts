@@ -1,6 +1,6 @@
 import { ExchangeProvider } from '@exchange'
 import { TradeStore, MarkerStore } from '@stores'
-import { sleep } from '@util'
+import { sleep, logger } from '@util'
 
 export class TradeEngine {
   private readonly scanType: 'back' | 'forward'
@@ -43,7 +43,7 @@ export class TradeEngine {
     const from = Math.min(...trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
     const { oldestTime } = await this.markerStore.saveMarker(this.exchange, symbol, to, from, trades)
 
-    console.log(`${this.exchange}.${symbol} scanBack`, { now: new Date(oldestTime), end: new Date(end) })
+    logger.info(`${this.exchange}.${symbol} scanBack`, { now: new Date(oldestTime), end: new Date(end) })
 
     if (oldestTime > end) {
       await this.scanBack(symbol, end)
@@ -62,7 +62,7 @@ export class TradeEngine {
     const to = Math.max(...trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
     const { newestTime } = await this.markerStore.saveMarker(this.exchange, symbol, to, from, trades)
 
-    console.log(`${this.exchange}.${symbol} scanForward`, { now: new Date(newestTime), end: new Date() })
+    logger.info(`${this.exchange}.${symbol} scanForward`, { now: new Date(newestTime), end: new Date() })
 
     // Always get current time so backfill can catch up to "now"
     if (newestTime < new Date().getTime()) {
@@ -75,7 +75,7 @@ export class TradeEngine {
 
     const filteredTrades = trades.filter(({ timestamp }) => timestamp > target)
 
-    // console.log(`${this.exchange}.${symbol} Got ${filteredTrades.length} new trade of ${trades.length} fetched.`)
+    logger.silly(`${this.exchange}.${symbol} Got ${filteredTrades.length} new trade of ${trades.length} fetched.`)
 
     if (!filteredTrades.length) return
 

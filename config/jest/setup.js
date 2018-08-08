@@ -46,3 +46,13 @@ jest.mock('../../src/lib/db/db-driver.lib', () => {
 
   return { dbDriver }
 })
+
+jest.mock('../../src/util/logger', () => {
+  const logger = {
+    info: jest.fn(),
+    debug: jest.fn(),
+    silly: jest.fn(),
+  }
+
+  return { logger }
+})

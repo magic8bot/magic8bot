@@ -5,6 +5,7 @@ import { ExchangeProvider } from '@exchange'
 import { TradeEngine } from './trade'
 import { StrategyEngine } from './strategy'
 import { sleep } from '@util'
+import { logger } from '../util/logger'
 
 export class ExchangeEngine {
   private exchangeName: string
@@ -74,7 +75,7 @@ export class ExchangeEngine {
 
   private setupBackfillers(days: number, symbol: string) {
     if (!this.tradeEngineOpts.has(symbol)) this.tradeEngineOpts.set(symbol, days)
-
+    logger.debug(`Setting up Backfiller for Symbol ${symbol} and ${days} days.`)
     this.tradeStore.addSymbol(this.exchangeName, symbol)
   }
 
@@ -85,6 +86,8 @@ export class ExchangeEngine {
 
     if (!this.strategyEngines.has(symbol)) this.strategyEngines.set(symbol, new Set())
     const strategyEngines = this.strategyEngines.get(symbol)
+
+    logger.debug(`Setting up Strategy ${strategyConf.strategyName}`)
 
     strategyEngines.add(
       new StrategyEngine(this.exchangeProvider, this.walletStore, this.exchangeName, symbol, fullConf)

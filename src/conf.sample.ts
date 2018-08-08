@@ -67,9 +67,9 @@ const exchanges: ExchangeConf[] = [
     // each exchange will inherit from base, unless overwritten
     auth: {
       apiURI: 'https://api.pro.coinbase.com',
-      b64secret: '',
-      key: '',
-      passphrase: '',
+      secret: '',
+      apiKey: '',
+      password: '',
       websocketURI: 'wss://ws-feed.pro.coinbase.com',
     },
     tradePollInterval: 400,
@@ -78,7 +78,7 @@ const exchanges: ExchangeConf[] = [
       strategies: [
         // each strategy will inherit from exchange, unless overwritten
         {
-          symbol: 'BTC-USD',
+          symbol: 'BTC/USD',
           share: {
             asset: 1,
             currency: 0.25,
@@ -86,7 +86,7 @@ const exchanges: ExchangeConf[] = [
           strategyName: 'macd',
         },
         {
-          symbol: 'BCH-USD',
+          symbol: 'BCH/USD',
           share: {
             asset: 1,
             currency: 0.25,
@@ -94,7 +94,7 @@ const exchanges: ExchangeConf[] = [
           strategyName: 'macd',
         },
         {
-          symbol: 'LTC-USD',
+          symbol: 'LTC/USD',
           share: {
             asset: 1,
             currency: 0.25,
@@ -103,7 +103,7 @@ const exchanges: ExchangeConf[] = [
         },
         {
           period: '4m',
-          symbol: 'ETH-USD',
+          symbol: 'ETH/USD',
           share: {
             asset: 1,
             currency: 0.25,
@@ -115,7 +115,7 @@ const exchanges: ExchangeConf[] = [
   },
   {
     auth: {
-      key: '',
+      apiKey: '',
       secret: '',
     },
     tradePollInterval: 400,
@@ -123,7 +123,7 @@ const exchanges: ExchangeConf[] = [
     options: {
       strategies: [
         {
-          symbol: 'BTC-USDT',
+          symbol: 'BTC/USDT',
           share: {
             asset: 1,
             currency: 1,
@@ -155,4 +155,6 @@ export const magic8bot: Magic8bot = {
   port: 3000,
   srcRoot: null,
   version: null,
+  loggerLevel: 'debug',
+  loggerFile: 'magic8bot.log',
 }

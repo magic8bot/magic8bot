@@ -1,11 +1,12 @@
 import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
 import { WalletStore, OrderStore, ORDER_STATE } from '@stores'
-import { EVENT, eventBus, OrderWithTrades, Adjustment, TradeWithFee } from '@lib'
+import { EVENT, eventBus, OrderWithTrades, Adjustment } from '@lib'
 import { ExchangeProvider, OrderOpts } from '@exchange'
 import { StrategyConf } from '@m8bTypes'
 import { QuoteEngine } from './quote'
 import { sleep } from '@util'
 import { OrderNotFound } from 'ccxt'
+import { logger } from '../util/logger'
 
 export class OrderEngine {
   private opts: {
@@ -40,7 +41,7 @@ export class OrderEngine {
 
   get wallet() {
     const wallet = this.walletStore.getWallet(this.opts)
-    console.log({ wallet })
+    logger.info({ wallet })
     return wallet
   }
 
@@ -84,7 +85,7 @@ export class OrderEngine {
   }
 
   private async placeOrder(orderOpts: OrderOpts) {
-    console.log('Placing order:', orderOpts)
+    logger.info('Placing order:', orderOpts)
 
     const { exchange } = this.opts
     const order = await this.exchangeProvider.placeOrder(exchange, orderOpts)

@@ -1,4 +1,4 @@
-import { Balances } from 'ccxt'
+import { Balances, Balance } from 'ccxt'
 import { EventBusListener } from '@magic8bot/event-bus'
 
 import { StrategyConf } from '@m8bTypes'
@@ -8,6 +8,7 @@ import { BaseStrategy, strategyLoader } from '@strategy'
 import { ExchangeProvider } from '@exchange'
 
 import { OrderEngine } from './order'
+import { logger } from '@util'
 
 export class StrategyEngine {
   public strategyName: string
@@ -46,7 +47,10 @@ export class StrategyEngine {
     }
 
     const [a, c] = this.symbol.split('/')
-    const adjustment = { asset: balances[a].total * this.strategyConf.share.asset, currency: balances[c].total * this.strategyConf.share.currency }
+    const assetBalance = balances[a] ? balances[a] : { free: 0, total: 0, used: 0 } as Balance
+    const currencyBalance = balances[c] ? balances[c] : { free: 0, total: 0, used: 0 } as Balance
+
+    const adjustment = { asset: assetBalance.total * this.strategyConf.share.asset, currency: currencyBalance.total * this.strategyConf.share.currency }
     await this.walletStore.initWallet(walletOpts, { ...adjustment, type: 'init' })
   }
 
@@ -55,7 +59,7 @@ export class StrategyEngine {
   }
 
   private onSignal(signal: 'buy' | 'sell', force = false) {
-    console.log({ signal })
+    logger.info({ signal })
     if (!signal || (signal === this.lastSignal && !force)) return
     this.lastSignal = signal
 

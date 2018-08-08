@@ -90,7 +90,7 @@ export class OrderEngine {
     } catch (e) {
       // No Monies!! Decrement wallet
       if (e instanceof InsufficientFunds) this.emitWalletAdjustment(adjustment)
-      logger.error(e.message)
+      logger.error(`Order failed. Exchange returned: ${e.message}`)
       return false
     }
   }
@@ -135,7 +135,7 @@ export class OrderEngine {
     const quote = this.exchangeProvider.priceToPrecision(exchange, symbol, rawQuote)
 
     // Order slipped
-    if (Number(quote) !== Number(price)) {
+    if (quote !== price) {
       if (await this.cancelOrder(id)) return side === 'buy' ? this.executeBuy(quote) : this.executeSell(quote)
       return false
     }

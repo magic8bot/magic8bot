@@ -40,13 +40,14 @@ export abstract class BaseStrategy<T = any> {
    * It should not return anything. All states have to be saved within the strategy!
    *
    * On construction this method is subscribed to the event-bus `EVENT.PERIOD_UPDATE`.
-   *
+   * it should emit its results to the event-bus `EVENT.STRAT_CALC`
    * @param periods OHLC candles to calculate the strategy
    */
   public abstract calculate(periods: PeriodItem[])
   /**
    * This method should implement the action, to do on evaluation of a "completed" period.
    * On construction this method is subscribed to the event-bus `EVENT.PERIOD_NEW`.
+   * it should emit its signal to the event-bus `EVENT.STRAT_SIGNAL`.
    */
   public abstract onPeriod()
 

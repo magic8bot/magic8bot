@@ -1,4 +1,3 @@
-jest.mock('pushbullet')
 jest.mock('crypto', () => ({ randomBytes: () => ({ toString: () => 'random-string' }) }))
 
 const mockA = jest.fn()
@@ -19,7 +18,7 @@ jest.mock('../../src/lib/event-bus', () => {
 })
 
 jest.mock('../../src/lib/ws-server', () => {
-  const WsServer = class { }
+  const WsServer = class {}
   return { WsServer }
 })
 

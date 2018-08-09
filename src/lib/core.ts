@@ -1,5 +1,5 @@
 import { ExchangeEngine } from '@engine'
-import { sessionStore, TradeStore, MarkerStore, WalletStore, PeriodStore } from '@stores'
+import { sessionStore, TradeStore, MarkerStore, WalletStore, PeriodStore, OrderStore } from '@stores'
 import { Conf, ExchangeConf } from '@m8bTypes'
 import { ExchangeProvider } from '@exchange'
 
@@ -21,9 +21,10 @@ export class Core {
     const tradeStore = new TradeStore()
     const markerStore = new MarkerStore()
     const periodStore = new PeriodStore()
+    const orderStore = new OrderStore()
 
     exchanges.forEach((exchangeConf) => {
-      const engine = new ExchangeEngine(exchangeProvider, walletStore, tradeStore, markerStore, periodStore, this.mergeConfig(exchangeConf), this.conf.mode !== 'live')
+      const engine = new ExchangeEngine(exchangeProvider, walletStore, tradeStore, markerStore, periodStore, orderStore, this.mergeConfig(exchangeConf), this.conf.mode !== 'live')
       engine.init()
     })
   }

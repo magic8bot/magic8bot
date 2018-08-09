@@ -1,5 +1,5 @@
 import { ExchangeConf, StrategyConf, Base } from '@m8bTypes'
-import { TradeStore, MarkerStore, WalletStore, PeriodStore } from '@stores'
+import { TradeStore, MarkerStore, WalletStore, PeriodStore, OrderStore } from '@stores'
 import { ExchangeProvider } from '@exchange'
 
 import { TradeEngine } from './trade'
@@ -22,6 +22,7 @@ export class ExchangeEngine {
     private readonly tradeStore: TradeStore,
     private readonly markerStore: MarkerStore,
     private readonly periodStore: PeriodStore,
+    private readonly orderStore: OrderStore,
     { exchangeName, tradePollInterval, options: { strategies, base } }: ExchangeConf,
     isPaper: boolean
   ) {
@@ -82,7 +83,7 @@ export class ExchangeEngine {
 
     logger.debug(`Setting up Strategy ${strategyConf.strategyName}`)
 
-    strategyEngines.add(new StrategyEngine(this.exchangeProvider, this.walletStore, this.periodStore, this.exchangeName, symbol, fullConf))
+    strategyEngines.add(new StrategyEngine(this.exchangeProvider, this.walletStore, this.periodStore, this.orderStore, this.exchangeName, symbol, fullConf))
   }
 
   private mergeConfig(strategyConf: StrategyConf): StrategyConf {

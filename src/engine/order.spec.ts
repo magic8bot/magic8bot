@@ -1,13 +1,6 @@
 const mockAsset = 5
 const mockCurrency = 200
 const mockPrice = 100
-
-const mockNewOrder = jest.fn()
-const mockCloseOpenOrder = jest.fn()
-const mockUpdateOrder = jest.fn()
-const mockSaveOrder = jest.fn()
-const mockGetOpenOrder = jest.fn()
-const mockUpdateOrderState = jest.fn()
 const mockWalletStore: any = {
   getWallet: jest.fn().mockReturnValue({ asset: mockAsset, currency: mockCurrency }),
 }
@@ -19,20 +12,29 @@ const MOCK_ORDER_STATE = {
   CANCELED: 'canceled',
 }
 
-jest.mock('../stores', () => {
-  // tslint:disable-next-line:only-arrow-functions
-  const orderStore = function() {
-    return {
-      newOrder: mockNewOrder,
-      closeOpenOrder: mockCloseOpenOrder,
-      updateOrder: mockUpdateOrder,
-      saveOrder: mockSaveOrder,
-      getOpenOrder: mockGetOpenOrder,
-      updateOrderState: mockUpdateOrderState,
-    }
-  }
+const mockAddSymbol = jest.fn()
+const mockNewOrder = jest.fn()
+const mockCloseOpenOrder = jest.fn()
+const mockUpdateOrder = jest.fn()
+const mockSaveOrder = jest.fn()
+const mockGetOpenOrder = jest.fn()
+const mockUpdateOrderState = jest.fn()
 
-  return { WalletStore: mockWalletStore, OrderStore: orderStore, ORDER_STATE: MOCK_ORDER_STATE }
+// tslint:disable-next-line:only-arrow-functions
+const mockOrderStore: any = function() {
+  return {
+    addSymbol: mockAddSymbol,
+    newOrder: mockNewOrder,
+    closeOpenOrder: mockCloseOpenOrder,
+    updateOrder: mockUpdateOrder,
+    saveOrder: mockSaveOrder,
+    getOpenOrder: mockGetOpenOrder,
+    updateOrderState: mockUpdateOrderState,
+  }
+}
+
+jest.mock('../stores', () => {
+  return { WalletStore: mockWalletStore, OrderStore: mockOrderStore, ORDER_STATE: MOCK_ORDER_STATE }
 })
 
 const mockAmountToPrecision = jest.fn()
@@ -80,7 +82,7 @@ describe('OrderEngine', () => {
   let mockEmitWalletAdjustment
 
   beforeEach(() => {
-    orderEngine = new OrderEngine(mockExchangeProvider, mockWalletStore, mockStrategyConf, mockId, mockId)
+    orderEngine = new OrderEngine(mockExchangeProvider, mockWalletStore, mockOrderStore, mockId, mockId, mockStrategyConf)
     mockEmitWalletAdjustment = jest.spyOn<any, any>(orderEngine, 'emitWalletAdjustment').mockReturnValueOnce(undefined)
   })
 
@@ -285,7 +287,7 @@ describe('OrderEngine', () => {
     expect(updateOrder).toHaveBeenCalledWith({ ...order, status: 'closed' })
     expect(adjustOrder).toHaveBeenCalledTimes(0)
     expect(mockCloseOpenOrder).toHaveBeenCalledTimes(1)
-    expect(mockCloseOpenOrder).toHaveBeenCalledWith(mockId)
+    expect(mockCloseOpenOrder).toHaveBeenCalledWith(mockId, mockId, mockId, mockId)
   })
 
   test('update and save order', async () => {
@@ -305,9 +307,9 @@ describe('OrderEngine', () => {
     expect(adjustWallet).toHaveBeenCalledTimes(1)
     expect(adjustWallet).toHaveBeenCalledWith(order)
     expect(mockUpdateOrder).toHaveBeenCalledTimes(1)
-    expect(mockUpdateOrder).toHaveBeenCalledWith(order)
+    expect(mockUpdateOrder).toHaveBeenCalledWith(mockId, mockId, mockId, order)
     expect(mockSaveOrder).toHaveBeenCalledTimes(1)
-    expect(mockSaveOrder).toHaveBeenCalledWith(order)
+    expect(mockSaveOrder).toHaveBeenCalledWith(mockId, order)
   })
 
   test('adjust wallet when partial buy fill', async () => {
@@ -328,7 +330,7 @@ describe('OrderEngine', () => {
     await orderEngine.executeBuy()
 
     expect(mockGetOpenOrder).toHaveBeenCalledTimes(1)
-    expect(mockGetOpenOrder).toHaveBeenCalledWith(mockId)
+    expect(mockGetOpenOrder).toHaveBeenCalledWith(mockId, mockId, mockId, mockId)
     expect(mockEmitWalletAdjustment).toHaveBeenCalledTimes(2)
     expect(mockEmitWalletAdjustment).toHaveBeenLastCalledWith(expectedAdjustment)
   })
@@ -351,7 +353,7 @@ describe('OrderEngine', () => {
     await orderEngine.executeSell()
 
     expect(mockGetOpenOrder).toHaveBeenCalledTimes(1)
-    expect(mockGetOpenOrder).toHaveBeenCalledWith(mockId)
+    expect(mockGetOpenOrder).toHaveBeenCalledWith(mockId, mockId, mockId, mockId)
     expect(mockEmitWalletAdjustment).toHaveBeenCalledTimes(2)
     expect(mockEmitWalletAdjustment).toHaveBeenLastCalledWith(expectedAdjustment)
   })
@@ -455,8 +457,8 @@ describe('OrderEngine', () => {
     await orderEngine.executeBuy()
 
     expect(mockUpdateOrderState).toHaveBeenCalledTimes(2)
-    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
-    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, mockId, MOCK_ORDER_STATE.CANCELED)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, mockId, mockId, mockId, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, mockId, mockId, mockId, mockId, MOCK_ORDER_STATE.CANCELED)
   })
 
   test('update order state if slippage and OrderNotFound error', async () => {
@@ -482,8 +484,8 @@ describe('OrderEngine', () => {
     await orderEngine.executeBuy()
 
     expect(mockUpdateOrderState).toHaveBeenCalledTimes(2)
-    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
-    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, mockId, MOCK_ORDER_STATE.DONE)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, mockId, mockId, mockId, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, mockId, mockId, mockId, mockId, MOCK_ORDER_STATE.DONE)
   })
 
   test('update order state if slippage and Error', async () => {
@@ -509,8 +511,8 @@ describe('OrderEngine', () => {
     await orderEngine.executeBuy()
 
     expect(mockUpdateOrderState).toHaveBeenCalledTimes(2)
-    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
-    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, mockId, MOCK_ORDER_STATE.CANCELED)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, mockId, mockId, mockId, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, mockId, mockId, mockId, mockId, MOCK_ORDER_STATE.CANCELED)
   })
 
   test('refund correct amount for canceled buy', async () => {

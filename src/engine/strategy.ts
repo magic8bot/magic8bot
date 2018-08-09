@@ -32,7 +32,9 @@ export class StrategyEngine {
     this.signalListener(({ signal }) => this.onSignal(signal))
 
     this.strategy = new (strategyLoader(strategyName))(this.exchangeName, this.symbol, this.strategyConf)
-    PeriodStore.instance.addSymbol(exchangeName, symbol, strategyName, { period, lookbackSize: 250 })
+
+    const storeOpts = { exchange: exchangeName, symbol, strategy: strategyName }
+    PeriodStore.instance.addSymbol(storeOpts, { period, lookbackSize: 250 })
 
     this.orderEngine = new OrderEngine(this.exchangeProvider, this.exchangeName, this.symbol, this.strategyConf)
   }

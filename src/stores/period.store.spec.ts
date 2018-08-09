@@ -9,7 +9,7 @@ describe('PeriodStore', () => {
 
   beforeEach(() => {
     periodStore = PeriodStore.instance
-    periodStore.addSymbol('test', 'test', 'test', { period: '1m', lookbackSize: 2 })
+    periodStore.addSymbol({ exchange: 'test', symbol: 'test', strategy: 'test' }, { period: '1m', lookbackSize: 2 })
   })
 
   it('should add trades', () => {

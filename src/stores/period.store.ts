@@ -2,6 +2,7 @@ import { Trade } from 'ccxt'
 import { timebucket } from '@magic8bot/timebucket'
 import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
 import { PeriodItem, eventBus, EVENT } from '@lib'
+import { StoreOpts } from '@m8bTypes'
 
 const singleton = Symbol()
 const singletonEnforcer = Symbol()
@@ -30,8 +31,8 @@ export class PeriodStore {
     }
   }
 
-  public addSymbol(exchange: string, symbol: string, strategy: string, conf: PeriodConf) {
-    const idStr = this.makeIdStr(exchange, symbol, strategy)
+  public addSymbol({ exchange, symbol, strategy }: StoreOpts, conf: PeriodConf) {
+    const idStr = this.makeIdStr({ exchange, symbol, strategy })
     this.periods.set(idStr, [])
     this.periodConfigs.set(idStr, conf)
     this.tradeEventTimeouts.set(idStr, null)
@@ -95,7 +96,7 @@ export class PeriodStore {
     )
   }
 
-  private makeIdStr(exchange: string, symbol: string, strategy: string) {
+  private makeIdStr({ exchange, symbol, strategy }: StoreOpts) {
     return `${exchange}.${symbol}.${strategy}`
   }
 }

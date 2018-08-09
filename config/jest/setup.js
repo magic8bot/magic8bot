@@ -19,7 +19,7 @@ jest.mock('../../src/lib/event-bus', () => {
 })
 
 jest.mock('../../src/lib/ws-server', () => {
-  const WsServer = class {}
+  const WsServer = class { }
   return { WsServer }
 })
 
@@ -49,7 +49,10 @@ jest.mock('../../src/lib/db/db-driver.lib', () => {
 
 jest.mock('../../src/util/logger', () => {
   const logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
     info: jest.fn(),
+    verbose: jest.fn(),
     debug: jest.fn(),
     silly: jest.fn(),
     error: jest.fn(),

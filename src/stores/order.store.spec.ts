@@ -1,6 +1,5 @@
 import { OrderStore, ORDER_STATE } from './order.store'
 import { OrderWithTrades } from '@lib'
-import { dbDriver } from '../lib/db/db-driver.lib'
 
 const order: OrderWithTrades = {
   id: 'test',

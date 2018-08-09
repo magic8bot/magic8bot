@@ -1,7 +1,4 @@
 import { TradeStore } from './trade.store'
-import { now, makeNewOrder } from './spec.util'
-import { time } from '@util'
-import { Trade } from 'ccxt'
 
 describe('TradeStore', () => {
   let tradeStore: TradeStore

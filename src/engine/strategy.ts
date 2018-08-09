@@ -55,6 +55,7 @@ export class StrategyEngine {
   }
 
   public run() {
+    logger.info(`Starting Strategy ${this.strategyName}`)
     this.strategy.prerollDone()
   }
 

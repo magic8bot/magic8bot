@@ -1,5 +1,5 @@
 import { ExchangeConf, ExchangeAuth } from '@m8bTypes'
-import ccxt, { Trade, BaseError, NotSupported, AuthenticationError } from 'ccxt'
+import ccxt, { Trade } from 'ccxt'
 import { ExchangeWrapper } from './exchange.wrapper'
 import { ExchangeErrorHandler } from './exchange.error'
 import { sleep } from '@util'

@@ -55,7 +55,15 @@ jest.mock('../../src/util/logger', () => {
     verbose: jest.fn(),
     debug: jest.fn(),
     silly: jest.fn(),
+    error: jest.fn(),
   }
 
   return { logger }
+})
+
+jest.mock('../../src/util/async', () => {
+  const asyncTimeout = jest.fn().mockResolvedValue()
+  const sleep = jest.fn().mockResolvedValue()
+
+  return { asyncTimeout, sleep }
 })

@@ -1,19 +1,4 @@
-import {
-  BaseError,
-  ExchangeError,
-  NotSupported,
-  AuthenticationError,
-  InvalidNonce,
-  InsufficientFunds,
-  InvalidOrder,
-  OrderNotFound,
-  OrderNotCached,
-  CancelPending,
-  NetworkError,
-  DDoSProtection,
-  RequestTimeout,
-  ExchangeNotAvailable,
-} from 'ccxt'
+import { BaseError, ExchangeError, NetworkError, DDoSProtection, RequestTimeout, ExchangeNotAvailable } from 'ccxt'
 
 interface RecoverRetry {
   recover: boolean
@@ -35,34 +20,8 @@ export class ExchangeErrorHandler {
   }
 
   private handleBaseError(e: BaseError): RecoverRetry {
-    return e instanceof ExchangeError ? this.handleExchangeError(e) : this.handleNetworkError(e)
-  }
-
-  private handleExchangeError(e: ExchangeError): RecoverRetry {
-    // Bubble up the error
-    if (e instanceof InvalidOrder) throw e
-
-    if (e instanceof NotSupported) return this.handleNotSupported(e)
-    if (e instanceof AuthenticationError) return this.handleAuthenticationError(e)
-    if (e instanceof InvalidNonce) return this.handleInvalidNonce(e)
-    if (e instanceof InsufficientFunds) return this.handleInsufficientFunds(e)
-    return this.handleError(e)
-  }
-
-  private handleNotSupported(e: NotSupported): RecoverRetry {
-    return { recover: false, retry: false }
-  }
-
-  private handleAuthenticationError(e: AuthenticationError): RecoverRetry {
-    return { recover: false, retry: false }
-  }
-
-  private handleInvalidNonce(e: InvalidNonce): RecoverRetry {
-    return { recover: true, retry: false }
-  }
-
-  private handleInsufficientFunds(e: InsufficientFunds): RecoverRetry {
-    return { recover: true, retry: false }
+    if (e instanceof ExchangeError) throw e
+    return this.handleNetworkError(e)
   }
 
   private handleNetworkError(e: NetworkError): RecoverRetry {

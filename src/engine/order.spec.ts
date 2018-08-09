@@ -12,6 +12,13 @@ const mockWalletStore: any = {
   getWallet: jest.fn().mockReturnValue({ asset: mockAsset, currency: mockCurrency }),
 }
 
+const MOCK_ORDER_STATE = {
+  PENDING: 'pending',
+  PENDING_CANCEL: 'pending_cancel',
+  DONE: 'done',
+  CANCELED: 'canceled',
+}
+
 jest.mock('../stores', () => {
   // tslint:disable-next-line:only-arrow-functions
   const orderStore = function() {
@@ -25,14 +32,7 @@ jest.mock('../stores', () => {
     }
   }
 
-  const ORDER_STATE = {
-    PENDING: 'pending',
-    PENDING_CANCEL: 'pending_cancel',
-    DONE: 'done',
-    CANCELED: 'canceled',
-  }
-
-  return { WalletStore: mockWalletStore, OrderStore: orderStore, ORDER_STATE }
+  return { WalletStore: mockWalletStore, OrderStore: orderStore, ORDER_STATE: MOCK_ORDER_STATE }
 })
 
 const mockAmountToPrecision = jest.fn()
@@ -64,22 +64,39 @@ jest.mock('./quote', () => {
   return { QuoteEngine: quoteEngine }
 })
 
+const mockId = 'test'
 const mockStrategyConf: any = {
   markUp: 0,
   markDown: 0,
-  strategyName: 'test',
+  strategyName: mockId,
   orderPollInterval: 0,
 }
 
 import { OrderEngine } from './order'
+import { InsufficientFunds, OrderNotFound } from 'ccxt'
 
 describe('OrderEngine', () => {
   let orderEngine: OrderEngine
+  let mockEmitWalletAdjustment
 
   beforeEach(() => {
-    mockPriceToPrecision.mockClear()
-    mockAmountToPrecision.mockClear()
-    orderEngine = new OrderEngine(mockExchangeProvider, mockWalletStore, mockStrategyConf, 'test', 'test')
+    orderEngine = new OrderEngine(mockExchangeProvider, mockWalletStore, mockStrategyConf, mockId, mockId)
+    mockEmitWalletAdjustment = jest.spyOn<any, any>(orderEngine, 'emitWalletAdjustment').mockReturnValueOnce(undefined)
+  })
+
+  afterEach(() => {
+    mockEmitWalletAdjustment.mockReset()
+    mockNewOrder.mockReset()
+    mockCloseOpenOrder.mockReset()
+    mockUpdateOrder.mockReset()
+    mockSaveOrder.mockReset()
+    mockGetOpenOrder.mockReset()
+    mockUpdateOrderState.mockReset()
+    mockAmountToPrecision.mockReset()
+    mockPlaceOrder.mockReset()
+    mockCheckOrder.mockReset()
+    mockPriceToPrecision.mockReset()
+    mockCancelOrder.mockReset()
   })
 
   test('can get a wallet', () => {
@@ -89,102 +106,459 @@ describe('OrderEngine', () => {
   })
 
   test('executes a buy', async () => {
-    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
     const amount = (mockCurrency / mockPrice) * 0.995
     mockAmountToPrecision.mockReturnValueOnce(amount)
-    const currency = -(amount * mockPrice)
-    const placeOrder = jest.fn().mockReturnValue({ id: 'test' })
-    const emitWalletAdjusment = jest.fn()
-    const checkOrder = jest.fn()
-    // @ts-ignore
-    orderEngine.placeOrder = placeOrder
-    // @ts-ignore
-    orderEngine.emitWalletAdjusment = emitWalletAdjusment
-    // @ts-ignore
-    orderEngine.checkOrder = checkOrder
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    const placeOrder = jest.spyOn<any, any>(orderEngine, 'placeOrder').mockReturnValueOnce({ id: mockId })
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
 
     await orderEngine.executeBuy()
 
+    const currency = -(amount * mockPrice)
     const expectedAdjustment = { asset: 0, currency, type: 'newOrder' }
-    const expectedOrderOpts = { symbol: 'test', price: mockPrice, amount, type: 'limit', side: 'buy' }
+    const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount, type: 'limit', side: 'buy' }
 
     expect(mockPriceToPrecision).toHaveBeenCalledTimes(2)
     expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
-    expect(emitWalletAdjusment).toHaveBeenCalledTimes(1)
-    expect(emitWalletAdjusment).toHaveBeenCalledWith(expectedAdjustment)
     expect(placeOrder).toHaveBeenCalledTimes(1)
-    expect(placeOrder).toHaveBeenCalledWith(expectedOrderOpts)
+    expect(placeOrder).toHaveBeenCalledWith(expectedOrderOpts, expectedAdjustment)
     expect(checkOrder).toHaveBeenCalledTimes(1)
   })
 
   test('executes a sell', async () => {
-    mockPriceToPrecision.mockReturnValueOnce(mockPrice)
     mockAmountToPrecision.mockReturnValueOnce(mockAsset)
-    const placeOrder = jest.fn().mockReturnValue({ id: 'test' })
-    const emitWalletAdjusment = jest.fn()
-    const checkOrder = jest.fn()
-    // @ts-ignore
-    orderEngine.placeOrder = placeOrder
-    // @ts-ignore
-    orderEngine.emitWalletAdjusment = emitWalletAdjusment
-    // @ts-ignore
-    orderEngine.checkOrder = checkOrder
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice)
+
+    const placeOrder = jest.spyOn<any, any>(orderEngine, 'placeOrder').mockReturnValueOnce({ id: mockId })
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
 
     await orderEngine.executeSell()
 
     const expectedAdjustment = { asset: -mockAsset, currency: 0, type: 'newOrder' }
-    const expectedOrderOpts = { symbol: 'test', price: mockPrice, amount: mockAsset, type: 'limit', side: 'sell' }
+    const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount: mockAsset, type: 'limit', side: 'sell' }
 
     expect(mockPriceToPrecision).toHaveBeenCalledTimes(1)
     expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
     expect(placeOrder).toHaveBeenCalledTimes(1)
-    expect(placeOrder).toHaveBeenCalledWith(expectedOrderOpts)
-    expect(emitWalletAdjusment).toHaveBeenCalledTimes(1)
-    expect(emitWalletAdjusment).toHaveBeenCalledWith(expectedAdjustment)
+    expect(placeOrder).toHaveBeenCalledWith(expectedOrderOpts, expectedAdjustment)
     expect(checkOrder).toHaveBeenCalledTimes(1)
   })
 
-  test('does not adjust wallet if execute buy fails', async () => {
-    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+  test('does not check order after execute buy fails', async () => {
     const amount = (mockCurrency / mockPrice) * 0.995
     mockAmountToPrecision.mockReturnValueOnce(amount)
-    const placeOrder = jest.fn().mockReturnValue(false)
-    const emitWalletAdjusment = jest.fn()
-    const checkOrder = jest.fn()
-    // @ts-ignore
-    orderEngine.placeOrder = placeOrder
-    // @ts-ignore
-    orderEngine.emitWalletAdjusment = emitWalletAdjusment
-    // @ts-ignore
-    orderEngine.checkOrder = checkOrder
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    const placeOrder = jest.spyOn<any, any>(orderEngine, 'placeOrder').mockReturnValueOnce(false)
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
 
     await orderEngine.executeBuy()
 
     expect(mockPriceToPrecision).toHaveBeenCalledTimes(2)
     expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
     expect(placeOrder).toHaveBeenCalledTimes(1)
-    expect(emitWalletAdjusment).toHaveBeenCalledTimes(0)
     expect(checkOrder).toHaveBeenCalledTimes(0)
   })
 
-  test('does not adjust wallet if execute sell fails', async () => {
+  test('does not check order after execute sell fails', async () => {
     mockPriceToPrecision.mockReturnValueOnce(mockPrice)
     mockAmountToPrecision.mockReturnValueOnce(mockAsset)
-    const placeOrder = jest.fn().mockReturnValue(false)
-    const emitWalletAdjusment = jest.fn()
-    const checkOrder = jest.fn()
-    // @ts-ignore
-    orderEngine.placeOrder = placeOrder
-    // @ts-ignore
-    orderEngine.emitWalletAdjusment = emitWalletAdjusment
-    // @ts-ignore
-    orderEngine.checkOrder = checkOrder
+
+    const placeOrder = jest.spyOn<any, any>(orderEngine, 'placeOrder').mockReturnValueOnce(false)
+    jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
 
     await orderEngine.executeSell()
 
     expect(mockPriceToPrecision).toHaveBeenCalledTimes(1)
     expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
     expect(placeOrder).toHaveBeenCalledTimes(1)
-    expect(emitWalletAdjusment).toHaveBeenCalledTimes(0)
+    expect(mockEmitWalletAdjustment).toHaveBeenCalledTimes(0)
+  })
+
+  test('handle wallet adjustment for successful orders', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    mockPlaceOrder.mockReturnValueOnce({ id: mockId })
+
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
+
+    await orderEngine.executeBuy()
+
+    const currency = -(amount * mockPrice)
+    const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount, type: 'limit', side: 'buy' }
+    const expectedAdjustment = { asset: 0, currency, type: 'newOrder' }
+
+    expect(mockPlaceOrder).toHaveBeenCalledTimes(1)
+    expect(mockPlaceOrder).toHaveBeenCalledWith(mockId, expectedOrderOpts)
+    expect(mockEmitWalletAdjustment).toHaveBeenCalledTimes(1)
+    expect(mockEmitWalletAdjustment).toHaveBeenCalledWith(expectedAdjustment)
+    expect(mockNewOrder).toHaveBeenCalledTimes(1)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
+  test('handle wallet adjustment for insufficient funds orders', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    mockPlaceOrder.mockImplementation(() => {
+      throw new InsufficientFunds('no monies')
+    })
+
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
+
+    await orderEngine.executeBuy()
+
+    const currency = -(amount * mockPrice)
+    const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount, type: 'limit', side: 'buy' }
+    const expectedAdjustment = { asset: 0, currency, type: 'newOrder' }
+
+    expect(mockPlaceOrder).toHaveBeenCalledTimes(1)
+    expect(mockPlaceOrder).toHaveBeenCalledWith(mockId, expectedOrderOpts)
+    expect(mockEmitWalletAdjustment).toHaveBeenCalledTimes(1)
+    expect(mockEmitWalletAdjustment).toHaveBeenCalledWith(expectedAdjustment)
+    expect(mockNewOrder).toHaveBeenCalledTimes(0)
+    expect(checkOrder).toHaveBeenCalledTimes(0)
+  })
+
+  test("don't adjust wallet on failed orders", async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    mockPlaceOrder.mockImplementation(() => {
+      throw new Error('done goofed')
+    })
+
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
+
+    await orderEngine.executeBuy()
+
+    const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount, type: 'limit', side: 'buy' }
+
+    expect(mockPlaceOrder).toHaveBeenCalledTimes(1)
+    expect(mockPlaceOrder).toHaveBeenCalledWith(mockId, expectedOrderOpts)
+    expect(mockEmitWalletAdjustment).toHaveBeenCalledTimes(0)
+    expect(mockNewOrder).toHaveBeenCalledTimes(0)
+    expect(checkOrder).toHaveBeenCalledTimes(0)
+  })
+
+  test('adjust orders with status open', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    const order = { id: mockId, status: 'open' }
+    mockPlaceOrder.mockReturnValueOnce(order)
+    mockCheckOrder.mockReturnValueOnce(order)
+
+    const updateOrder = jest.spyOn<any, any>(orderEngine, 'updateOrder').mockReturnValueOnce(undefined)
+    const adjustOrder = jest.spyOn<any, any>(orderEngine, 'adjustOrder').mockReturnValueOnce(undefined)
+
+    await orderEngine.executeBuy()
+
+    expect(updateOrder).toHaveBeenCalledTimes(1)
+    expect(updateOrder).toHaveBeenCalledWith(order)
+    expect(adjustOrder).toHaveBeenCalledTimes(1)
+    expect(adjustOrder).toHaveBeenCalledWith(mockId)
+    expect(mockCloseOpenOrder).toHaveBeenCalledTimes(0)
+  })
+
+  test('close orders with status not open', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    const order = { id: mockId, status: 'open' }
+    mockPlaceOrder.mockReturnValueOnce(order)
+    mockCheckOrder.mockReturnValueOnce({ ...order, status: 'closed' })
+
+    const updateOrder = jest.spyOn<any, any>(orderEngine, 'updateOrder').mockReturnValueOnce(undefined)
+    const adjustOrder = jest.spyOn<any, any>(orderEngine, 'adjustOrder').mockReturnValueOnce(undefined)
+
+    await orderEngine.executeBuy()
+
+    expect(updateOrder).toHaveBeenCalledTimes(1)
+    expect(updateOrder).toHaveBeenCalledWith({ ...order, status: 'closed' })
+    expect(adjustOrder).toHaveBeenCalledTimes(0)
+    expect(mockCloseOpenOrder).toHaveBeenCalledTimes(1)
+    expect(mockCloseOpenOrder).toHaveBeenCalledWith(mockId)
+  })
+
+  test('update and save order', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    const order = { id: mockId, status: 'open' }
+    mockPlaceOrder.mockReturnValueOnce(order)
+    mockCheckOrder.mockReturnValueOnce(order)
+
+    const adjustWallet = jest.spyOn<any, any>(orderEngine, 'adjustWallet').mockReturnValueOnce(undefined)
+    jest.spyOn<any, any>(orderEngine, 'adjustOrder').mockReturnValueOnce(undefined)
+
+    await orderEngine.executeBuy()
+
+    expect(adjustWallet).toHaveBeenCalledTimes(1)
+    expect(adjustWallet).toHaveBeenCalledWith(order)
+    expect(mockUpdateOrder).toHaveBeenCalledTimes(1)
+    expect(mockUpdateOrder).toHaveBeenCalledWith(order)
+    expect(mockSaveOrder).toHaveBeenCalledTimes(1)
+    expect(mockSaveOrder).toHaveBeenCalledWith(order)
+  })
+
+  test('adjust wallet when partial buy fill', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    const order = { id: mockId, status: 'open', side: 'buy', filled: amount / 2 }
+    const orderFill = { ...order, filled: amount }
+    mockPlaceOrder.mockReturnValueOnce(order)
+    mockCheckOrder.mockReturnValueOnce(orderFill)
+    mockGetOpenOrder.mockReturnValueOnce(order)
+
+    jest.spyOn<any, any>(orderEngine, 'adjustOrder').mockReturnValueOnce(undefined)
+
+    const expectedAdjustment = { asset: amount / 2, currency: 0, type: 'fillOrder' }
+
+    await orderEngine.executeBuy()
+
+    expect(mockGetOpenOrder).toHaveBeenCalledTimes(1)
+    expect(mockGetOpenOrder).toHaveBeenCalledWith(mockId)
+    expect(mockEmitWalletAdjustment).toHaveBeenCalledTimes(2)
+    expect(mockEmitWalletAdjustment).toHaveBeenLastCalledWith(expectedAdjustment)
+  })
+
+  test('adjust wallet when partial sell fill', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    const order = { id: mockId, status: 'open', side: 'sell', cost: (mockAsset / 2) * mockPrice }
+    const orderFill = { ...order, cost: mockAsset * mockPrice }
+    mockPlaceOrder.mockReturnValueOnce(order)
+    mockCheckOrder.mockReturnValueOnce(orderFill)
+    mockGetOpenOrder.mockReturnValueOnce(order)
+
+    jest.spyOn<any, any>(orderEngine, 'adjustOrder').mockReturnValueOnce(undefined)
+
+    const expectedAdjustment = { asset: 0, currency: 250, type: 'fillOrder' }
+
+    await orderEngine.executeSell()
+
+    expect(mockGetOpenOrder).toHaveBeenCalledTimes(1)
+    expect(mockGetOpenOrder).toHaveBeenCalledWith(mockId)
+    expect(mockEmitWalletAdjustment).toHaveBeenCalledTimes(2)
+    expect(mockEmitWalletAdjustment).toHaveBeenLastCalledWith(expectedAdjustment)
+  })
+
+  test('recheck order with if no slippage', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision
+      .mockReturnValueOnce(mockPrice)
+      .mockReturnValueOnce(mockCurrency)
+      .mockReturnValueOnce(mockPrice)
+
+    const order = { id: mockId, status: 'open', side: 'buy', price: mockPrice }
+    mockPlaceOrder.mockReturnValueOnce(order)
+    mockCheckOrder.mockReturnValueOnce(order).mockReturnValueOnce({ ...order, status: 'closed' })
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    const executeBuy = jest.spyOn(orderEngine, 'executeBuy')
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder')
+
+    await orderEngine.executeBuy()
+
+    expect(executeBuy).toHaveBeenCalledTimes(1)
+    expect(checkOrder).toHaveBeenCalledTimes(2)
+  })
+
+  test('re-execute order if slippage', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision
+      .mockReturnValueOnce(mockPrice)
+      .mockReturnValueOnce(mockCurrency)
+      .mockReturnValueOnce(mockPrice + 1)
+
+    const order = { id: mockId, status: 'open', side: 'buy', price: mockPrice }
+    mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
+    mockCheckOrder.mockReturnValueOnce(order)
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    const executeBuy = jest.spyOn(orderEngine, 'executeBuy')
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder')
+    const cancelOrder = jest.spyOn<any, any>(orderEngine, 'cancelOrder').mockImplementationOnce(() => true)
+
+    await orderEngine.executeBuy()
+
+    expect(executeBuy).toHaveBeenCalledTimes(2)
+    expect(cancelOrder).toHaveBeenCalledTimes(1)
+    expect(cancelOrder).toHaveBeenCalledWith(mockId)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
+  test("don't re-execute order if slippage and cancel fails", async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision
+      .mockReturnValueOnce(mockPrice)
+      .mockReturnValueOnce(mockCurrency)
+      .mockReturnValueOnce(mockPrice + 1)
+
+    const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice }
+    mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
+    mockCheckOrder.mockReturnValueOnce(order)
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    const executeBuy = jest.spyOn(orderEngine, 'executeBuy')
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder')
+    const cancelOrder = jest.spyOn<any, any>(orderEngine, 'cancelOrder').mockImplementationOnce(() => false)
+
+    await orderEngine.executeBuy()
+
+    expect(executeBuy).toHaveBeenCalledTimes(1)
+    expect(cancelOrder).toHaveBeenCalledTimes(1)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
+  test('update order state if slippage', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision
+      .mockReturnValueOnce(mockPrice)
+      .mockReturnValueOnce(mockCurrency)
+      .mockReturnValueOnce(mockPrice + 1)
+
+    const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice }
+    mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
+    mockCheckOrder.mockReturnValueOnce(order)
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    await orderEngine.executeBuy()
+
+    expect(mockUpdateOrderState).toHaveBeenCalledTimes(2)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, mockId, MOCK_ORDER_STATE.CANCELED)
+  })
+
+  test('update order state if slippage and OrderNotFound error', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision
+      .mockReturnValueOnce(mockPrice)
+      .mockReturnValueOnce(mockCurrency)
+      .mockReturnValueOnce(mockPrice + 1)
+
+    const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice }
+    mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
+    mockCheckOrder.mockReturnValueOnce(order)
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    mockCancelOrder.mockImplementation(() => {
+      throw new OrderNotFound('nope')
+    })
+
+    await orderEngine.executeBuy()
+
+    expect(mockUpdateOrderState).toHaveBeenCalledTimes(2)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, mockId, MOCK_ORDER_STATE.DONE)
+  })
+
+  test('update order state if slippage and Error', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision
+      .mockReturnValueOnce(mockPrice)
+      .mockReturnValueOnce(mockCurrency)
+      .mockReturnValueOnce(mockPrice + 1)
+
+    const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice }
+    mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
+    mockCheckOrder.mockReturnValueOnce(order)
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    mockCancelOrder.mockImplementation(() => {
+      throw new Error('err...')
+    })
+
+    await orderEngine.executeBuy()
+
+    expect(mockUpdateOrderState).toHaveBeenCalledTimes(2)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, mockId, MOCK_ORDER_STATE.CANCELED)
+  })
+
+  test('refund correct amount for canceled buy', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision
+      .mockReturnValueOnce(mockPrice)
+      .mockReturnValueOnce(mockCurrency)
+      .mockReturnValueOnce(mockPrice + 1)
+
+    const order = { id: mockId, status: 'open', side: 'buy', price: mockPrice, remaining: amount }
+    mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
+    mockCheckOrder.mockReturnValueOnce(order)
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    const currency = amount * mockPrice
+    const expectedAdjustment = { asset: 0, currency, type: 'cancelOrder' }
+
+    await orderEngine.executeBuy()
+
+    expect(mockEmitWalletAdjustment).toHaveBeenLastCalledWith(expectedAdjustment)
+  })
+
+  test('refund correct amount for canceled sell', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision
+      .mockReturnValueOnce(mockPrice)
+      .mockReturnValueOnce(mockCurrency)
+      .mockReturnValueOnce(mockPrice + 1)
+
+    const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice, remaining: amount }
+    mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
+    mockCheckOrder.mockReturnValueOnce(order)
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    const expectedAdjustment = { asset: amount, currency: 0, type: 'cancelOrder' }
+
+    await orderEngine.executeBuy()
+
+    expect(mockEmitWalletAdjustment).toHaveBeenLastCalledWith(expectedAdjustment)
   })
 })

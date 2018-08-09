@@ -20,8 +20,10 @@ const mockLoadTrades = jest.fn()
 const mockInsertTrades = jest.fn()
 
 const mockTradeStore: any = {
-  loadTrades: mockLoadTrades,
-  insertTrades: mockInsertTrades,
+  instance: {
+    loadTrades: mockLoadTrades,
+    insertTrades: mockInsertTrades,
+  },
 }
 
 const mockFindLatestTradeMarker = jest.fn()
@@ -30,10 +32,12 @@ const mockGetNextForwardMarker = jest.fn()
 const mockSaveMarker = jest.fn()
 
 const mockMarkerStore: any = {
-  findLatestTradeMarker: mockFindLatestTradeMarker,
-  getNextBackMarker: mockGetNextBackMarker,
-  getNextForwardMarker: mockGetNextForwardMarker,
-  saveMarker: mockSaveMarker,
+  instance: {
+    findLatestTradeMarker: mockFindLatestTradeMarker,
+    getNextBackMarker: mockGetNextBackMarker,
+    getNextForwardMarker: mockGetNextForwardMarker,
+    saveMarker: mockSaveMarker,
+  },
 }
 
 jest.mock('../stores', () => {
@@ -47,7 +51,7 @@ describe('TradeEngine', () => {
   let getNow: jest.Mock<any>
 
   beforeEach(() => {
-    tradeEngine = new TradeEngine(mockId, mockExchangeProvider, mockTradeStore, mockMarkerStore, 0)
+    tradeEngine = new TradeEngine(mockId, mockExchangeProvider, 0)
     getNow = jest.spyOn<any, any>(tradeEngine, 'getNow').mockReturnValue(mockNow)
   })
 
@@ -277,7 +281,7 @@ describe('TradeEngine', () => {
 
   test('bullshit getNow', async () => {
     // tslint:disable-next-line:no-shadowed-variable
-    const tradeEngine = new TradeEngine(mockId, mockExchangeProvider, mockTradeStore, mockMarkerStore, 0)
+    const tradeEngine = new TradeEngine(mockId, mockExchangeProvider, 0)
 
     // @ts-ignore
     const now = await tradeEngine.getNow()

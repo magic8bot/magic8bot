@@ -1,21 +1,31 @@
 import { Trade } from 'ccxt'
 import { EventBusEmitter } from '@magic8bot/event-bus'
 import { dbDriver, eventBus, EVENT } from '@lib'
+import { StoreOpts } from '@m8bTypes'
+
+const singleton = Symbol()
 
 export class TradeStore {
+  public static get instance(): TradeStore {
+    if (!this[singleton]) this[singleton] = new TradeStore()
+    return this[singleton]
+  }
+
   public tradesMap: Map<string, number> = new Map()
   private emitters: Map<string, EventBusEmitter<Trade>> = new Map()
 
-  public addSymbol(exchange: string, symbol: string) {
-    const idStr = this.makeIdStr(exchange, symbol)
+  private constructor() {}
+
+  public addSymbol({ exchange, symbol }: StoreOpts) {
+    const idStr = this.makeIdStr({ exchange, symbol })
     if (this.tradesMap.has(idStr)) return
 
     this.tradesMap.set(idStr, 0)
     this.emitters.set(idStr, eventBus.get(EVENT.XCH_TRADE)(exchange)(symbol).emit)
   }
 
-  public async loadTrades(exchange: string, symbol: string) {
-    const idStr = this.makeIdStr(exchange, symbol)
+  public async loadTrades({ exchange, symbol }: StoreOpts) {
+    const idStr = this.makeIdStr({ exchange, symbol })
     const timestamp = this.tradesMap.get(idStr)
     const trades = await dbDriver.trade
       .find({ symbol, exchange, timestamp: { $gt: timestamp } })
@@ -29,7 +39,7 @@ export class TradeStore {
     trades.forEach((trade) => emitter(trade))
   }
 
-  public async insertTrades(exchange: string, symbol: string, newTrades: Trade[]) {
+  public async insertTrades({ exchange, symbol }: StoreOpts, newTrades: Trade[]) {
     try {
       await dbDriver.trade.insertMany(newTrades.map((trade) => ({ ...trade, exchange, symbol })), { ordered: false })
     } catch {
@@ -37,7 +47,9 @@ export class TradeStore {
     }
   }
 
-  private makeIdStr(exchange: string, symbol: string) {
+  private makeIdStr({ exchange, symbol }: StoreOpts) {
     return `${exchange}.${symbol}`
   }
 }
+
+// export const tradeStore = new TradeStore()

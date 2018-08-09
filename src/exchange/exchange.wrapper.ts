@@ -1,4 +1,4 @@
-import { Exchange, Trade, Balances, OrderBook, Order } from 'ccxt'
+import { Exchange, Trade, Order } from 'ccxt'
 import { gdax, binance } from './adapters'
 import { ExchangeAdapter } from './adapters/base'
 import { OrderWithTrades } from '@lib'
@@ -45,6 +45,6 @@ export class ExchangeWrapper {
   }
 
   public priceToPrecision(symbol: string, amount: number) {
-    return this.exchange.priceToPrecision(symbol, amount)
+    return Number(this.exchange.priceToPrecision(symbol, amount))
   }
 }

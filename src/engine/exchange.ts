@@ -1,10 +1,9 @@
 import { ExchangeConf, StrategyConf, Base } from '@m8bTypes'
-import { TradeStore, MarkerStore, WalletStore } from '@stores'
+import { TradeStore } from '@stores'
 import { ExchangeProvider } from '@exchange'
 
 import { TradeEngine } from './trade'
 import { StrategyEngine } from './strategy'
-import { sleep } from '@util'
 import { logger } from '../util/logger'
 
 export class ExchangeEngine {
@@ -17,24 +16,13 @@ export class ExchangeEngine {
 
   private strategyEngines: Map<string, Set<StrategyEngine>> = new Map()
 
-  constructor(
-    private readonly exchangeProvider: ExchangeProvider,
-    private readonly walletStore: WalletStore,
-    private readonly tradeStore: TradeStore,
-    private readonly markerStore: MarkerStore,
-    { exchangeName, tradePollInterval, options: { strategies, base } }: ExchangeConf,
-    isPaper: boolean
-  ) {
+  private readonly tradeStore = TradeStore.instance
+
+  constructor(private readonly exchangeProvider: ExchangeProvider, { exchangeName, tradePollInterval, options: { strategies, base } }: ExchangeConf, isPaper: boolean) {
     this.exchangeName = exchangeName
     this.baseConf = base
 
-    this.tradeEngine = new TradeEngine(
-      this.exchangeName,
-      this.exchangeProvider,
-      this.tradeStore,
-      this.markerStore,
-      tradePollInterval
-    )
+    this.tradeEngine = new TradeEngine(this.exchangeName, this.exchangeProvider, tradePollInterval)
 
     const currencyPairDays = this.getBackfillerDays(strategies, base.days)
 
@@ -51,15 +39,14 @@ export class ExchangeEngine {
   private async initWallets() {
     const balances = await this.exchangeProvider.getBalances(this.exchangeName)
 
-    this.strategyEngines.forEach(async (strategyEngines) =>
-      strategyEngines.forEach((strategyEngine) => strategyEngine.init(balances))
-    )
+    this.strategyEngines.forEach(async (strategyEngines) => strategyEngines.forEach((strategyEngine) => strategyEngine.init(balances)))
   }
 
   private backfill() {
     this.tradeEngineOpts.forEach(async (days, symbol) => {
       await this.tradeEngine.scan(symbol, days)
-      await this.tradeStore.loadTrades(this.exchangeName, symbol)
+      await this.tradeStore.loadTrades({ exchange: this.exchangeName, symbol })
+      logger.info(`Backfill for ${this.exchangeName} on ${symbol} completed.`)
       this.strategyEngines.get(symbol).forEach((strategyEngine) => strategyEngine.run())
       this.tradeEngine.tick(symbol)
     })
@@ -76,7 +63,7 @@ export class ExchangeEngine {
   private setupBackfillers(days: number, symbol: string) {
     if (!this.tradeEngineOpts.has(symbol)) this.tradeEngineOpts.set(symbol, days)
     logger.debug(`Setting up Backfiller for Symbol ${symbol} and ${days} days.`)
-    this.tradeStore.addSymbol(this.exchangeName, symbol)
+    this.tradeStore.addSymbol({ exchange: this.exchangeName, symbol })
   }
 
   private setupStrategies(strategyConf: StrategyConf) {
@@ -89,9 +76,7 @@ export class ExchangeEngine {
 
     logger.debug(`Setting up Strategy ${strategyConf.strategyName}`)
 
-    strategyEngines.add(
-      new StrategyEngine(this.exchangeProvider, this.walletStore, this.exchangeName, symbol, fullConf)
-    )
+    strategyEngines.add(new StrategyEngine(this.exchangeProvider, this.exchangeName, symbol, fullConf))
   }
 
   private mergeConfig(strategyConf: StrategyConf): StrategyConf {

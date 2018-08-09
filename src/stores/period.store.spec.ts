@@ -7,38 +7,25 @@ import { Trade } from 'ccxt'
 describe('PeriodStore', () => {
   let periodStore: PeriodStore
 
-  beforeEach(() => {
-    periodStore = new PeriodStore('1m', 'test', 'test', 'test', 3)
+  beforeAll(() => {
+    periodStore = PeriodStore.instance
+    periodStore.addSymbol({ exchange: 'test', symbol: 'test', strategy: 'test' }, { period: '1m', lookbackSize: 2 })
   })
 
-  it('should add trades', async (done) => {
-    expect(async () => {
-      await periodStore.addTrade(makeNewOrder(now) as Trade)
-      done()
-    }).not.toThrowError()
+  afterEach(() => {
+    periodStore.clearPeriods('test.test.test')
   })
 
-  it('should not leak between tests', async (done) => {
-    expect(periodStore.periods.length).toEqual(0)
-
-    done()
-  })
-
-  it('should init with trades', async (done) => {
-    const trades = [...Array(3).fill(0)].map((v, i) => makeNewOrder(time(now).sub.s(i * 10)))
-
-    periodStore.initPeriods(trades as Trade[])
-
-    expect(periodStore.periods.length).toEqual(1)
-
-    done()
+  it('should add trades', () => {
+    periodStore.addTrade('test.test.test', makeNewOrder(now) as Trade)
+    expect(periodStore.periods.get('test.test.test').length).toEqual(1)
   })
 
   it('should set new periods', async (done) => {
     const trades = [...Array(9).fill(0)].map((v, i) => makeNewOrder(time(now).sub.s(i * 10))).reverse()
-    trades.forEach((trade) => periodStore.addTrade(trade as Trade))
+    trades.forEach((trade) => periodStore.addTrade('test.test.test', trade as Trade))
 
-    expect(periodStore.periods.length).toEqual(2)
+    expect(periodStore.periods.get('test.test.test').length).toEqual(2)
 
     done()
   })
@@ -47,10 +34,10 @@ describe('PeriodStore', () => {
     // Create a trade for every period, total of 3
     const trades = [...Array(3).fill(0)].map((v, i) => makeNewOrder(time(now).sub.m(i + 1))).reverse()
     trades.forEach((trade, index) => {
-      periodStore.addTrade(trade as Trade)
+      periodStore.addTrade('test.test.test', trade as Trade)
       // periodStore should keep 2 lookbacks and the third period (first inserted) should be dropped
-      if (index < 2) expect(periodStore.periods.length).toEqual(index + 1)
-      else expect(periodStore.periods.length).toEqual(2)
+      if (index < 2) expect(periodStore.periods.get('test.test.test').length).toEqual(index + 1)
+      else expect(periodStore.periods.get('test.test.test').length).toEqual(2)
     })
     done()
   })
@@ -64,20 +51,20 @@ describe('PeriodStore', () => {
         .toMilliseconds()
     )
 
-    periodStore.addTrade(trades[0] as Trade)
-    expect(periodStore.periods[0].time).toEqual(buckets[0])
+    periodStore.addTrade('test.test.test', trades[0] as Trade)
+    expect(periodStore.periods.get('test.test.test')[0].time).toEqual(buckets[0])
 
-    periodStore.addTrade(trades[1] as Trade)
-    expect(periodStore.periods[0].time).toEqual(buckets[1])
-    expect(periodStore.periods[1].time).toEqual(buckets[1] - 60000)
+    periodStore.addTrade('test.test.test', trades[1] as Trade)
+    expect(periodStore.periods.get('test.test.test')[0].time).toEqual(buckets[1])
+    expect(periodStore.periods.get('test.test.test')[1].time).toEqual(buckets[1] - 60000)
 
-    periodStore.addTrade(trades[2] as Trade)
-    expect(periodStore.periods[0].time).toEqual(buckets[2])
-    expect(periodStore.periods[1].time).toEqual(buckets[2] - 60000)
+    periodStore.addTrade('test.test.test', trades[2] as Trade)
+    expect(periodStore.periods.get('test.test.test')[0].time).toEqual(buckets[2])
+    expect(periodStore.periods.get('test.test.test')[1].time).toEqual(buckets[2] - 60000)
 
-    periodStore.addTrade(trades[3] as Trade)
-    expect(periodStore.periods[0].time).toEqual(buckets[3])
-    expect(periodStore.periods[1].time).toEqual(buckets[3] - 60000)
+    periodStore.addTrade('test.test.test', trades[3] as Trade)
+    expect(periodStore.periods.get('test.test.test')[0].time).toEqual(buckets[3])
+    expect(periodStore.periods.get('test.test.test')[1].time).toEqual(buckets[3] - 60000)
 
     done()
   })

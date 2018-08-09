@@ -14,17 +14,16 @@
  */
 export class CMF {
   public static calculate(periods: Record<string, number>[], length: number) {
-    if (periods.length > length) return null
+    if (periods.length < length) return null
 
     const periodsSlice = periods.slice(0, length)
     const sumOfVolume = periodsSlice.reduce((sum, { volume }) => sum + volume, 0)
     const moneyFlowVolume = periodsSlice.reduce((sum, period) => sum + CMF.getMoneyFlow(period), 0)
-
     return moneyFlowVolume / sumOfVolume
   }
 
   private static getMoneyFlow(period: Record<string, number>) {
     const { volume, close, low, high } = period
-    return volume * (close - low - (high - close) / (high - low))
+    return volume * ((close - low) - (high - close)) / (high - low)
   }
 }

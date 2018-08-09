@@ -1,9 +1,7 @@
-import readline from 'readline'
-
 import semver from 'semver'
 import { magic8bot } from './conf'
 import { Conf } from '@m8bTypes'
-import { Core, dbDriver, wsServer, eventBus, EVENT } from '@lib'
+import { Core, dbDriver, wsServer } from '@lib'
 import { logger } from '@util'
 
 const checkSharePercent = ({ exchanges }: Conf) => {

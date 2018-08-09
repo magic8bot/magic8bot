@@ -20,6 +20,7 @@ export class OrderEngine {
   private orderStore: OrderStore
 
   private orderPollInterval: number
+  private orderSlippageAdjustmentTolerance: number
 
   constructor(private readonly exchangeProvider: ExchangeProvider, private readonly walletStore: WalletStore, strategyConf: StrategyConf, exchange: string, symbol: string) {
     const { markUp, markDn } = strategyConf
@@ -29,6 +30,7 @@ export class OrderEngine {
     this.orderStore = new OrderStore(this.opts)
 
     this.orderPollInterval = strategyConf.orderPollInterval
+    this.orderSlippageAdjustmentTolerance = strategyConf.orderSlippageAdjustmentTolerance
 
     this.emitWalletAdjustment = eventBus.get(EVENT.WALLET_ADJUST)(exchange)(symbol)(strategyConf.strategyName).emit
   }
@@ -133,9 +135,11 @@ export class OrderEngine {
 
     const rawQuote = side === 'buy' ? await this.quoteEngine.getBuyPrice() : await this.quoteEngine.getSellPrice()
     const quote = this.exchangeProvider.priceToPrecision(exchange, symbol, rawQuote)
+    const adjustedQuote = side === 'buy' ? quote - this.orderSlippageAdjustmentTolerance : quote + this.orderSlippageAdjustmentTolerance
+    const shouldAdjust = side === 'buy' ? price < adjustedQuote : price > adjustedQuote
 
     // Order slipped
-    if (quote !== price) {
+    if (shouldAdjust) {
       if (await this.cancelOrder(id)) return side === 'buy' ? this.executeBuy(quote) : this.executeSell(quote)
       return false
     }

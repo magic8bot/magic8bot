@@ -31,6 +31,7 @@ export interface Base {
   markDn: number
   markUp: number
   orderPollInterval: number
+  orderSlippageAdjustmentTolerance: number
 
   min_periods: number
   sell_stop_pct: number

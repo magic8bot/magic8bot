@@ -21,20 +21,15 @@ export class OrderEngine {
   private orderPollInterval: number
   private strategy: string
 
-  constructor(
-    private readonly exchangeProvider: ExchangeProvider,
-    private readonly walletStore: WalletStore,
-    private readonly orderStore: OrderStore,
-    private readonly exchange: string,
-    private readonly symbol: string,
-    strategyConf: StrategyConf
-  ) {
+  private readonly orderStore = OrderStore.instance
+  private readonly walletStore = WalletStore.instance
+
+  constructor(private readonly exchangeProvider: ExchangeProvider, private readonly exchange: string, private readonly symbol: string, strategyConf: StrategyConf) {
     const { markUp, markDn } = strategyConf
     this.quoteEngine = new QuoteEngine(this.exchangeProvider, exchange, symbol, markUp, markDn)
     const strategy = (this.strategy = strategyConf.strategyName)
 
     this.opts = { exchange, symbol, strategy }
-    this.orderStore = new OrderStore()
     this.orderStore.addSymbol(exchange, symbol, strategy)
 
     this.orderPollInterval = strategyConf.orderPollInterval

@@ -1,6 +1,9 @@
 import { dbDriver, OrderWithTrades } from '@lib'
-import { sessionStore } from './session.store'
+import { SessionStore } from './session.store'
 import { Order } from 'ccxt'
+
+const singleton = Symbol()
+const singletonEnforcer = Symbol()
 
 interface Opts {
   exchange: string
@@ -16,9 +19,20 @@ export enum ORDER_STATE {
 }
 
 export class OrderStore {
+  public static get instance(): OrderStore {
+    if (!this[singleton]) this[singleton] = new OrderStore(singletonEnforcer)
+    return this[singleton]
+  }
+
   private openOrders: Map<string, Map<string, OrderWithTrades>> = new Map()
   private orderStates: Map<string, Map<string, ORDER_STATE>> = new Map()
-  private readonly sessionId = sessionStore.sessionId
+  private readonly sessionId = SessionStore.instance.sessionId
+
+  constructor(enforcer: Symbol) {
+    if (enforcer !== singletonEnforcer) {
+      throw new Error('Cannot construct singleton')
+    }
+  }
 
   public addSymbol(exchange: string, symbol: string, strategy: string) {
     const idStr = this.makeIdStr(exchange, symbol, strategy)

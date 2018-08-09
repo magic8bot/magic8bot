@@ -2,9 +2,23 @@ import { Trade } from 'ccxt'
 import { EventBusEmitter } from '@magic8bot/event-bus'
 import { dbDriver, eventBus, EVENT } from '@lib'
 
+const singleton = Symbol()
+const singletonEnforcer = Symbol()
+
 export class TradeStore {
+  public static get instance(): TradeStore {
+    if (!this[singleton]) this[singleton] = new TradeStore(singletonEnforcer)
+    return this[singleton]
+  }
+
   public tradesMap: Map<string, number> = new Map()
   private emitters: Map<string, EventBusEmitter<Trade>> = new Map()
+
+  constructor(enforcer: Symbol) {
+    if (enforcer !== singletonEnforcer) {
+      throw new Error('Cannot construct singleton')
+    }
+  }
 
   public addSymbol(exchange: string, symbol: string) {
     const idStr = this.makeIdStr(exchange, symbol)
@@ -41,3 +55,5 @@ export class TradeStore {
     return `${exchange}.${symbol}`
   }
 }
+
+// export const tradeStore = new TradeStore()

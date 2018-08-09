@@ -3,7 +3,7 @@ import { EventBusListener } from '@magic8bot/event-bus'
 
 import { StrategyConf } from '@m8bTypes'
 import { eventBus, EVENT } from '@lib'
-import { PeriodStore, WalletStore, OrderStore } from '@stores'
+import { PeriodStore, WalletStore } from '@stores'
 import { BaseStrategy, strategyLoader } from '@strategy'
 import { ExchangeProvider } from '@exchange'
 
@@ -21,9 +21,6 @@ export class StrategyEngine {
 
   constructor(
     private readonly exchangeProvider: ExchangeProvider,
-    private readonly walletStore: WalletStore,
-    private readonly periodStore: PeriodStore,
-    private readonly orderStore: OrderStore,
     private readonly exchangeName: string,
     private readonly symbol: string,
     private readonly strategyConf: StrategyConf
@@ -35,9 +32,9 @@ export class StrategyEngine {
     this.signalListener(({ signal }) => this.onSignal(signal))
 
     this.strategy = new (strategyLoader(strategyName))(this.exchangeName, this.symbol, this.strategyConf)
-    this.periodStore.addSymbol(exchangeName, symbol, strategyName, { period, lookbackSize: 250 })
+    PeriodStore.instance.addSymbol(exchangeName, symbol, strategyName, { period, lookbackSize: 250 })
 
-    this.orderEngine = new OrderEngine(this.exchangeProvider, this.walletStore, this.orderStore, this.exchangeName, this.symbol, this.strategyConf)
+    this.orderEngine = new OrderEngine(this.exchangeProvider, this.exchangeName, this.symbol, this.strategyConf)
   }
 
   public async init(balances: Balances) {
@@ -52,7 +49,7 @@ export class StrategyEngine {
     const currencyBalance = balances[c] ? balances[c] : ({ free: 0, total: 0, used: 0 } as Balance)
 
     const adjustment = { asset: assetBalance.total * this.strategyConf.share.asset, currency: currencyBalance.total * this.strategyConf.share.currency }
-    await this.walletStore.initWallet(walletOpts, { ...adjustment, type: 'init' })
+    await WalletStore.instance.initWallet(walletOpts, { ...adjustment, type: 'init' })
   }
 
   public run() {

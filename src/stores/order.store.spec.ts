@@ -26,7 +26,7 @@ describe('OrderStore', () => {
   let orderStore: OrderStore
 
   beforeEach(() => {
-    orderStore = new OrderStore()
+    orderStore = OrderStore.instance
     orderStore.addSymbol('test', 'test', 'test')
   })
 

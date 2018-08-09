@@ -2,8 +2,22 @@ import crypto from 'crypto'
 
 import { dbDriver, SessionCollection } from '@lib'
 
+const singleton = Symbol()
+const singletonEnforcer = Symbol()
+
 export class SessionStore {
+  public static get instance(): SessionStore {
+    if (!this[singleton]) this[singleton] = new SessionStore(singletonEnforcer)
+    return this[singleton]
+  }
+
   private _sessionId: string = null
+
+  constructor(enforcer: Symbol) {
+    if (enforcer !== singletonEnforcer) {
+      throw new Error('Cannot construct singleton')
+    }
+  }
 
   public get sessionId() {
     return this._sessionId
@@ -37,5 +51,3 @@ export class SessionStore {
     await dbDriver.session.updateOne({ sessionId: session.sessionId }, { $set: { lastTime: new Date().getTime() } })
   }
 }
-
-export const sessionStore = new SessionStore()

@@ -1,6 +1,9 @@
 import { EventBusListener } from '@magic8bot/event-bus'
 import { dbDriver, Wallet, eventBus, EVENT, Adjustment } from '@lib'
-import { sessionStore } from './session.store'
+import { SessionStore } from './session.store'
+
+const singleton = Symbol()
+const singletonEnforcer = Symbol()
 
 export interface WalletOpts {
   exchange: string
@@ -9,8 +12,19 @@ export interface WalletOpts {
 }
 
 export class WalletStore {
-  private sessionId: string = sessionStore.sessionId
+  public static get instance(): WalletStore {
+    if (!this[singleton]) this[singleton] = new WalletStore(singletonEnforcer)
+    return this[singleton]
+  }
+
+  private sessionId: string = SessionStore.instance.sessionId
   private wallets: Map<string, Wallet> = new Map()
+
+  constructor(enforcer: Symbol) {
+    if (enforcer !== singletonEnforcer) {
+      throw new Error('Cannot construct singleton')
+    }
+  }
 
   public async initWallet(walletOpts: WalletOpts, adjustment: Adjustment) {
     await this.loadOrNewWallet(walletOpts, adjustment)

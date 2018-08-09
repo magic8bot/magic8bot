@@ -5,13 +5,10 @@ import { sleep, logger } from '@util'
 export class TradeEngine {
   private readonly scanType: 'back' | 'forward'
 
-  constructor(
-    private readonly exchange: string,
-    private readonly exchangeProvider: ExchangeProvider,
-    private readonly tradeStore: TradeStore,
-    private readonly markerStore: MarkerStore,
-    private readonly tradePollInterval: number
-  ) {
+  private readonly tradeStore = TradeStore.instance
+  private readonly markerStore = MarkerStore.instance
+
+  constructor(private readonly exchange: string, private readonly exchangeProvider: ExchangeProvider, private readonly tradePollInterval: number) {
     this.scanType = this.exchangeProvider.getScan(this.exchange)
   }
 

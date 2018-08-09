@@ -4,7 +4,7 @@ describe('TradeStore', () => {
   let tradeStore: TradeStore
 
   beforeEach(() => {
-    tradeStore = new TradeStore()
+    tradeStore = TradeStore.instance
   })
 
   it('should be able to add symbols', async (done) => {

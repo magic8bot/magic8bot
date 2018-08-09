@@ -8,7 +8,7 @@ describe('PeriodStore', () => {
   let periodStore: PeriodStore
 
   beforeEach(() => {
-    periodStore = new PeriodStore()
+    periodStore = PeriodStore.instance
     periodStore.addSymbol('test', 'test', 'test', { period: '1m', lookbackSize: 2 })
   })
 

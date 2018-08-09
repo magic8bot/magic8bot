@@ -1,8 +1,22 @@
 import { Trade } from 'ccxt'
 import { dbDriver, Marker } from '@lib'
 
+const singleton = Symbol()
+const singletonEnforcer = Symbol()
+
 export class MarkerStore {
+  public static get instance(): MarkerStore {
+    if (!this[singleton]) this[singleton] = new MarkerStore(singletonEnforcer)
+    return this[singleton]
+  }
+
   private markers: Map<string, Marker> = new Map()
+
+  constructor(enforcer: Symbol) {
+    if (enforcer !== singletonEnforcer) {
+      throw new Error('Cannot construct singleton')
+    }
+  }
 
   public async getNextBackMarker(exchange: string, symbol: string) {
     const marker = this.getMarker(exchange, symbol)
@@ -63,3 +77,5 @@ export class MarkerStore {
     return `${exchange}.${symbol}`
   }
 }
+
+// export const markerStore = new MarkerStore()

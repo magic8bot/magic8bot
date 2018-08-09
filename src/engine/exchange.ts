@@ -1,5 +1,5 @@
 import { ExchangeConf, StrategyConf, Base } from '@m8bTypes'
-import { TradeStore, MarkerStore, WalletStore, PeriodStore, OrderStore } from '@stores'
+import { TradeStore } from '@stores'
 import { ExchangeProvider } from '@exchange'
 
 import { TradeEngine } from './trade'
@@ -16,20 +16,13 @@ export class ExchangeEngine {
 
   private strategyEngines: Map<string, Set<StrategyEngine>> = new Map()
 
-  constructor(
-    private readonly exchangeProvider: ExchangeProvider,
-    private readonly walletStore: WalletStore,
-    private readonly tradeStore: TradeStore,
-    private readonly markerStore: MarkerStore,
-    private readonly periodStore: PeriodStore,
-    private readonly orderStore: OrderStore,
-    { exchangeName, tradePollInterval, options: { strategies, base } }: ExchangeConf,
-    isPaper: boolean
-  ) {
+  private readonly tradeStore = TradeStore.instance
+
+  constructor(private readonly exchangeProvider: ExchangeProvider, { exchangeName, tradePollInterval, options: { strategies, base } }: ExchangeConf, isPaper: boolean) {
     this.exchangeName = exchangeName
     this.baseConf = base
 
-    this.tradeEngine = new TradeEngine(this.exchangeName, this.exchangeProvider, this.tradeStore, this.markerStore, tradePollInterval)
+    this.tradeEngine = new TradeEngine(this.exchangeName, this.exchangeProvider, tradePollInterval)
 
     const currencyPairDays = this.getBackfillerDays(strategies, base.days)
 
@@ -83,7 +76,7 @@ export class ExchangeEngine {
 
     logger.debug(`Setting up Strategy ${strategyConf.strategyName}`)
 
-    strategyEngines.add(new StrategyEngine(this.exchangeProvider, this.walletStore, this.periodStore, this.orderStore, this.exchangeName, symbol, fullConf))
+    strategyEngines.add(new StrategyEngine(this.exchangeProvider, this.exchangeName, symbol, fullConf))
   }
 
   private mergeConfig(strategyConf: StrategyConf): StrategyConf {

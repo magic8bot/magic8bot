@@ -4,7 +4,7 @@ describe('SessionStore', () => {
   let sessionStore: SessionStore
 
   beforeEach(() => {
-    sessionStore = new SessionStore()
+    sessionStore = SessionStore.instance
   })
 
   it('should create new session', async (done) => {

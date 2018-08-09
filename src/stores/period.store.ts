@@ -3,18 +3,32 @@ import { timebucket } from '@magic8bot/timebucket'
 import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
 import { PeriodItem, eventBus, EVENT } from '@lib'
 
+const singleton = Symbol()
+const singletonEnforcer = Symbol()
+
 interface PeriodConf {
   period: string
   lookbackSize: number
 }
 
 export class PeriodStore {
+  public static get instance(): PeriodStore {
+    if (!this[singleton]) this[singleton] = new PeriodStore(singletonEnforcer)
+    return this[singleton]
+  }
+
   public periods: Map<string, PeriodItem[]> = new Map()
 
   private periodConfigs: Map<string, PeriodConf> = new Map()
   private updateEmitters: Map<string, EventBusEmitter<PeriodItem[]>> = new Map()
   private periodEmitters: Map<string, EventBusEmitter<PeriodItem[]>> = new Map()
   private tradeEventTimeouts: Map<string, NodeJS.Timer> = new Map()
+
+  constructor(enforcer: Symbol) {
+    if (enforcer !== singletonEnforcer) {
+      throw new Error('Cannot construct singleton')
+    }
+  }
 
   public addSymbol(exchange: string, symbol: string, strategy: string, conf: PeriodConf) {
     const idStr = this.makeIdStr(exchange, symbol, strategy)

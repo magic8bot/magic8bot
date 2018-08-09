@@ -2,7 +2,9 @@ const mockAsset = 5
 const mockCurrency = 200
 const mockPrice = 100
 const mockWalletStore: any = {
-  getWallet: jest.fn().mockReturnValue({ asset: mockAsset, currency: mockCurrency }),
+  instance: {
+    getWallet: jest.fn().mockReturnValue({ asset: mockAsset, currency: mockCurrency }),
+  },
 }
 
 const MOCK_ORDER_STATE = {
@@ -21,8 +23,8 @@ const mockGetOpenOrder = jest.fn()
 const mockUpdateOrderState = jest.fn()
 
 // tslint:disable-next-line:only-arrow-functions
-const mockOrderStore: any = function() {
-  return {
+const mockOrderStore: any = {
+  instance: {
     addSymbol: mockAddSymbol,
     newOrder: mockNewOrder,
     closeOpenOrder: mockCloseOpenOrder,
@@ -30,7 +32,7 @@ const mockOrderStore: any = function() {
     saveOrder: mockSaveOrder,
     getOpenOrder: mockGetOpenOrder,
     updateOrderState: mockUpdateOrderState,
-  }
+  },
 }
 
 jest.mock('../stores', () => {
@@ -82,7 +84,7 @@ describe('OrderEngine', () => {
   let mockEmitWalletAdjustment
 
   beforeEach(() => {
-    orderEngine = new OrderEngine(mockExchangeProvider, mockWalletStore, mockOrderStore, mockId, mockId, mockStrategyConf)
+    orderEngine = new OrderEngine(mockExchangeProvider, mockId, mockId, mockStrategyConf)
     mockEmitWalletAdjustment = jest.spyOn<any, any>(orderEngine, 'emitWalletAdjustment').mockReturnValueOnce(undefined)
   })
 

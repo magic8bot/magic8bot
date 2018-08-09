@@ -4,7 +4,7 @@ xdescribe('MarkerStore', () => {
   let markerStore: MarkerStore
 
   beforeEach(() => {
-    markerStore = new MarkerStore()
+    markerStore = MarkerStore.instance
   })
 
   it('should get next back marker', (done) => {

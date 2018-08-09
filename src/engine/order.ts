@@ -19,6 +19,8 @@ export class OrderEngine {
   private emitWalletAdjustment: EventBusEmitter<Adjustment>
 
   private orderPollInterval: number
+  private orderSlippageAdjustmentTolerance: number
+
   private strategy: string
 
   private readonly orderStore = OrderStore.instance
@@ -37,6 +39,7 @@ export class OrderEngine {
     this.orderStore.addSymbol(this.storeOpts)
 
     this.orderPollInterval = strategyConf.orderPollInterval
+    this.orderSlippageAdjustmentTolerance = strategyConf.orderSlippageAdjustmentTolerance
 
     this.emitWalletAdjustment = eventBus.get(EVENT.WALLET_ADJUST)(exchange)(symbol)(strategy).emit
   }
@@ -141,9 +144,11 @@ export class OrderEngine {
 
     const rawQuote = side === 'buy' ? await this.quoteEngine.getBuyPrice() : await this.quoteEngine.getSellPrice()
     const quote = this.exchangeProvider.priceToPrecision(exchange, symbol, rawQuote)
+    const adjustedQuote = side === 'buy' ? quote - this.orderSlippageAdjustmentTolerance : quote + this.orderSlippageAdjustmentTolerance
+    const shouldAdjust = side === 'buy' ? price < adjustedQuote : price > adjustedQuote
 
     // Order slipped
-    if (quote !== price) {
+    if (shouldAdjust) {
       if (await this.cancelOrder(id)) return side === 'buy' ? this.executeBuy(quote) : this.executeSell(quote)
       return false
     }

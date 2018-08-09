@@ -74,6 +74,7 @@ const mockStrategyConf: any = {
   markDown: 0,
   strategyName: mockId,
   orderPollInterval: 0,
+  orderSlippageAdjustmentTolerance: 0,
 }
 
 import { OrderEngine } from './order'
@@ -386,7 +387,7 @@ describe('OrderEngine', () => {
     expect(checkOrder).toHaveBeenCalledTimes(2)
   })
 
-  test('re-execute order if slippage', async () => {
+  test('re-execute order if slippage (buy)', async () => {
     const amount = (mockCurrency / mockPrice) * 0.995
     mockAmountToPrecision.mockReturnValueOnce(amount)
     mockPriceToPrecision
@@ -414,13 +415,151 @@ describe('OrderEngine', () => {
     expect(checkOrder).toHaveBeenCalledTimes(1)
   })
 
-  test("don't re-execute order if slippage and cancel fails", async () => {
+  test('re-execute order if slippage (buy) w/ tolerance', async () => {
+    // @ts-ignore
+    orderEngine.orderSlippageAdjustmentTolerance = 1
+
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision
+      .mockReturnValueOnce(mockPrice)
+      .mockReturnValueOnce(mockCurrency)
+      .mockReturnValueOnce(mockPrice + 2)
+
+    const order = { id: mockId, status: 'open', side: 'buy', price: mockPrice }
+    mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
+    mockCheckOrder.mockReturnValueOnce(order)
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    const executeBuy = jest.spyOn(orderEngine, 'executeBuy')
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder')
+    const cancelOrder = jest.spyOn<any, any>(orderEngine, 'cancelOrder').mockImplementationOnce(() => true)
+
+    await orderEngine.executeBuy()
+
+    expect(executeBuy).toHaveBeenCalledTimes(2)
+    expect(cancelOrder).toHaveBeenCalledTimes(1)
+    expect(cancelOrder).toHaveBeenCalledWith(mockId)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
+  test("don't re-execute order if no-slippage (buy) w/ tolerance", async () => {
+    // @ts-ignore
+    orderEngine.orderSlippageAdjustmentTolerance = 1
+
     const amount = (mockCurrency / mockPrice) * 0.995
     mockAmountToPrecision.mockReturnValueOnce(amount)
     mockPriceToPrecision
       .mockReturnValueOnce(mockPrice)
       .mockReturnValueOnce(mockCurrency)
       .mockReturnValueOnce(mockPrice + 1)
+
+    const order = { id: mockId, status: 'open', side: 'buy', price: mockPrice }
+    mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
+    mockCheckOrder.mockReturnValueOnce(order).mockReturnValueOnce({ ...order, status: 'closed' })
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    const executeBuy = jest.spyOn(orderEngine, 'executeBuy')
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder')
+    const cancelOrder = jest.spyOn<any, any>(orderEngine, 'cancelOrder').mockImplementationOnce(() => true)
+
+    await orderEngine.executeBuy()
+
+    expect(executeBuy).toHaveBeenCalledTimes(1)
+    expect(cancelOrder).toHaveBeenCalledTimes(0)
+    expect(checkOrder).toHaveBeenCalledTimes(2)
+  })
+
+  test('re-execute order if slippage (sell)', async () => {
+    mockAmountToPrecision.mockReturnValueOnce(mockAsset)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockPrice - 1)
+
+    const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice }
+    mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
+    mockCheckOrder.mockReturnValueOnce(order)
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    const executeSell = jest.spyOn(orderEngine, 'executeSell')
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder')
+    const cancelOrder = jest.spyOn<any, any>(orderEngine, 'cancelOrder').mockImplementationOnce(() => true)
+
+    await orderEngine.executeSell()
+
+    expect(executeSell).toHaveBeenCalledTimes(2)
+    expect(cancelOrder).toHaveBeenCalledTimes(1)
+    expect(cancelOrder).toHaveBeenCalledWith(mockId)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
+  test('re-execute order if slippage (sell) w/ tolerance', async () => {
+    // @ts-ignore
+    orderEngine.orderSlippageAdjustmentTolerance = 1
+
+    mockAmountToPrecision.mockReturnValueOnce(mockAsset)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockPrice - 2)
+
+    const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice }
+    mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
+    mockCheckOrder.mockReturnValueOnce(order)
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    const executeSell = jest.spyOn(orderEngine, 'executeSell')
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder')
+    const cancelOrder = jest.spyOn<any, any>(orderEngine, 'cancelOrder').mockImplementationOnce(() => true)
+
+    await orderEngine.executeSell()
+
+    expect(executeSell).toHaveBeenCalledTimes(2)
+    expect(cancelOrder).toHaveBeenCalledTimes(1)
+    expect(cancelOrder).toHaveBeenCalledWith(mockId)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
+  test("don't re-execute order if slippage (sell) w/ tolerance", async () => {
+    // @ts-ignore
+    orderEngine.orderSlippageAdjustmentTolerance = 1
+
+    mockAmountToPrecision.mockReturnValueOnce(mockAsset)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockPrice - 1)
+
+    const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice }
+    mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
+    mockCheckOrder.mockReturnValueOnce(order).mockReturnValueOnce({ ...order, status: 'closed' })
+    mockGetOpenOrder
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+      .mockReturnValueOnce(order)
+
+    const executeSell = jest.spyOn(orderEngine, 'executeSell')
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder')
+    const cancelOrder = jest.spyOn<any, any>(orderEngine, 'cancelOrder').mockImplementationOnce(() => true)
+
+    await orderEngine.executeSell()
+
+    expect(executeSell).toHaveBeenCalledTimes(1)
+    expect(cancelOrder).toHaveBeenCalledTimes(0)
+    expect(checkOrder).toHaveBeenCalledTimes(2)
+  })
+
+  test("don't re-execute order if slippage and cancel fails", async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision
+      .mockReturnValueOnce(mockPrice)
+      .mockReturnValueOnce(mockCurrency)
+      .mockReturnValueOnce(mockPrice - 1)
 
     const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice }
     mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
@@ -447,7 +586,7 @@ describe('OrderEngine', () => {
     mockPriceToPrecision
       .mockReturnValueOnce(mockPrice)
       .mockReturnValueOnce(mockCurrency)
-      .mockReturnValueOnce(mockPrice + 1)
+      .mockReturnValueOnce(mockPrice - 1)
 
     const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice }
     mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
@@ -470,7 +609,7 @@ describe('OrderEngine', () => {
     mockPriceToPrecision
       .mockReturnValueOnce(mockPrice)
       .mockReturnValueOnce(mockCurrency)
-      .mockReturnValueOnce(mockPrice + 1)
+      .mockReturnValueOnce(mockPrice - 1)
 
     const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice }
     mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
@@ -497,7 +636,7 @@ describe('OrderEngine', () => {
     mockPriceToPrecision
       .mockReturnValueOnce(mockPrice)
       .mockReturnValueOnce(mockCurrency)
-      .mockReturnValueOnce(mockPrice + 1)
+      .mockReturnValueOnce(mockPrice - 1)
 
     const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice }
     mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)
@@ -549,7 +688,7 @@ describe('OrderEngine', () => {
     mockPriceToPrecision
       .mockReturnValueOnce(mockPrice)
       .mockReturnValueOnce(mockCurrency)
-      .mockReturnValueOnce(mockPrice + 1)
+      .mockReturnValueOnce(mockPrice - 1)
 
     const order = { id: mockId, status: 'open', side: 'sell', price: mockPrice, remaining: amount }
     mockPlaceOrder.mockReturnValueOnce(order).mockReturnValueOnce(false)

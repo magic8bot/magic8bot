@@ -31,6 +31,7 @@ const base: Base = {
   markDn: 0,
   markUp: 0,
   orderPollInterval: 500,
+  orderSlippageAdjustmentTolerance: 0,
 
   // BELOW NOT IMPLEMENTED
   avg_slippage_pct: 0.045,

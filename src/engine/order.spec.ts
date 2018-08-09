@@ -2,7 +2,9 @@ const mockAsset = 5
 const mockCurrency = 200
 const mockPrice = 100
 const mockWalletStore: any = {
-  getWallet: jest.fn().mockReturnValue({ asset: mockAsset, currency: mockCurrency }),
+  instance: {
+    getWallet: jest.fn().mockReturnValue({ asset: mockAsset, currency: mockCurrency }),
+  },
 }
 
 const MOCK_ORDER_STATE = {
@@ -21,8 +23,8 @@ const mockGetOpenOrder = jest.fn()
 const mockUpdateOrderState = jest.fn()
 
 // tslint:disable-next-line:only-arrow-functions
-const mockOrderStore: any = function() {
-  return {
+const mockOrderStore: any = {
+  instance: {
     addSymbol: mockAddSymbol,
     newOrder: mockNewOrder,
     closeOpenOrder: mockCloseOpenOrder,
@@ -30,7 +32,7 @@ const mockOrderStore: any = function() {
     saveOrder: mockSaveOrder,
     getOpenOrder: mockGetOpenOrder,
     updateOrderState: mockUpdateOrderState,
-  }
+  },
 }
 
 jest.mock('../stores', () => {
@@ -78,11 +80,12 @@ import { OrderEngine } from './order'
 import { InsufficientFunds, OrderNotFound } from 'ccxt'
 
 describe('OrderEngine', () => {
+  const storeOpts = { exchange: mockId, strategy: mockId, symbol: mockId }
   let orderEngine: OrderEngine
   let mockEmitWalletAdjustment
 
   beforeEach(() => {
-    orderEngine = new OrderEngine(mockExchangeProvider, mockWalletStore, mockOrderStore, mockId, mockId, mockStrategyConf)
+    orderEngine = new OrderEngine(mockExchangeProvider, mockId, mockId, mockStrategyConf)
     mockEmitWalletAdjustment = jest.spyOn<any, any>(orderEngine, 'emitWalletAdjustment').mockReturnValueOnce(undefined)
   })
 
@@ -287,7 +290,7 @@ describe('OrderEngine', () => {
     expect(updateOrder).toHaveBeenCalledWith({ ...order, status: 'closed' })
     expect(adjustOrder).toHaveBeenCalledTimes(0)
     expect(mockCloseOpenOrder).toHaveBeenCalledTimes(1)
-    expect(mockCloseOpenOrder).toHaveBeenCalledWith(mockId, mockId, mockId, mockId)
+    expect(mockCloseOpenOrder).toHaveBeenCalledWith(storeOpts, mockId)
   })
 
   test('update and save order', async () => {
@@ -307,7 +310,7 @@ describe('OrderEngine', () => {
     expect(adjustWallet).toHaveBeenCalledTimes(1)
     expect(adjustWallet).toHaveBeenCalledWith(order)
     expect(mockUpdateOrder).toHaveBeenCalledTimes(1)
-    expect(mockUpdateOrder).toHaveBeenCalledWith(mockId, mockId, mockId, order)
+    expect(mockUpdateOrder).toHaveBeenCalledWith(storeOpts, order)
     expect(mockSaveOrder).toHaveBeenCalledTimes(1)
     expect(mockSaveOrder).toHaveBeenCalledWith(mockId, order)
   })
@@ -330,7 +333,7 @@ describe('OrderEngine', () => {
     await orderEngine.executeBuy()
 
     expect(mockGetOpenOrder).toHaveBeenCalledTimes(1)
-    expect(mockGetOpenOrder).toHaveBeenCalledWith(mockId, mockId, mockId, mockId)
+    expect(mockGetOpenOrder).toHaveBeenCalledWith(storeOpts, mockId)
     expect(mockEmitWalletAdjustment).toHaveBeenCalledTimes(2)
     expect(mockEmitWalletAdjustment).toHaveBeenLastCalledWith(expectedAdjustment)
   })
@@ -353,7 +356,7 @@ describe('OrderEngine', () => {
     await orderEngine.executeSell()
 
     expect(mockGetOpenOrder).toHaveBeenCalledTimes(1)
-    expect(mockGetOpenOrder).toHaveBeenCalledWith(mockId, mockId, mockId, mockId)
+    expect(mockGetOpenOrder).toHaveBeenCalledWith(storeOpts, mockId)
     expect(mockEmitWalletAdjustment).toHaveBeenCalledTimes(2)
     expect(mockEmitWalletAdjustment).toHaveBeenLastCalledWith(expectedAdjustment)
   })
@@ -457,8 +460,8 @@ describe('OrderEngine', () => {
     await orderEngine.executeBuy()
 
     expect(mockUpdateOrderState).toHaveBeenCalledTimes(2)
-    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, mockId, mockId, mockId, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
-    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, mockId, mockId, mockId, mockId, MOCK_ORDER_STATE.CANCELED)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, storeOpts, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, storeOpts, mockId, MOCK_ORDER_STATE.CANCELED)
   })
 
   test('update order state if slippage and OrderNotFound error', async () => {
@@ -484,8 +487,8 @@ describe('OrderEngine', () => {
     await orderEngine.executeBuy()
 
     expect(mockUpdateOrderState).toHaveBeenCalledTimes(2)
-    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, mockId, mockId, mockId, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
-    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, mockId, mockId, mockId, mockId, MOCK_ORDER_STATE.DONE)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, storeOpts, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, storeOpts, mockId, MOCK_ORDER_STATE.DONE)
   })
 
   test('update order state if slippage and Error', async () => {
@@ -511,8 +514,8 @@ describe('OrderEngine', () => {
     await orderEngine.executeBuy()
 
     expect(mockUpdateOrderState).toHaveBeenCalledTimes(2)
-    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, mockId, mockId, mockId, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
-    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, mockId, mockId, mockId, mockId, MOCK_ORDER_STATE.CANCELED)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(1, storeOpts, mockId, MOCK_ORDER_STATE.PENDING_CANCEL)
+    expect(mockUpdateOrderState).toHaveBeenNthCalledWith(2, storeOpts, mockId, MOCK_ORDER_STATE.CANCELED)
   })
 
   test('refund correct amount for canceled buy', async () => {

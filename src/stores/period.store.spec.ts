@@ -7,9 +7,13 @@ import { Trade } from 'ccxt'
 describe('PeriodStore', () => {
   let periodStore: PeriodStore
 
-  beforeEach(() => {
-    periodStore = new PeriodStore()
-    periodStore.addSymbol('test', 'test', 'test', { period: '1m', lookbackSize: 2 })
+  beforeAll(() => {
+    periodStore = PeriodStore.instance
+    periodStore.addSymbol({ exchange: 'test', symbol: 'test', strategy: 'test' }, { period: '1m', lookbackSize: 2 })
+  })
+
+  afterEach(() => {
+    periodStore.clearPeriods('test.test.test')
   })
 
   it('should add trades', () => {

@@ -23,42 +23,43 @@ const order: OrderWithTrades = {
 }
 
 describe('OrderStore', () => {
+  const storeOpts = { exchange: 'test', symbol: 'test', strategy: 'test' }
   let orderStore: OrderStore
 
-  beforeEach(() => {
-    orderStore = new OrderStore()
-    orderStore.addSymbol('test', 'test', 'test')
+  beforeAll(() => {
+    orderStore = OrderStore.instance
+    orderStore.addSymbol(storeOpts)
   })
 
   it('should save new orders', async (done) => {
     expect(async () => {
-      await orderStore.newOrder('test', 'test', 'test', order)
+      await orderStore.newOrder(storeOpts, order)
       done()
     }).not.toThrowError()
   })
 
   it('should return open order', async (done) => {
     expect(async () => {
-      await orderStore.newOrder('test', 'test', 'test', order)
-      expect(orderStore.getOpenOrder('test', 'test', 'test', order.id).status).toEqual('open')
+      await orderStore.newOrder(storeOpts, order)
+      expect(orderStore.getOpenOrder(storeOpts, order.id).status).toEqual('open')
       done()
     }).not.toThrowError()
   })
 
   it('should return order pending state', async (done) => {
     expect(async () => {
-      await orderStore.newOrder('test', 'test', 'test', order)
-      expect(orderStore.getOrderState('test', 'test', 'test', order.id)).toEqual(ORDER_STATE.PENDING)
+      await orderStore.newOrder(storeOpts, order)
+      expect(orderStore.getOrderState(storeOpts, order.id)).toEqual(ORDER_STATE.PENDING)
       done()
     }).not.toThrowError()
   })
 
   it('should test update order', async (done) => {
     expect(async () => {
-      await orderStore.newOrder('test', 'test', 'test', order)
+      await orderStore.newOrder(storeOpts, order)
       order.status = 'closed'
-      orderStore.updateOrder('test', 'test', 'test', order)
-      expect(orderStore.getOrderState('test', 'test', 'test', order.id)).toEqual(ORDER_STATE.DONE)
+      orderStore.updateOrder(storeOpts, order)
+      expect(orderStore.getOrderState(storeOpts, order.id)).toEqual(ORDER_STATE.DONE)
 
       done()
     }).not.toThrowError()
@@ -66,17 +67,17 @@ describe('OrderStore', () => {
 
   it('should return all pending orders order', async (done) => {
     expect(async () => {
-      await orderStore.newOrder('test', 'test', 'test', order)
-      expect(orderStore.getAllPendingOrders('test', 'test', 'test')).toEqual(['test'])
+      await orderStore.newOrder(storeOpts, order)
+      expect(orderStore.getAllPendingOrders(storeOpts)).toEqual(['test'])
       done()
     }).not.toThrowError()
   })
 
   it('should close the open order', async (done) => {
     expect(async () => {
-      await orderStore.newOrder('test', 'test', 'test', order)
-      orderStore.closeOpenOrder('test', 'test', 'test', order.id)
-      expect(orderStore.getOpenOrder('test', 'test', 'test', order.id)).toBeUndefined()
+      await orderStore.newOrder(storeOpts, order)
+      orderStore.closeOpenOrder(storeOpts, order.id)
+      expect(orderStore.getOpenOrder(storeOpts, order.id)).toBeUndefined()
       done()
     }).not.toThrowError()
   })

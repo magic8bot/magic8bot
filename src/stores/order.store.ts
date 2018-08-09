@@ -1,6 +1,9 @@
 import { dbDriver, OrderWithTrades } from '@lib'
-import { sessionStore } from './session.store'
+import { SessionStore } from './session.store'
 import { Order } from 'ccxt'
+import { StoreOpts } from '@m8bTypes'
+
+const singleton = Symbol()
 
 interface Opts {
   exchange: string
@@ -16,18 +19,25 @@ export enum ORDER_STATE {
 }
 
 export class OrderStore {
+  public static get instance(): OrderStore {
+    if (!this[singleton]) this[singleton] = new OrderStore()
+    return this[singleton]
+  }
+
   private openOrders: Map<string, Map<string, OrderWithTrades>> = new Map()
   private orderStates: Map<string, Map<string, ORDER_STATE>> = new Map()
-  private readonly sessionId = sessionStore.sessionId
+  private readonly sessionId = SessionStore.instance.sessionId
 
-  public addSymbol(exchange: string, symbol: string, strategy: string) {
-    const idStr = this.makeIdStr(exchange, symbol, strategy)
+  private constructor() {}
+
+  public addSymbol(storeOpts: StoreOpts) {
+    const idStr = this.makeIdStr(storeOpts)
     this.openOrders.set(idStr, new Map())
     this.orderStates.set(idStr, new Map())
   }
 
-  public async newOrder(exchange: string, symbol: string, strategy: string, order: Order | OrderWithTrades) {
-    const idStr = this.makeIdStr(exchange, symbol, strategy)
+  public async newOrder({ exchange, symbol, strategy }: StoreOpts, order: Order | OrderWithTrades) {
+    const idStr = this.makeIdStr({ exchange, symbol, strategy })
     this.openOrders.get(idStr).set(order.id, order as OrderWithTrades)
     this.orderStates.get(idStr).set(order.id, ORDER_STATE.PENDING)
 
@@ -36,38 +46,38 @@ export class OrderStore {
     await dbDriver.order.insertOne({ ...order, sessionId, exchange, symbol, strategy })
   }
 
-  public getOpenOrder(exchange: string, symbol: string, strategy: string, id: string) {
-    const idStr = this.makeIdStr(exchange, symbol, strategy)
+  public getOpenOrder(storeOpts: StoreOpts, id: string) {
+    const idStr = this.makeIdStr(storeOpts)
     return this.openOrders.get(idStr).get(id)
   }
 
-  public closeOpenOrder(exchange: string, symbol: string, strategy: string, id: string) {
-    const idStr = this.makeIdStr(exchange, symbol, strategy)
+  public closeOpenOrder(storeOpts: StoreOpts, id: string) {
+    const idStr = this.makeIdStr(storeOpts)
     this.openOrders.get(idStr).delete(id)
   }
 
-  public updateOrder(exchange: string, symbol: string, strategy: string, order: OrderWithTrades) {
-    const idStr = this.makeIdStr(exchange, symbol, strategy)
-    if (order.status !== 'open') this.updateOrderState(exchange, symbol, strategy, order.id, order.status === 'closed' ? ORDER_STATE.DONE : ORDER_STATE.CANCELED)
+  public updateOrder(storeOpts: StoreOpts, order: OrderWithTrades) {
+    const idStr = this.makeIdStr(storeOpts)
+    if (order.status !== 'open') this.updateOrderState(storeOpts, order.id, order.status === 'closed' ? ORDER_STATE.DONE : ORDER_STATE.CANCELED)
 
     this.openOrders.get(idStr).set(order.id, order)
   }
 
-  public getAllPendingOrders(exchange: string, symbol: string, strategy: string) {
-    const idStr = this.makeIdStr(exchange, symbol, strategy)
+  public getAllPendingOrders(storeOpts: StoreOpts) {
+    const idStr = this.makeIdStr(storeOpts)
 
     return Array.from(this.orderStates.get(idStr).entries())
       .filter(([id, state]) => state === ORDER_STATE.PENDING)
       .map(([id]) => id)
   }
 
-  public getOrderState(exchange: string, symbol: string, strategy: string, id: string) {
-    const idStr = this.makeIdStr(exchange, symbol, strategy)
+  public getOrderState(storeOpts: StoreOpts, id: string) {
+    const idStr = this.makeIdStr(storeOpts)
     return this.orderStates.get(idStr).get(id)
   }
 
-  public updateOrderState(exchange: string, symbol: string, strategy: string, id: string, state: ORDER_STATE) {
-    const idStr = this.makeIdStr(exchange, symbol, strategy)
+  public updateOrderState(storeOpts: StoreOpts, id: string, state: ORDER_STATE) {
+    const idStr = this.makeIdStr(storeOpts)
     this.orderStates.get(idStr).set(id, state)
   }
 
@@ -76,7 +86,7 @@ export class OrderStore {
     return dbDriver.order.updateOne({ id, exchange }, { $set: { ...updatedOrder } })
   }
 
-  private makeIdStr(exchange: string, symbol: string, strategy: string) {
+  private makeIdStr({ exchange, symbol, strategy }: StoreOpts) {
     return `${exchange}.${symbol}.${strategy}`
   }
 }

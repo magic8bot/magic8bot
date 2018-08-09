@@ -2,6 +2,9 @@ import { Trade } from 'ccxt'
 import { timebucket } from '@magic8bot/timebucket'
 import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
 import { PeriodItem, eventBus, EVENT } from '@lib'
+import { StoreOpts } from '@m8bTypes'
+
+const singleton = Symbol()
 
 interface PeriodConf {
   period: string
@@ -9,6 +12,11 @@ interface PeriodConf {
 }
 
 export class PeriodStore {
+  public static get instance(): PeriodStore {
+    if (!this[singleton]) this[singleton] = new PeriodStore()
+    return this[singleton]
+  }
+
   public periods: Map<string, PeriodItem[]> = new Map()
 
   private periodConfigs: Map<string, PeriodConf> = new Map()
@@ -16,8 +24,12 @@ export class PeriodStore {
   private periodEmitters: Map<string, EventBusEmitter<PeriodItem[]>> = new Map()
   private tradeEventTimeouts: Map<string, NodeJS.Timer> = new Map()
 
-  public addSymbol(exchange: string, symbol: string, strategy: string, conf: PeriodConf) {
-    const idStr = this.makeIdStr(exchange, symbol, strategy)
+  private constructor() {}
+
+  public addSymbol({ exchange, symbol, strategy }: StoreOpts, conf: PeriodConf) {
+    const idStr = this.makeIdStr({ exchange, symbol, strategy })
+    if (this.periods.has(idStr)) return
+
     this.periods.set(idStr, [])
     this.periodConfigs.set(idStr, conf)
     this.tradeEventTimeouts.set(idStr, null)
@@ -70,6 +82,10 @@ export class PeriodStore {
     this.periodEmitters.get(idStr)()
   }
 
+  public clearPeriods(idStr: string) {
+    this.periods.set(idStr, [])
+  }
+
   private emitTrades(idStr: string) {
     clearTimeout(this.tradeEventTimeouts.get(idStr))
     this.tradeEventTimeouts.set(
@@ -81,7 +97,7 @@ export class PeriodStore {
     )
   }
 
-  private makeIdStr(exchange: string, symbol: string, strategy: string) {
+  private makeIdStr({ exchange, symbol, strategy }: StoreOpts) {
     return `${exchange}.${symbol}.${strategy}`
   }
 }

@@ -2,7 +2,7 @@ import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
 import { WalletStore, OrderStore, ORDER_STATE } from '@stores'
 import { EVENT, eventBus, OrderWithTrades, Adjustment } from '@lib'
 import { ExchangeProvider, OrderOpts } from '@exchange'
-import { StrategyConf } from '@m8bTypes'
+import { StrategyConf, StoreOpts } from '@m8bTypes'
 import { QuoteEngine } from './quote'
 import { sleep } from '@util'
 import { OrderNotFound, InsufficientFunds } from 'ccxt'
@@ -17,22 +17,31 @@ export class OrderEngine {
   private quoteEngine: QuoteEngine
 
   private emitWalletAdjustment: EventBusEmitter<Adjustment>
-  private orderStore: OrderStore
 
   private orderPollInterval: number
   private orderSlippageAdjustmentTolerance: number
 
-  constructor(private readonly exchangeProvider: ExchangeProvider, private readonly walletStore: WalletStore, strategyConf: StrategyConf, exchange: string, symbol: string) {
+  private strategy: string
+
+  private readonly orderStore = OrderStore.instance
+  private readonly walletStore = WalletStore.instance
+
+  private readonly storeOpts: StoreOpts
+
+  constructor(private readonly exchangeProvider: ExchangeProvider, private readonly exchange: string, private readonly symbol: string, strategyConf: StrategyConf) {
     const { markUp, markDn } = strategyConf
     this.quoteEngine = new QuoteEngine(this.exchangeProvider, exchange, symbol, markUp, markDn)
+    const strategy = (this.strategy = strategyConf.strategyName)
 
-    this.opts = { exchange, symbol, strategy: strategyConf.strategyName }
-    this.orderStore = new OrderStore(this.opts)
+    this.storeOpts = { exchange, symbol, strategy }
+
+    this.opts = { exchange, symbol, strategy }
+    this.orderStore.addSymbol(this.storeOpts)
 
     this.orderPollInterval = strategyConf.orderPollInterval
     this.orderSlippageAdjustmentTolerance = strategyConf.orderSlippageAdjustmentTolerance
 
-    this.emitWalletAdjustment = eventBus.get(EVENT.WALLET_ADJUST)(exchange)(symbol)(strategyConf.strategyName).emit
+    this.emitWalletAdjustment = eventBus.get(EVENT.WALLET_ADJUST)(exchange)(symbol)(strategy).emit
   }
 
   get wallet() {
@@ -86,7 +95,7 @@ export class OrderEngine {
 
       // Great Success! Decrement wallet
       this.emitWalletAdjustment(adjustment)
-      await this.orderStore.newOrder(order)
+      await this.orderStore.newOrder(this.storeOpts, order)
 
       return order
     } catch (e) {
@@ -105,19 +114,19 @@ export class OrderEngine {
 
     await this.updateOrder(order)
 
-    return order.status === 'open' ? this.adjustOrder(id) : this.orderStore.closeOpenOrder(id)
+    return order.status === 'open' ? this.adjustOrder(id) : this.orderStore.closeOpenOrder(this.storeOpts, id)
   }
 
   private async updateOrder(order: OrderWithTrades) {
     this.adjustWallet(order)
 
-    this.orderStore.updateOrder(order)
-    await this.orderStore.saveOrder(order)
+    this.orderStore.updateOrder(this.storeOpts, order)
+    await this.orderStore.saveOrder(this.exchange, order)
   }
 
   private adjustWallet(order: OrderWithTrades) {
     // @todo(notVitaliy): Adjust for fees
-    const openOrder = this.orderStore.getOpenOrder(order.id)
+    const openOrder = this.orderStore.getOpenOrder(this.storeOpts, order.id)
     const adjustment = { asset: 0, currency: 0 }
 
     if (order.side === 'buy') {
@@ -130,7 +139,7 @@ export class OrderEngine {
   }
 
   private async adjustOrder(id: string) {
-    const { price, side } = this.orderStore.getOpenOrder(id)
+    const { price, side } = this.orderStore.getOpenOrder(this.storeOpts, id)
     const { exchange, symbol } = this.opts
 
     const rawQuote = side === 'buy' ? await this.quoteEngine.getBuyPrice() : await this.quoteEngine.getSellPrice()
@@ -148,22 +157,22 @@ export class OrderEngine {
   }
 
   private async cancelOrder(id: string) {
-    const { price, side, remaining } = this.orderStore.getOpenOrder(id)
+    const { price, side, remaining } = this.orderStore.getOpenOrder(this.storeOpts, id)
     const { exchange } = this.opts
     try {
-      this.orderStore.updateOrderState(id, ORDER_STATE.PENDING_CANCEL)
+      this.orderStore.updateOrderState(this.storeOpts, id, ORDER_STATE.PENDING_CANCEL)
       await this.exchangeProvider.cancelOrder(exchange, id)
-      this.orderStore.updateOrderState(id, ORDER_STATE.CANCELED)
+      this.orderStore.updateOrderState(this.storeOpts, id, ORDER_STATE.CANCELED)
 
       // Refund the wallet
       const adjustment = side === 'buy' ? { asset: 0, currency: price * remaining } : { asset: remaining, currency: 0 }
       this.emitWalletAdjustment({ ...adjustment, type: 'cancelOrder' })
     } catch (e) {
       if (e instanceof OrderNotFound) {
-        this.orderStore.updateOrderState(id, ORDER_STATE.DONE)
+        this.orderStore.updateOrderState(this.storeOpts, id, ORDER_STATE.DONE)
         return false
       }
-      this.orderStore.updateOrderState(id, ORDER_STATE.CANCELED)
+      this.orderStore.updateOrderState(this.storeOpts, id, ORDER_STATE.CANCELED)
     }
     return true
   }

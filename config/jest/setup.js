@@ -1,4 +1,3 @@
-jest.mock('pushbullet')
 jest.mock('crypto', () => ({ randomBytes: () => ({ toString: () => 'random-string' }) }))
 
 const mockA = jest.fn()
@@ -49,7 +48,10 @@ jest.mock('../../src/lib/db/db-driver.lib', () => {
 
 jest.mock('../../src/util/logger', () => {
   const logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
     info: jest.fn(),
+    verbose: jest.fn(),
     debug: jest.fn(),
     silly: jest.fn(),
     error: jest.fn(),

@@ -1,4 +1,4 @@
-import { Exchange, Trade, Balances, OrderBook, Order } from 'ccxt'
+import { Exchange, Trade, Order } from 'ccxt'
 import { gdax, binance } from './adapters'
 import { ExchangeAdapter } from './adapters/base'
 import { OrderWithTrades } from '@lib'

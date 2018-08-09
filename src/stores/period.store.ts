@@ -2,49 +2,72 @@ import { Trade } from 'ccxt'
 import { timebucket } from '@magic8bot/timebucket'
 import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
 import { PeriodItem, eventBus, EVENT } from '@lib'
+import { StoreOpts } from '@m8bTypes'
+
+const singleton = Symbol()
+
+interface PeriodConf {
+  period: string
+  lookbackSize: number
+}
 
 export class PeriodStore {
-  public periods: PeriodItem[] = []
+  public static get instance(): PeriodStore {
+    if (!this[singleton]) this[singleton] = new PeriodStore()
+    return this[singleton]
+  }
 
-  private updateEmitter: EventBusEmitter<PeriodItem[]>
-  private periodEmitter: EventBusEmitter<PeriodItem[]>
+  public periods: Map<string, PeriodItem[]> = new Map()
 
-  private tradeEventTimeout: NodeJS.Timer = null
+  private periodConfigs: Map<string, PeriodConf> = new Map()
+  private updateEmitters: Map<string, EventBusEmitter<PeriodItem[]>> = new Map()
+  private periodEmitters: Map<string, EventBusEmitter<PeriodItem[]>> = new Map()
+  private tradeEventTimeouts: Map<string, NodeJS.Timer> = new Map()
 
-  constructor(private readonly period: string, exchange: string, symbol: string, strategy: string, private readonly lookbackSize = 250) {
+  private constructor() {}
+
+  public addSymbol({ exchange, symbol, strategy }: StoreOpts, conf: PeriodConf) {
+    const idStr = this.makeIdStr({ exchange, symbol, strategy })
+    if (this.periods.has(idStr)) return
+
+    this.periods.set(idStr, [])
+    this.periodConfigs.set(idStr, conf)
+    this.tradeEventTimeouts.set(idStr, null)
+
     const tradeListener: EventBusListener<Trade> = eventBus.get(EVENT.XCH_TRADE)(exchange)(symbol).listen
-    tradeListener((trade: Trade) => this.addTrade(trade))
+    tradeListener((trade: Trade) => this.addTrade(idStr, trade))
 
-    this.updateEmitter = eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol).emit
-    this.periodEmitter = eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol).emit
+    this.updateEmitters.set(idStr, eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol)(strategy).emit)
+    this.periodEmitters.set(idStr, eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol)(strategy).emit)
   }
 
-  public initPeriods(trades: Trade[]) {
-    trades.sort(({ timestamp: a }, { timestamp: b }) => (a === b ? 0 : a > b ? 1 : -1)).forEach((trade) => this.addTrade(trade))
-  }
+  public addTrade(idStr: string, trade: Trade) {
+    const { period } = this.periodConfigs.get(idStr)
+    const periods = this.periods.get(idStr)
 
-  public addTrade(trade: Trade) {
     const { amount, price, timestamp } = trade
     const bucket = timebucket(timestamp)
-      .resize(this.period)
+      .resize(period)
       .toMilliseconds()
 
-    if (!this.periods.length || this.periods[0].time < bucket) return this.newPeriod(bucket, trade)
+    if (!periods.length || periods[0].time < bucket) return this.newPeriod(idStr, bucket, trade)
 
-    this.periods[0].low = Math.min(price, this.periods[0].low)
-    this.periods[0].high = Math.max(price, this.periods[0].high)
-    this.periods[0].close = price
-    this.periods[0].volume += amount
+    periods[0].low = Math.min(price, periods[0].low)
+    periods[0].high = Math.max(price, periods[0].high)
+    periods[0].close = price
+    periods[0].volume += amount
 
-    this.emitTrades()
+    this.emitTrades(idStr)
   }
 
-  public newPeriod(bucket: number, { amount, price }: Trade) {
+  public newPeriod(idStr: string, bucket: number, { amount, price }: Trade) {
+    const { lookbackSize } = this.periodConfigs.get(idStr)
+    const periods = this.periods.get(idStr)
     // Events are fired on next tick. Spreading the array will
     // prevent the new period from being injected.
-    this.updateEmitter([...this.periods])
+    this.updateEmitters.get(idStr)([...periods])
 
-    this.periods.unshift({
+    periods.unshift({
       close: price,
       high: price,
       low: price,
@@ -54,15 +77,27 @@ export class PeriodStore {
       bucket,
     })
 
-    if (this.periods.length >= this.lookbackSize) this.periods.pop()
+    if (periods.length > lookbackSize) periods.pop()
 
-    this.periodEmitter()
+    this.periodEmitters.get(idStr)()
   }
 
-  private emitTrades() {
-    clearTimeout(this.tradeEventTimeout)
-    this.tradeEventTimeout = setTimeout(() => {
-      this.updateEmitter([...this.periods])
-    }, 100)
+  public clearPeriods(idStr: string) {
+    this.periods.set(idStr, [])
+  }
+
+  private emitTrades(idStr: string) {
+    clearTimeout(this.tradeEventTimeouts.get(idStr))
+    this.tradeEventTimeouts.set(
+      idStr,
+      setTimeout(() => {
+        const periods = this.periods.get(idStr)
+        this.updateEmitters.get(idStr)([...periods])
+      }, 100)
+    )
+  }
+
+  private makeIdStr({ exchange, symbol, strategy }: StoreOpts) {
+    return `${exchange}.${symbol}.${strategy}`
   }
 }

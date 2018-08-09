@@ -3,8 +3,8 @@ import { SessionStore } from './session.store'
 describe('SessionStore', () => {
   let sessionStore: SessionStore
 
-  beforeEach(() => {
-    sessionStore = new SessionStore()
+  beforeAll(() => {
+    sessionStore = SessionStore.instance
   })
 
   it('should create new session', async (done) => {

@@ -26,38 +26,39 @@ describe('OrderStore', () => {
   let orderStore: OrderStore
 
   beforeEach(() => {
-    orderStore = new OrderStore({ exchange: 'test', symbol: 'test', strategy: 'test' })
+    orderStore = new OrderStore()
+    orderStore.addSymbol('test', 'test', 'test')
   })
 
   it('should save new orders', async (done) => {
     expect(async () => {
-      await orderStore.newOrder(order)
+      await orderStore.newOrder('test', 'test', 'test', order)
       done()
     }).not.toThrowError()
   })
 
   it('should return open order', async (done) => {
     expect(async () => {
-      await orderStore.newOrder(order)
-      expect(orderStore.getOpenOrder(order.id).status).toEqual('open')
+      await orderStore.newOrder('test', 'test', 'test', order)
+      expect(orderStore.getOpenOrder('test', 'test', 'test', order.id).status).toEqual('open')
       done()
     }).not.toThrowError()
   })
 
   it('should return order pending state', async (done) => {
     expect(async () => {
-      await orderStore.newOrder(order)
-      expect(orderStore.getOrderState(order.id)).toEqual(ORDER_STATE.PENDING)
+      await orderStore.newOrder('test', 'test', 'test', order)
+      expect(orderStore.getOrderState('test', 'test', 'test', order.id)).toEqual(ORDER_STATE.PENDING)
       done()
     }).not.toThrowError()
   })
 
   it('should test update order', async (done) => {
     expect(async () => {
-      await orderStore.newOrder(order)
+      await orderStore.newOrder('test', 'test', 'test', order)
       order.status = 'closed'
-      orderStore.updateOrder(order)
-      expect(orderStore.getOrderState(order.id)).toEqual(ORDER_STATE.DONE)
+      orderStore.updateOrder('test', 'test', 'test', order)
+      expect(orderStore.getOrderState('test', 'test', 'test', order.id)).toEqual(ORDER_STATE.DONE)
 
       done()
     }).not.toThrowError()
@@ -65,19 +66,18 @@ describe('OrderStore', () => {
 
   it('should return all pending orders order', async (done) => {
     expect(async () => {
-      await orderStore.newOrder(order)
-      expect(orderStore.getAllPendingOrders()).toEqual(['test'])
+      await orderStore.newOrder('test', 'test', 'test', order)
+      expect(orderStore.getAllPendingOrders('test', 'test', 'test')).toEqual(['test'])
       done()
     }).not.toThrowError()
   })
 
   it('should close the open order', async (done) => {
     expect(async () => {
-      await orderStore.newOrder(order)
-      orderStore.closeOpenOrder(order.id)
-      expect(orderStore.getOpenOrder(order.id)).toBeUndefined()
+      await orderStore.newOrder('test', 'test', 'test', order)
+      orderStore.closeOpenOrder('test', 'test', 'test', order.id)
+      expect(orderStore.getOpenOrder('test', 'test', 'test', order.id)).toBeUndefined()
       done()
     }).not.toThrowError()
   })
-
 })

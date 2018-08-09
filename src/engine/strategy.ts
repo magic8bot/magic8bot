@@ -3,7 +3,7 @@ import { EventBusListener } from '@magic8bot/event-bus'
 
 import { StrategyConf } from '@m8bTypes'
 import { eventBus, EVENT } from '@lib'
-import { PeriodStore, WalletStore } from '@stores'
+import { PeriodStore, WalletStore, OrderStore } from '@stores'
 import { BaseStrategy, strategyLoader } from '@strategy'
 import { ExchangeProvider } from '@exchange'
 
@@ -23,6 +23,7 @@ export class StrategyEngine {
     private readonly exchangeProvider: ExchangeProvider,
     private readonly walletStore: WalletStore,
     private readonly periodStore: PeriodStore,
+    private readonly orderStore: OrderStore,
     private readonly exchangeName: string,
     private readonly symbol: string,
     private readonly strategyConf: StrategyConf
@@ -36,7 +37,7 @@ export class StrategyEngine {
     this.strategy = new (strategyLoader(strategyName))(this.exchangeName, this.symbol, this.strategyConf)
     this.periodStore.addSymbol(exchangeName, symbol, strategyName, { period, lookbackSize: 250 })
 
-    this.orderEngine = new OrderEngine(this.exchangeProvider, this.walletStore, this.strategyConf, this.exchangeName, this.symbol)
+    this.orderEngine = new OrderEngine(this.exchangeProvider, this.walletStore, this.orderStore, this.exchangeName, this.symbol, this.strategyConf)
   }
 
   public async init(balances: Balances) {

@@ -87,8 +87,6 @@ export class TradeEngine {
 
     const filteredTrades = trades.filter(({ timestamp }) => timestamp > target)
 
-    console.log(trades, filteredTrades)
-
     logger.silly(`${this.exchange}.${symbol} Got ${filteredTrades.length} new trade of ${trades.length} fetched.`)
 
     if (!filteredTrades.length) return

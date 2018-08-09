@@ -26,7 +26,7 @@ describe('OrderStore', () => {
   const storeOpts = { exchange: 'test', symbol: 'test', strategy: 'test' }
   let orderStore: OrderStore
 
-  beforeEach(() => {
+  beforeAll(() => {
     orderStore = OrderStore.instance
     orderStore.addSymbol(storeOpts)
   })

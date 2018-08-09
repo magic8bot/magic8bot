@@ -4,7 +4,7 @@ describe('TradeStore', () => {
   const storeOpts = { exchange: 'test', symbol: 'test' }
   let tradeStore: TradeStore
 
-  beforeEach(() => {
+  beforeAll(() => {
     tradeStore = TradeStore.instance
   })
 

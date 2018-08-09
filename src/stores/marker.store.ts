@@ -3,21 +3,16 @@ import { dbDriver, Marker } from '@lib'
 import { StoreOpts } from '@m8bTypes'
 
 const singleton = Symbol()
-const singletonEnforcer = Symbol()
 
 export class MarkerStore {
   public static get instance(): MarkerStore {
-    if (!this[singleton]) this[singleton] = new MarkerStore(singletonEnforcer)
+    if (!this[singleton]) this[singleton] = new MarkerStore()
     return this[singleton]
   }
 
   private markers: Map<string, Marker> = new Map()
 
-  constructor(enforcer: Symbol) {
-    if (enforcer !== singletonEnforcer) {
-      throw new Error('Cannot construct singleton')
-    }
-  }
+  private constructor() {}
 
   public async getNextBackMarker(storeOpts: StoreOpts) {
     const marker = this.getMarker(storeOpts)

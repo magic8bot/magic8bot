@@ -4,22 +4,17 @@ import { SessionStore } from './session.store'
 import { StoreOpts } from '@m8bTypes'
 
 const singleton = Symbol()
-const singletonEnforcer = Symbol()
 
 export class WalletStore {
   public static get instance(): WalletStore {
-    if (!this[singleton]) this[singleton] = new WalletStore(singletonEnforcer)
+    if (!this[singleton]) this[singleton] = new WalletStore()
     return this[singleton]
   }
 
   private sessionId: string = SessionStore.instance.sessionId
   private wallets: Map<string, Wallet> = new Map()
 
-  constructor(enforcer: Symbol) {
-    if (enforcer !== singletonEnforcer) {
-      throw new Error('Cannot construct singleton')
-    }
-  }
+  private constructor() {}
 
   public async initWallet(storeOpts: StoreOpts, adjustment: Adjustment) {
     await this.loadOrNewWallet(storeOpts, adjustment)

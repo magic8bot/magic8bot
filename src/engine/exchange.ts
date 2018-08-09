@@ -45,7 +45,7 @@ export class ExchangeEngine {
   private backfill() {
     this.tradeEngineOpts.forEach(async (days, symbol) => {
       await this.tradeEngine.scan(symbol, days)
-      await this.tradeStore.loadTrades(this.exchangeName, symbol)
+      await this.tradeStore.loadTrades({ exchange: this.exchangeName, symbol })
       logger.info(`Backfill for ${this.exchangeName} on ${symbol} completed.`)
       this.strategyEngines.get(symbol).forEach((strategyEngine) => strategyEngine.run())
       this.tradeEngine.tick(symbol)
@@ -63,7 +63,7 @@ export class ExchangeEngine {
   private setupBackfillers(days: number, symbol: string) {
     if (!this.tradeEngineOpts.has(symbol)) this.tradeEngineOpts.set(symbol, days)
     logger.debug(`Setting up Backfiller for Symbol ${symbol} and ${days} days.`)
-    this.tradeStore.addSymbol(this.exchangeName, symbol)
+    this.tradeStore.addSymbol({ exchange: this.exchangeName, symbol })
   }
 
   private setupStrategies(strategyConf: StrategyConf) {

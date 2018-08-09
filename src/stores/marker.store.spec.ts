@@ -3,7 +3,7 @@ import { MarkerStore } from './marker.store'
 xdescribe('MarkerStore', () => {
   let markerStore: MarkerStore
 
-  beforeEach(() => {
+  beforeAll(() => {
     markerStore = MarkerStore.instance
   })
 

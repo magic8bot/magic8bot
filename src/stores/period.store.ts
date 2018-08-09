@@ -5,7 +5,6 @@ import { PeriodItem, eventBus, EVENT } from '@lib'
 import { StoreOpts } from '@m8bTypes'
 
 const singleton = Symbol()
-const singletonEnforcer = Symbol()
 
 interface PeriodConf {
   period: string
@@ -14,7 +13,7 @@ interface PeriodConf {
 
 export class PeriodStore {
   public static get instance(): PeriodStore {
-    if (!this[singleton]) this[singleton] = new PeriodStore(singletonEnforcer)
+    if (!this[singleton]) this[singleton] = new PeriodStore()
     return this[singleton]
   }
 
@@ -25,14 +24,12 @@ export class PeriodStore {
   private periodEmitters: Map<string, EventBusEmitter<PeriodItem[]>> = new Map()
   private tradeEventTimeouts: Map<string, NodeJS.Timer> = new Map()
 
-  constructor(enforcer: Symbol) {
-    if (enforcer !== singletonEnforcer) {
-      throw new Error('Cannot construct singleton')
-    }
-  }
+  private constructor() {}
 
   public addSymbol({ exchange, symbol, strategy }: StoreOpts, conf: PeriodConf) {
     const idStr = this.makeIdStr({ exchange, symbol, strategy })
+    if (this.periods.has(idStr)) return
+
     this.periods.set(idStr, [])
     this.periodConfigs.set(idStr, conf)
     this.tradeEventTimeouts.set(idStr, null)
@@ -83,6 +80,10 @@ export class PeriodStore {
     if (periods.length > lookbackSize) periods.pop()
 
     this.periodEmitters.get(idStr)()
+  }
+
+  public clearPeriods(idStr: string) {
+    this.periods.set(idStr, [])
   }
 
   private emitTrades(idStr: string) {

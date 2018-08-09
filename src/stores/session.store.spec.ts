@@ -3,7 +3,7 @@ import { SessionStore } from './session.store'
 describe('SessionStore', () => {
   let sessionStore: SessionStore
 
-  beforeEach(() => {
+  beforeAll(() => {
     sessionStore = SessionStore.instance
   })
 

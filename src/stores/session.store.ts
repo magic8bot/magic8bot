@@ -3,21 +3,16 @@ import crypto from 'crypto'
 import { dbDriver, SessionCollection } from '@lib'
 
 const singleton = Symbol()
-const singletonEnforcer = Symbol()
 
 export class SessionStore {
   public static get instance(): SessionStore {
-    if (!this[singleton]) this[singleton] = new SessionStore(singletonEnforcer)
+    if (!this[singleton]) this[singleton] = new SessionStore()
     return this[singleton]
   }
 
   private _sessionId: string = null
 
-  constructor(enforcer: Symbol) {
-    if (enforcer !== singletonEnforcer) {
-      throw new Error('Cannot construct singleton')
-    }
-  }
+  private constructor() {}
 
   public get sessionId() {
     return this._sessionId

@@ -4,7 +4,6 @@ import { Order } from 'ccxt'
 import { StoreOpts } from '@m8bTypes'
 
 const singleton = Symbol()
-const singletonEnforcer = Symbol()
 
 interface Opts {
   exchange: string
@@ -21,7 +20,7 @@ export enum ORDER_STATE {
 
 export class OrderStore {
   public static get instance(): OrderStore {
-    if (!this[singleton]) this[singleton] = new OrderStore(singletonEnforcer)
+    if (!this[singleton]) this[singleton] = new OrderStore()
     return this[singleton]
   }
 
@@ -29,11 +28,7 @@ export class OrderStore {
   private orderStates: Map<string, Map<string, ORDER_STATE>> = new Map()
   private readonly sessionId = SessionStore.instance.sessionId
 
-  constructor(enforcer: Symbol) {
-    if (enforcer !== singletonEnforcer) {
-      throw new Error('Cannot construct singleton')
-    }
-  }
+  private constructor() {}
 
   public addSymbol(storeOpts: StoreOpts) {
     const idStr = this.makeIdStr(storeOpts)

@@ -4,22 +4,17 @@ import { dbDriver, eventBus, EVENT } from '@lib'
 import { StoreOpts } from '@m8bTypes'
 
 const singleton = Symbol()
-const singletonEnforcer = Symbol()
 
 export class TradeStore {
   public static get instance(): TradeStore {
-    if (!this[singleton]) this[singleton] = new TradeStore(singletonEnforcer)
+    if (!this[singleton]) this[singleton] = new TradeStore()
     return this[singleton]
   }
 
   public tradesMap: Map<string, number> = new Map()
   private emitters: Map<string, EventBusEmitter<Trade>> = new Map()
 
-  constructor(enforcer: Symbol) {
-    if (enforcer !== singletonEnforcer) {
-      throw new Error('Cannot construct singleton')
-    }
-  }
+  private constructor() {}
 
   public addSymbol({ exchange, symbol }: StoreOpts) {
     const idStr = this.makeIdStr({ exchange, symbol })

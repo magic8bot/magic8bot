@@ -14,7 +14,8 @@ export class TradeEngine {
 
   public async scan(symbol: string, days: number) {
     const storeOpts = { exchange: this.exchange, symbol }
-    const now = new Date().getTime()
+
+    const now = this.getNow()
     const target = now - 86400000 * days
 
     await (this.scanType === 'back' ? this.scanBack(symbol, target) : this.scanForward(symbol, target))
@@ -27,8 +28,17 @@ export class TradeEngine {
 
     await (this.scanType === 'back' ? this.tickBack(symbol, target) : this.scanForward(symbol, target))
     await sleep(this.tradePollInterval)
+
     await this.tradeStore.loadTrades(storeOpts)
+    await this.recursiveTick(symbol)
+  }
+
+  private async recursiveTick(symbol) {
     await this.tick(symbol)
+  }
+
+  private getNow() {
+    return new Date().getTime()
   }
 
   private async scanBack(symbol: string, end: number) {
@@ -66,7 +76,7 @@ export class TradeEngine {
     logger.debug(`${this.exchange}.${symbol} scanForward ${JSON.stringify({ now: new Date(newestTime), end: new Date() })}`)
 
     // Always get current time so backfill can catch up to "now"
-    if (newestTime < new Date().getTime()) {
+    if (newestTime < this.getNow()) {
       await this.scanForward(symbol, to)
     }
   }

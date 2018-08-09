@@ -14,7 +14,6 @@ export class StrategyEngine {
   public strategyName: string
 
   private strategy: BaseStrategy
-  private periodStore: PeriodStore
   private orderEngine: OrderEngine
   private lastSignal: 'buy' | 'sell' = null
 
@@ -23,6 +22,7 @@ export class StrategyEngine {
   constructor(
     private readonly exchangeProvider: ExchangeProvider,
     private readonly walletStore: WalletStore,
+    private readonly periodStore: PeriodStore,
     private readonly exchangeName: string,
     private readonly symbol: string,
     private readonly strategyConf: StrategyConf
@@ -34,7 +34,7 @@ export class StrategyEngine {
     this.signalListener(({ signal }) => this.onSignal(signal))
 
     this.strategy = new (strategyLoader(strategyName))(this.exchangeName, this.symbol, this.strategyConf)
-    this.periodStore = new PeriodStore(period, exchangeName, symbol, strategyName)
+    this.periodStore.addSymbol(exchangeName, symbol, strategyName, { period, lookbackSize: 250 })
 
     this.orderEngine = new OrderEngine(this.exchangeProvider, this.walletStore, this.strategyConf, this.exchangeName, this.symbol)
   }
@@ -47,8 +47,8 @@ export class StrategyEngine {
     }
 
     const [a, c] = this.symbol.split('/')
-    const assetBalance = balances[a] ? balances[a] : { free: 0, total: 0, used: 0 } as Balance
-    const currencyBalance = balances[c] ? balances[c] : { free: 0, total: 0, used: 0 } as Balance
+    const assetBalance = balances[a] ? balances[a] : ({ free: 0, total: 0, used: 0 } as Balance)
+    const currencyBalance = balances[c] ? balances[c] : ({ free: 0, total: 0, used: 0 } as Balance)
 
     const adjustment = { asset: assetBalance.total * this.strategyConf.share.asset, currency: currencyBalance.total * this.strategyConf.share.currency }
     await this.walletStore.initWallet(walletOpts, { ...adjustment, type: 'init' })

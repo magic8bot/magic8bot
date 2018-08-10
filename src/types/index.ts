@@ -118,7 +118,7 @@ export interface Magic8bot {
   srcRoot: string
   debug: boolean
   loggerLevel: 'silly' | 'debug' | 'verbose' | 'info' | 'warn' | 'error'
-  loggerFile: string
+  loggerFile?: string
 }
 
 export interface Quote {

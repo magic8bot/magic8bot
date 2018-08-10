@@ -1,5 +1,6 @@
 import { PeriodItem, EVENT, eventBus } from '@lib'
-import { EventBusListener } from '@magic8bot/event-bus'
+import { EventBusListener, EventBusEmitter } from '@magic8bot/event-bus'
+import { SignalEvent, Signal } from '../../types/index'
 
 /**
  * This class defines the base functionality of a strategy.
@@ -15,24 +16,43 @@ import { EventBusListener } from '@magic8bot/event-bus'
  * `onPeriod` should handle the indicator analysis and "calculate" a signal, which has to be
  * emited to the event-bus `EVENT.STRAT_SIGNAL`.
  */
-export abstract class BaseStrategy<T = any> {
-
+export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
   /**
    * Defines the options used by a strategy
    */
-  public options: T
+  public options: TOptions
 
   /**
    * Preroll-Flag. Its changed by prerollDone
    */
   protected isPreroll = true
 
+  /**
+   * Emitter to publish new signals to the bot
+   */
+  protected signalEmitter: EventBusEmitter<SignalEvent>
+  /**
+   * Emitter to publish a calculation to the bot
+   */
+  protected calcEmitter: EventBusEmitter<TCalcResult>
+
   constructor(protected readonly name: string, protected exchange: string, protected symbol: string) {
     const periodUpdateListener: EventBusListener<PeriodItem[]> = eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol)(this.name).listen
     const periodNewListener: EventBusListener<void> = eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol)(this.name).listen
-
-    periodUpdateListener((periods) => this.calculate(periods))
-    periodNewListener(() => this.onPeriod())
+    periodUpdateListener((periods) => {
+      const result = this.calculate(periods)
+      if (result) {
+        this.calcEmitter(result)
+      }
+    })
+    periodNewListener(() => {
+      const signal = this.onPeriod()
+      if (signal) {
+        this.signalEmitter({ signal })
+      }
+    })
+    this.signalEmitter = eventBus.get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(this.name).emit
+    this.calcEmitter = eventBus.get(EVENT.STRAT_CALC)(exchange)(symbol)(this.name).emit
   }
 
   /**
@@ -40,16 +60,16 @@ export abstract class BaseStrategy<T = any> {
    * It should not return anything. All states have to be saved within the strategy!
    *
    * On construction this method is subscribed to the event-bus `EVENT.PERIOD_UPDATE`.
-   * it should emit its results to the event-bus `EVENT.STRAT_CALC`
+   * the returned value is emitted to the event-bus `EVENT.STRAT_CALC`
    * @param periods OHLC candles to calculate the strategy
    */
-  public abstract calculate(periods: PeriodItem[])
+  public abstract calculate(periods: PeriodItem[]): TCalcResult
   /**
    * This method should implement the action, to do on evaluation of a "completed" period.
    * On construction this method is subscribed to the event-bus `EVENT.PERIOD_NEW`.
-   * it should emit its signal to the event-bus `EVENT.STRAT_SIGNAL`.
+   * the returned signal is emitted to the event-bus `EVENT.STRAT_SIGNAL`.
    */
-  public abstract onPeriod()
+  public abstract onPeriod(): Signal
 
   /**
    * This method is called by the StragegyEngine, if preroll has been finished.

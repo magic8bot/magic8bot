@@ -157,5 +157,5 @@ export const magic8bot: Magic8bot = {
   srcRoot: null,
   version: null,
   loggerLevel: 'debug',
-  loggerFile: 'magic8bot.log',
+  loggerFile: '',
 }

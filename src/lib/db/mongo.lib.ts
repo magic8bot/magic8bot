@@ -81,29 +81,16 @@ export class MongoLib {
     this.optionCollection.createIndex({ sessionId: 1 })
 
     this.tradeCollection.createIndex({ id: 1 }, { unique: true })
-    this.tradeCollection.createIndex({ exchange: 1 })
-    this.tradeCollection.createIndex({ symbol: 1 })
-    this.tradeCollection.createIndex({ timestamp: 1 })
+    this.tradeCollection.createIndex({ exchange: 1, symbol: 1, timestamp: 1 })
 
-    this.markerCollection.createIndex({ exchange: 1 })
-    this.markerCollection.createIndex({ symbol: 1 })
-    this.markerCollection.createIndex({ to: 1 })
-    this.markerCollection.createIndex({ from: 1 })
+    this.markerCollection.createIndex({ exchange: 1, symbol: 1, to: 1 })
+    this.markerCollection.createIndex({ exchange: 1, symbol: 1, from: 1 })
 
-    this.orderCollection.createIndex({ sessionId: 1 })
-    this.orderCollection.createIndex({ symbol: 1 })
-    this.orderCollection.createIndex({ timestamp: 1 })
+    this.orderCollection.createIndex({ sessionId: 1, exchange: 1, symbol: 1, timestamp: 1 })
 
-    this.walletCollection.createIndex({ sessionId: 1 })
-    this.walletCollection.createIndex({ exchange: 1 })
-    this.walletCollection.createIndex({ symbol: 1 })
-    this.walletCollection.createIndex({ strategy: 1 })
+    this.walletCollection.createIndex({ sessionId: 1, exchange: 1, symbol: 1, strategy: 1 })
 
-    this.adjustmentCollection.createIndex({ sessionId: 1 })
-    this.adjustmentCollection.createIndex({ exchange: 1 })
-    this.adjustmentCollection.createIndex({ symbol: 1 })
-    this.adjustmentCollection.createIndex({ strategy: 1 })
-    this.adjustmentCollection.createIndex({ timestamp: 1 })
+    this.adjustmentCollection.createIndex({ sessionId: 1, exchange: 1, symbol: 1, strategy: 1, timestamp: 1 })
   }
 
   private makeConnectionString(

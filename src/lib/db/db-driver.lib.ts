@@ -7,9 +7,14 @@ class DbDriver {
   private db: MongoLib
 
   public async connect(dbType: DbType, dbConfig: MongoConf) {
-    if (dbType === 'mongo') this.db = new MongoLib()
-    else throw new Error(`${dbType} not yet supported.`)
-
+    switch (dbType) {
+      case 'mongo':
+        this.db = new MongoLib()
+        break
+      // Add new database engine support here
+      default:
+        throw new Error(`${dbType} not yet supported.`)
+    }
     await this.db.connect(dbConfig)
     this.db.init()
   }

@@ -32,6 +32,7 @@ const base: Base = {
   markUp: 0,
   orderPollInterval: 500,
   orderSlippageAdjustmentTolerance: 0,
+  resetSession: false,
 
   // BELOW NOT IMPLEMENTED
   avg_slippage_pct: 0.045,
@@ -54,7 +55,6 @@ const base: Base = {
   post_only: true,
   profit_stop_enable_pct: 0,
   profit_stop_pct: 1,
-  reset_profit: false,
   rsi_periods: 14,
   sell_pct: 100,
   sell_stop_pct: 0,

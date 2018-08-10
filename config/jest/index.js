@@ -12,10 +12,11 @@ module.exports = {
   moduleDirectories: ['node_modules', 'src'],
   moduleNameMapper: {
     '^@lib$': '<rootDir>/src/lib/index.ts',
+    '^@core$': '<rootDir>/src/core/index.ts',
     '^@engine$': '<rootDir>/src/engine/index.ts',
     '^@exchange$': '<rootDir>/src/exchange/index.ts',
     '^@strategy$': '<rootDir>/src/strategy/index.ts',
-    '^@stores$': '<rootDir>/src/stores/index.ts',
+    '^@store$': '<rootDir>/src/store/index.ts',
     '^@m8bTypes$': '<rootDir>/src/types/index.ts',
     '^@util$': '<rootDir>/src/util/index.ts',
   },
@@ -27,5 +28,5 @@ module.exports = {
   },
   roots: ['<rootDir>/src'],
   collectCoverage: true,
-  coveragePathIgnorePatterns: ["/node_modules", "/config"]
+  coveragePathIgnorePatterns: ['/node_modules', '/config'],
 }

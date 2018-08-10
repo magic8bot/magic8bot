@@ -1,5 +1,5 @@
 import { ExchangeProvider } from '@exchange'
-import { TradeStore, MarkerStore } from '@stores'
+import { TradeStore, MarkerStore } from '@store'
 import { sleep, logger } from '@util'
 
 export class TradeEngine {

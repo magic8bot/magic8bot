@@ -40,7 +40,7 @@ const mockMarkerStore: any = {
   },
 }
 
-jest.mock('../stores', () => {
+jest.mock('../store', () => {
   return { TradeStore: mockTradeStore, MarkerStore: mockMarkerStore }
 })
 

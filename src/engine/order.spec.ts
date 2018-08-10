@@ -35,7 +35,7 @@ const mockOrderStore: any = {
   },
 }
 
-jest.mock('../stores', () => {
+jest.mock('../store', () => {
   return { WalletStore: mockWalletStore, OrderStore: mockOrderStore, ORDER_STATE: MOCK_ORDER_STATE }
 })
 

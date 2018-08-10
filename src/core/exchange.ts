@@ -1,12 +1,12 @@
 import { ExchangeConf, StrategyConf, Base } from '@m8bTypes'
-import { TradeStore } from '@stores'
+import { TradeStore } from '@store'
 import { ExchangeProvider } from '@exchange'
 
-import { TradeEngine } from './trade'
-import { StrategyEngine } from './strategy'
-import { logger } from '../util/logger'
+import { StrategyCore } from '@core'
+import { TradeEngine } from '@engine'
+import { logger } from '@util'
 
-export class ExchangeEngine {
+export class ExchangeCore {
   private exchangeName: string
 
   private baseConf: Base
@@ -14,7 +14,7 @@ export class ExchangeEngine {
   private tradeEngine: TradeEngine
   private tradeEngineOpts: Map<string, number> = new Map()
 
-  private strategyEngines: Map<string, Set<StrategyEngine>> = new Map()
+  private strategyCores: Map<string, Set<StrategyCore>> = new Map()
 
   private readonly tradeStore = TradeStore.instance
 
@@ -39,7 +39,7 @@ export class ExchangeEngine {
   private async initWallets() {
     const balances = await this.exchangeProvider.getBalances(this.exchangeName)
 
-    this.strategyEngines.forEach(async (strategyEngines) => strategyEngines.forEach((strategyEngine) => strategyEngine.init(balances)))
+    this.strategyCores.forEach(async (strategyEngines) => strategyEngines.forEach((strategyEngine) => strategyEngine.init(balances)))
   }
 
   private backfill() {
@@ -47,7 +47,7 @@ export class ExchangeEngine {
       await this.tradeEngine.scan(symbol, days)
       await this.tradeStore.loadTrades({ exchange: this.exchangeName, symbol })
       logger.info(`Backfill for ${this.exchangeName} on ${symbol} completed.`)
-      this.strategyEngines.get(symbol).forEach((strategyEngine) => strategyEngine.run())
+      this.strategyCores.get(symbol).forEach((strategyEngine) => strategyEngine.run())
       this.tradeEngine.tick(symbol)
     })
   }
@@ -71,12 +71,12 @@ export class ExchangeEngine {
 
     const { symbol } = fullConf
 
-    if (!this.strategyEngines.has(symbol)) this.strategyEngines.set(symbol, new Set())
-    const strategyEngines = this.strategyEngines.get(symbol)
+    if (!this.strategyCores.has(symbol)) this.strategyCores.set(symbol, new Set())
+    const strategyEngines = this.strategyCores.get(symbol)
 
     logger.debug(`Setting up Strategy ${strategyConf.strategyName}`)
 
-    strategyEngines.add(new StrategyEngine(this.exchangeProvider, this.exchangeName, symbol, fullConf))
+    strategyEngines.add(new StrategyCore(this.exchangeProvider, this.exchangeName, symbol, fullConf))
   }
 
   private mergeConfig(strategyConf: StrategyConf): StrategyConf {

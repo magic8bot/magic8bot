@@ -65,10 +65,11 @@
   ],
   "_moduleAliases": {
     "@lib": "dist/lib/index.js",
+    "@core": "dist/core/index.js",
     "@engine": "dist/engine/index.js",
     "@exchange": "dist/exchange/index.js",
     "@strategy": "dist/strategy/index.js",
-    "@stores": "dist/stores/index.js",
+    "@store": "dist/store/index.js",
     "@m8bTypes": "dist/types/index.js",
     "@util": "dist/util/index.js"
   }

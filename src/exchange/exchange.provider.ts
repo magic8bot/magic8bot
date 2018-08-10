@@ -1,5 +1,5 @@
 import { ExchangeConf, ExchangeAuth } from '@m8bTypes'
-import ccxt, { Trade } from 'ccxt'
+import ccxt, { Trade, OrderBook } from 'ccxt'
 import { ExchangeWrapper } from './exchange.wrapper'
 import { ExchangeErrorHandler } from './exchange.error'
 import { sleep } from '@util'
@@ -27,7 +27,6 @@ export class ExchangeProvider {
 
       if (!this.hasAllReqCreds(auth, reqKeys)) {
         throw new Error(`${exchangeName} missing required credentials. Requires: ${reqKeys.join(', ')}`)
-        process.exit()
       }
 
       const exchange = new ccxt[exchangeName]({ ...auth, enableRateLimit: true, verbose })
@@ -45,7 +44,7 @@ export class ExchangeProvider {
     return this.retry(fn)
   }
 
-  public getOrderbook(exchangeName: string, symbol: string) {
+  public getOrderbook(exchangeName: string, symbol: string): OrderBook {
     const fn = () => this.exchanges.get(exchangeName).fetchOrderBook(symbol)
     return this.retry(fn)
   }
@@ -80,6 +79,10 @@ export class ExchangeProvider {
 
   public priceToPrecision(exchangeName: string, symbol: string, price: number) {
     return this.exchanges.get(exchangeName).priceToPrecision(symbol, price)
+  }
+
+  public limits(exchangeName: string, symbol: string) {
+    return this.exchanges.get(exchangeName).limits(symbol)
   }
 
   private async retry(fn: () => void, attempt = 0) {

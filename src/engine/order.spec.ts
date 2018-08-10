@@ -44,12 +44,14 @@ const mockPlaceOrder = jest.fn()
 const mockCheckOrder = jest.fn()
 const mockPriceToPrecision = jest.fn()
 const mockCancelOrder = jest.fn()
+const mockLimits = jest.fn().mockReturnValue({ amount: { min: 0, max: 100 } })
 const mockExchangeProvider: any = {
   amountToPrecision: mockAmountToPrecision,
   placeOrder: mockPlaceOrder,
   checkOrder: mockCheckOrder,
   priceToPrecision: mockPriceToPrecision,
   cancelOrder: mockCancelOrder,
+  limits: mockLimits,
 }
 
 jest.mock('../exchange/exchange.provider', () => {

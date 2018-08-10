@@ -167,5 +167,9 @@ describe('Macd', () => {
 
       expect(signal).toBeNull()
     })
+
+    it('macd w/o periods', () => {
+      expect(macd.calculate([])).toBeUndefined()
+    })
   })
 })

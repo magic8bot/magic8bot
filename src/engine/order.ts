@@ -86,7 +86,7 @@ export class OrderEngine {
   }
 
   private async placeOrder(orderOpts: OrderOpts, adjustment: Adjustment) {
-    logger.info('Placing order:', orderOpts)
+    logger.info(`Placing a ${orderOpts.type} ${orderOpts.side}-order of ${orderOpts.amount} at ${orderOpts.price}.`)
 
     try {
       const { exchange } = this.opts
@@ -110,6 +110,7 @@ export class OrderEngine {
     await sleep(this.orderPollInterval)
 
     const { exchange } = this.opts
+    logger.verbose(`Checking order ${id} on ${exchange}`)
     const order = await this.exchangeProvider.checkOrder(exchange, id)
 
     await this.updateOrder(order)

@@ -7,10 +7,10 @@ export class Core {
   constructor(private readonly conf: Conf) {}
 
   public async init() {
-    const { exchanges, reset_profit } = this.conf
+    const { exchanges, resetSession } = this.conf
 
     // @todo(notVitaliy): Fix this shit... eventually
-    if (reset_profit) {
+    if (resetSession) {
       await SessionStore.instance.newSession()
     } else {
       await SessionStore.instance.loadSession()

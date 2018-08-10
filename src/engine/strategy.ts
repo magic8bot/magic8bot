@@ -1,7 +1,7 @@
 import { Balances, Balance } from 'ccxt'
 import { EventBusListener } from '@magic8bot/event-bus'
 
-import { StrategyConf } from '@m8bTypes'
+import { StrategyConf, Signal } from '@m8bTypes'
 import { eventBus, EVENT } from '@lib'
 import { PeriodStore, WalletStore } from '@stores'
 import { BaseStrategy, strategyLoader } from '@strategy'
@@ -15,9 +15,9 @@ export class StrategyEngine {
 
   private strategy: BaseStrategy
   private orderEngine: OrderEngine
-  private lastSignal: 'buy' | 'sell' = null
+  private lastSignal: Signal = null
 
-  private signalListener: EventBusListener<{ signal: 'buy' | 'sell' }>
+  private signalListener: EventBusListener<{ signal: Signal }>
 
   constructor(
     private readonly exchangeProvider: ExchangeProvider,
@@ -60,7 +60,7 @@ export class StrategyEngine {
   }
 
   private onSignal(signal: 'buy' | 'sell', force = false) {
-    logger.info({ signal })
+    logger.info(`${this.strategyName} sent ${signal}-signal (force:${force})`)
     if (!signal || (signal === this.lastSignal && !force)) return
     this.lastSignal = signal
 

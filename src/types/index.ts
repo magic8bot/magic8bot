@@ -66,6 +66,7 @@ export interface Base {
 }
 
 export interface StrategyConf extends Partial<Base> {
+  [key: string]: any
   symbol: string
   strategyName: string
   share: {

@@ -32,9 +32,4 @@ describe('TradeStore', () => {
     await tradeStore.loadTrades(storeOpts)
     expect(tradeStore.tradesMap.size).toEqual(1)
   })
-
-  test('bullshit', async () => {
-    const a = TradeStore.instance
-    tradeStore.addSymbol(storeOpts)
-  })
 })

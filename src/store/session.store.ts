@@ -6,6 +6,7 @@ const singleton = Symbol()
 
 export class SessionStore {
   public static get instance(): SessionStore {
+    /* istanbul ignore next */
     if (!this[singleton]) this[singleton] = new SessionStore()
     return this[singleton]
   }

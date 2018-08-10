@@ -75,9 +75,4 @@ describe('MarkerStore', () => {
     expect(makeMarker).toHaveBeenCalledTimes(1)
     expect(setMarker).toHaveBeenCalledTimes(1)
   })
-
-  test('bullshit', async () => {
-    const a = MarkerStore.instance
-    await markerStore.findLatestTradeMarker(storeOpts)
-  })
 })

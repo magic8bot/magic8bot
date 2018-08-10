@@ -20,6 +20,7 @@ export enum ORDER_STATE {
 
 export class OrderStore {
   public static get instance(): OrderStore {
+    /* istanbul ignore next */
     if (!this[singleton]) this[singleton] = new OrderStore()
     return this[singleton]
   }
@@ -81,6 +82,7 @@ export class OrderStore {
     this.orderStates.get(idStr).set(id, state)
   }
 
+  /* istanbul ignore next */
   public async saveOrder(exchange: string, order: OrderWithTrades) {
     const { id, ...updatedOrder } = order
     return dbDriver.order.updateOne({ id, exchange }, { $set: { ...updatedOrder } })

@@ -25,8 +25,4 @@ describe('SessionStore', () => {
 
     expect(sessionStore.sessionId).toBeDefined()
   })
-
-  test('bullshit', async () => {
-    const a = SessionStore.instance
-  })
 })

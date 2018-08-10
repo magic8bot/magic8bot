@@ -46,7 +46,7 @@ export class OrderEngine {
 
   get wallet() {
     const wallet = this.walletStore.getWallet(this.opts)
-    logger.info({ wallet })
+    logger.verbose(`Available wallet-size on ${this.exchange} (Asset: ${wallet.asset}/Currency: ${wallet.currency}).`)
     return wallet
   }
 

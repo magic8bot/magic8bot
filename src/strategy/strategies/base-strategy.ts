@@ -1,6 +1,6 @@
 import { PeriodItem, EVENT, eventBus } from '@lib'
 import { EventBusListener, EventBusEmitter } from '@magic8bot/event-bus'
-import { SignalEvent, Signal } from '../../types/index'
+import { SignalEvent, Signal } from '@m8bTypes'
 
 /**
  * This class defines the base functionality of a strategy.
@@ -37,11 +37,13 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
   protected calcEmitter: EventBusEmitter<TCalcResult>
 
   constructor(protected readonly name: string, protected exchange: string, protected symbol: string) {
+
     const periodUpdateListener: EventBusListener<PeriodItem[]> = eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol)(this.name).listen
     const periodNewListener: EventBusListener<void> = eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol)(this.name).listen
+
     periodUpdateListener((periods) => {
       const result = this.calculate(periods)
-      if (result) {
+      if (result && Object.keys(result).length === 0) {
         this.calcEmitter(result)
       }
     })
@@ -77,15 +79,5 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
    */
   public prerollDone() {
     this.isPreroll = false
-  }
-
-  // tslint:disable-next-line:no-empty
-  public async init() {
-    // whats its usage?
-  }
-
-  // tslint:disable-next-line:no-empty
-  public async tick() {
-    // whats its usage?
   }
 }

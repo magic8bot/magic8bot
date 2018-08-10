@@ -3,14 +3,15 @@ import { EventBusListener } from '@magic8bot/event-bus'
 
 import { StrategyConf, Signal } from '@m8bTypes'
 import { eventBus, EVENT } from '@lib'
-import { PeriodStore, WalletStore } from '@stores'
+
+import { PeriodStore, WalletStore } from '@store'
 import { BaseStrategy, strategyLoader } from '@strategy'
 import { ExchangeProvider } from '@exchange'
+import { OrderEngine } from '@engine'
 
-import { OrderEngine } from './order'
 import { logger } from '@util'
 
-export class StrategyEngine {
+export class StrategyCore {
   public strategyName: string
 
   private strategy: BaseStrategy

@@ -37,7 +37,6 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
   protected calcEmitter: EventBusEmitter<TCalcResult>
 
   constructor(protected readonly name: string, protected exchange: string, protected symbol: string) {
-
     const periodUpdateListener: EventBusListener<PeriodItem[]> = eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol)(this.name).listen
     const periodNewListener: EventBusListener<void> = eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol)(this.name).listen
 

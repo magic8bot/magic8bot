@@ -1,7 +1,7 @@
-import { ExchangeEngine } from '@engine'
-import { SessionStore } from '@stores'
+import { SessionStore } from '@store'
 import { Conf, ExchangeConf } from '@m8bTypes'
 import { ExchangeProvider } from '@exchange'
+import { ExchangeCore } from './exchange'
 
 export class Core {
   constructor(private readonly conf: Conf) {}
@@ -19,7 +19,7 @@ export class Core {
     const exchangeProvider = new ExchangeProvider(exchanges)
 
     exchanges.forEach((exchangeConf) => {
-      const engine = new ExchangeEngine(exchangeProvider, this.mergeConfig(exchangeConf), this.conf.mode !== 'live')
+      const engine = new ExchangeCore(exchangeProvider, this.mergeConfig(exchangeConf), this.conf.mode !== 'live')
       engine.init()
     })
   }

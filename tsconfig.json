@@ -12,10 +12,11 @@
     "baseUrl": ".",
     "paths": {
       "@lib": ["./src/lib/index.ts"],
+      "@core": ["./src/core/index.ts"],
       "@engine": ["./src/engine/index.ts"],
       "@exchange": ["./src/exchange/index.ts"],
       "@strategy": ["./src/strategy/index.ts"],
-      "@stores": ["./src/stores/index.ts"],
+      "@store": ["./src/store/index.ts"],
       "@m8bTypes": ["./src/types/index.ts"],
       "@util": ["./src/util/index.ts"]
     },

@@ -68,4 +68,9 @@ describe('PeriodStore', () => {
 
     done()
   })
+
+  test('bullshit', async () => {
+    const a = PeriodStore.instance
+    periodStore.addSymbol({ exchange: 'test', symbol: 'test', strategy: 'test' }, { period: '1m', lookbackSize: 2 })
+  })
 })

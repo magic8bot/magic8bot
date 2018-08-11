@@ -27,7 +27,7 @@ interface MacdPeriod {
   avgLoss: number
 }
 
-export class Macd extends BaseStrategy<MacdOptions, { rsi: number, signal: number }> {
+export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: number }> {
   public options: MacdOptions = {
     period: '1m',
     minPeriods: 52,
@@ -61,6 +61,7 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number, signal: numbe
   }
 
   public calculate(periods: PeriodItem[]) {
+    /* istanbul ignore if */
     if (!periods.length) return
 
     this.checkOverbought(periods)
@@ -72,6 +73,8 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number, signal: numbe
     // prettier-ignore
     const { periods: [{ signal, rsi }] } = this
     const [{ bucket }] = periods
+
+    /* istanbul ignore next */
     if (signal && rsi) {
       logger.silly(`calculated: ${JSON.stringify({ bucket, rsi: rsi.toPrecision(4), signal: signal.toPrecision(6) })}`)
     }
@@ -79,10 +82,13 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number, signal: numbe
   }
 
   public calculateMacd() {
+    /* istanbul ignore else */
     if (this.periods[0].emaShort && this.periods[0].emaLong) {
       const macd = this.periods[0].emaShort - this.periods[0].emaLong
       this.periods[0].macd = macd
       this.getEmaMacd()
+
+      /* istanbul ignore else */
       if (this.periods[0].emaMacd) {
         this.periods[0].signal = macd - this.periods[0].emaMacd
       }
@@ -111,6 +117,7 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number, signal: numbe
   }
 
   public onPeriod() {
+    /* istanbul ignore next */
     const signal = this.isPreroll ? null : this.overboughtSell() ? 'sell' : this.getSignal()
     logger.verbose(`Period finished => Signal: ${signal === null ? 'no signal' : signal}`)
     this.newPeriod()
@@ -118,20 +125,24 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number, signal: numbe
   }
 
   public getSignal() {
+    /* istanbul ignore next */
     return this.periods.length <= 1 ? null : this.getMacdSignal(this.periods[0].signal, this.periods[1].signal)
   }
 
   public getMacdSignal(signal: number, lastSignal: number): Signal {
+    /* istanbul ignore next */
     return this.isBuy(signal, lastSignal) ? 'buy' : this.isSell(signal, lastSignal) ? 'sell' : null
   }
 
   public isSell(signal: number, lastSignal: number) {
     const { downTrendThreshold } = this.options
+    /* istanbul ignore next */
     return signal + downTrendThreshold < 0 && lastSignal + downTrendThreshold >= 0
   }
 
   public isBuy(signal: number, lastSignal: number) {
     const { upTrendThreshold } = this.options
+    /* istanbul ignore next */
     return signal - upTrendThreshold > 0 && lastSignal - upTrendThreshold <= 0
   }
 

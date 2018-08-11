@@ -130,19 +130,16 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
   }
 
   public getMacdSignal(signal: number, lastSignal: number): Signal {
-    /* istanbul ignore next */
     return this.isBuy(signal, lastSignal) ? 'buy' : this.isSell(signal, lastSignal) ? 'sell' : null
   }
 
   public isSell(signal: number, lastSignal: number) {
     const { downTrendThreshold } = this.options
-    /* istanbul ignore next */
     return signal + downTrendThreshold < 0 && lastSignal + downTrendThreshold >= 0
   }
 
   public isBuy(signal: number, lastSignal: number) {
     const { upTrendThreshold } = this.options
-    /* istanbul ignore next */
     return signal - upTrendThreshold > 0 && lastSignal - upTrendThreshold <= 0
   }
 

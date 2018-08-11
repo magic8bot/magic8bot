@@ -61,7 +61,6 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
   }
 
   public calculate(periods: PeriodItem[]) {
-    /* istanbul ignore if */
     if (!periods.length) return
 
     this.checkOverbought(periods)
@@ -73,7 +72,11 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
     // prettier-ignore
     const { periods: [{ signal, rsi }] } = this
     const [{ bucket }] = periods
-    logger.silly(`calculated: ${JSON.stringify({ bucket, rsi: rsi ? rsi.toPrecision(4) : null, signal: signal ? signal.toPrecision(6) : null })}`)    return { rsi, signal }
+
+    /* istanbul ignore next */
+    logger.silly(`calculated: ${JSON.stringify({ bucket, rsi: rsi ? rsi.toPrecision(4) : null, signal: signal ? signal.toPrecision(6) : null })}`)
+
+    return { rsi, signal }
   }
 
   public calculateMacd() {

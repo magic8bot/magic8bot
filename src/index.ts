@@ -1,8 +1,9 @@
 import semver from 'semver'
 import { magic8bot } from './conf'
 import { Conf } from '@m8bTypes'
-import { Core, dbDriver, wsServer } from '@lib'
+import { dbDriver, wsServer } from '@lib'
 import { logger } from '@util'
+import { Core } from '@core'
 
 const checkSharePercent = ({ exchanges }: Conf) => {
   exchanges.forEach(({ exchangeName, options: { strategies } }) => {

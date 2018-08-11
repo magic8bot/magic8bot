@@ -7,19 +7,22 @@ describe('SessionStore', () => {
     sessionStore = SessionStore.instance
   })
 
-  it('should create new session', async (done) => {
+  test('should create new session', async () => {
     await sessionStore.newSession()
 
     expect(sessionStore.sessionId).toBeDefined()
-
-    done()
   })
 
-  xit('should load a session', async (done) => {
+  test('should create a new session if none exists', async () => {
     await sessionStore.loadSession()
 
     expect(sessionStore.sessionId).toBeDefined()
+  })
 
-    done()
+  test('should actually load a session', async () => {
+    await sessionStore.newSession()
+    await sessionStore.loadSession()
+
+    expect(sessionStore.sessionId).toBeDefined()
   })
 })

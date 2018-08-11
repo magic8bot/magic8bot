@@ -8,11 +8,28 @@ describe('TradeStore', () => {
     tradeStore = TradeStore.instance
   })
 
-  it('should be able to add symbols', async (done) => {
+  test('should be able to add symbols', async () => {
     tradeStore.addSymbol(storeOpts)
 
     expect(tradeStore.tradesMap.size).toEqual(1)
+  })
 
-    done()
+  test('should load trades', async () => {
+    await tradeStore.loadTrades(storeOpts)
+    expect(tradeStore.tradesMap.size).toEqual(1)
+  })
+
+  test('should add trades', async () => {
+    await tradeStore.insertTrades(storeOpts, [{ foo: 'bar' }] as any)
+    expect(tradeStore.tradesMap.size).toEqual(1)
+  })
+
+  test('should actually load trads', async () => {
+    // @ts-ignore
+    const idStr = tradeStore.makeIdStr(storeOpts)
+    tradeStore.tradesMap.set(idStr, 0)
+    await tradeStore.insertTrades(storeOpts, [{ timestamp: 1 }] as any)
+    await tradeStore.loadTrades(storeOpts)
+    expect(tradeStore.tradesMap.size).toEqual(1)
   })
 })

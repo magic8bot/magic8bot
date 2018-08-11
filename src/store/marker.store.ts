@@ -6,6 +6,7 @@ const singleton = Symbol()
 
 export class MarkerStore {
   public static get instance(): MarkerStore {
+    /* istanbul ignore next */
     if (!this[singleton]) this[singleton] = new MarkerStore()
     return this[singleton]
   }
@@ -39,6 +40,7 @@ export class MarkerStore {
     return marker
   }
 
+  /* istanbul ignore next */
   public async findLatestTradeMarker({ exchange, symbol }: StoreOpts) {
     const marker = await dbDriver.marker
       .find({ exchange, symbol })
@@ -73,5 +75,3 @@ export class MarkerStore {
     return `${exchange}.${symbol}`
   }
 }
-
-// export const markerStore = new MarkerStore()

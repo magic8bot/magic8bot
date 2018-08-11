@@ -7,6 +7,7 @@ const singleton = Symbol()
 
 export class TradeStore {
   public static get instance(): TradeStore {
+    /* istanbul ignore next */
     if (!this[singleton]) this[singleton] = new TradeStore()
     return this[singleton]
   }
@@ -18,6 +19,7 @@ export class TradeStore {
 
   public addSymbol({ exchange, symbol }: StoreOpts) {
     const idStr = this.makeIdStr({ exchange, symbol })
+    /* istanbul ignore next */
     if (this.tradesMap.has(idStr)) return
 
     this.tradesMap.set(idStr, 0)
@@ -51,5 +53,3 @@ export class TradeStore {
     return `${exchange}.${symbol}`
   }
 }
-
-// export const tradeStore = new TradeStore()

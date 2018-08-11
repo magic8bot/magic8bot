@@ -13,6 +13,7 @@ interface PeriodConf {
 
 export class PeriodStore {
   public static get instance(): PeriodStore {
+    /* istanbul ignore next */
     if (!this[singleton]) this[singleton] = new PeriodStore()
     return this[singleton]
   }
@@ -28,6 +29,7 @@ export class PeriodStore {
 
   public addSymbol({ exchange, symbol, strategy }: StoreOpts, conf: PeriodConf) {
     const idStr = this.makeIdStr({ exchange, symbol, strategy })
+    /* istanbul ignore next */
     if (this.periods.has(idStr)) return
 
     this.periods.set(idStr, [])
@@ -35,6 +37,7 @@ export class PeriodStore {
     this.tradeEventTimeouts.set(idStr, null)
 
     const tradeListener: EventBusListener<Trade> = eventBus.get(EVENT.XCH_TRADE)(exchange)(symbol).listen
+    /* istanbul ignore next */
     tradeListener((trade: Trade) => this.addTrade(idStr, trade))
 
     this.updateEmitters.set(idStr, eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol)(strategy).emit)
@@ -90,10 +93,14 @@ export class PeriodStore {
     clearTimeout(this.tradeEventTimeouts.get(idStr))
     this.tradeEventTimeouts.set(
       idStr,
-      setTimeout(() => {
-        const periods = this.periods.get(idStr)
-        this.updateEmitters.get(idStr)([...periods])
-      }, 100)
+      setTimeout(
+        /* istanbul ignore next */
+        () => {
+          const periods = this.periods.get(idStr)
+          this.updateEmitters.get(idStr)([...periods])
+        },
+        100
+      )
     )
   }
 

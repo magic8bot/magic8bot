@@ -109,13 +109,22 @@ export class OrderEngine {
   private async checkOrder(id: string) {
     await sleep(this.orderPollInterval)
 
-    const { exchange } = this.opts
+    const { exchange, symbol } = this.opts
     logger.verbose(`Checking order ${id} on ${exchange}`)
     const order = await this.exchangeProvider.checkOrder(exchange, id)
 
     await this.updateOrder(order)
-
-    return order.status === 'open' ? this.adjustOrder(id) : this.orderStore.closeOpenOrder(this.storeOpts, id)
+    switch (order.status) {
+      case 'open':
+        return this.adjustOrder(id)
+      case 'closed':
+        logger.info(`Order ${id} for ${symbol} on  ${exchange} was closed.`)
+        break
+      case 'canceled':
+        logger.info(`Order ${id} for ${symbol} on ${exchange} was canceled.`)
+        break
+    }
+    return this.orderStore.closeOpenOrder(this.storeOpts, id)
   }
 
   private async updateOrder(order: OrderWithTrades) {
@@ -150,6 +159,7 @@ export class OrderEngine {
 
     // Order slipped
     if (shouldAdjust) {
+      logger.verbose(`Adjusting order ${id} on ${symbol} from ${quote} to ${adjustedQuote}`)
       if (await this.cancelOrder(id)) return side === 'buy' ? this.executeBuy(quote) : this.executeSell(quote)
       return false
     }

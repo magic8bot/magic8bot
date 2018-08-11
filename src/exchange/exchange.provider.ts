@@ -3,6 +3,7 @@ import ccxt, { Trade } from 'ccxt'
 import { ExchangeWrapper } from './exchange.wrapper'
 import { ExchangeErrorHandler } from './exchange.error'
 import { sleep } from '@util'
+import { OrderWithTrades } from '@lib'
 
 const verbose = false
 
@@ -56,7 +57,7 @@ export class ExchangeProvider {
     return this.retry(fn)
   }
 
-  public checkOrder(exchangeName: string, orderId: string) {
+  public checkOrder(exchangeName: string, orderId: string): OrderWithTrades {
     const fn = () => this.exchanges.get(exchangeName).checkOrder(orderId)
     return this.retry(fn)
   }

@@ -1,15 +1,19 @@
 import { EventBusListener } from '@magic8bot/event-bus'
 import { dbDriver, Wallet, eventBus, EVENT, Adjustment } from '@lib'
 import { SessionStore } from './session.store'
+import { AdjustmentStore } from './adjustment.store'
 import { StoreOpts } from '@m8bTypes'
 
 const singleton = Symbol()
 
 export class WalletStore {
   public static get instance(): WalletStore {
+    /* istanbul ignore next */
     if (!this[singleton]) this[singleton] = new WalletStore()
     return this[singleton]
   }
+
+  private readonly adjustmentStore = AdjustmentStore.instance
 
   private sessionId: string = SessionStore.instance.sessionId
   private wallets: Map<string, Wallet> = new Map()
@@ -49,6 +53,7 @@ export class WalletStore {
     const { exchange, symbol, strategy } = storeOpts
     const walletListener: EventBusListener<Adjustment> = eventBus.get(EVENT.WALLET_ADJUST)(exchange)(symbol)(strategy).listen
 
+    /* istanbul ignore next */
     walletListener((adjustment: Adjustment) => this.adjustWallet(storeOpts, adjustment))
   }
 
@@ -60,8 +65,7 @@ export class WalletStore {
     wallet.asset += adjustment.asset
     wallet.currency += adjustment.currency
 
-    const timestamp = new Date().getTime()
-    await dbDriver.adjustment.save({ sessionId: this.sessionId, ...storeOpts, timestamp, ...adjustment })
+    await this.adjustmentStore.adjustWallet(storeOpts, adjustment)
 
     this.saveWallet(storeOpts)
   }

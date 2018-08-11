@@ -41,6 +41,12 @@ jest.mock('../../src/lib/db/db-driver.lib', () => {
     get order() {
       return db.collection('orders')
     },
+    get wallet() {
+      return db.collection('wallets')
+    },
+    get adjustment() {
+      return db.collection('adjustments')
+    },
   }
 
   return { dbDriver }

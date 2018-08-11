@@ -86,17 +86,15 @@ export class OrderEngine {
 
   private async placeOrder(orderOpts: OrderOpts, adjustment: Adjustment) {
     const { exchange } = this.opts
-    let { amount } = orderOpts
-    const { symbol, side, type, price } = orderOpts
+    const { symbol, side, type, price, amount } = orderOpts
     const { min, max } = this.exchangeProvider.getLimits(exchange, symbol).amount
-
     if (amount < min) {
       logger.error(`Insufficient Funds in Wallet to place an minSize-order of ${amount}! (Min: ${min})`)
       return false
     }
     // prevent order fail, if calculated order is over market limits
     if (amount > max) {
-      amount = max
+      orderOpts.amount = max
     }
 
     logger.info(`Placing a ${type} ${side}-order of ${amount} at ${price}.`)

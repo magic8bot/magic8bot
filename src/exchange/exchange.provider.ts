@@ -50,7 +50,6 @@ export class ExchangeProvider {
   }
 
   public placeOrder(exchangeName: string, { symbol, type, side, amount, price }: OrderOpts) {
-    console.log({ amount, price, cost: amount * price })
     const fn = () => this.exchanges.get(exchangeName).createOrder(symbol, type, side, amount, price)
     return this.retry(fn)
   }

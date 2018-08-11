@@ -34,6 +34,7 @@ const toCamel = (parts: string[]) => {
 const detectCase = (str: string) => {
   if (/_/.test(str)) return 'snake'
   if (/-/.test(str)) return 'kebab'
+  /* istanbul ignore else */
   if (/[A-Z]/.test(str)) return 'camel'
 }
 
@@ -55,7 +56,7 @@ export const fromSnakeToCamel = (str: string) => fromSnake(str).toCamel()
 export const fromSnakeToKebab = (str: string) => fromSnake(str).toKebab()
 
 export const fromKebabToCamel = (str: string) => fromKebab(str).toCamel()
-export const fromKebabToKebab = (str: string) => fromKebab(str).toKebab()
+export const fromKebabToSnake = (str: string) => fromKebab(str).toSnake()
 
 export const fromAnyToCamel = (str: string) => fromAny(str).toCamel()
 export const fromAnyToSnake = (str: string) => fromAny(str).toSnake()

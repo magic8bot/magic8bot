@@ -8,6 +8,7 @@ const PROPERTY_RANDOM_CHANCE = 0.3 // Chance of a Mutation to spawn a new specie
 const PROPERTY_MUTATION_CHANCE = 0.3 // Chance of a Mutation in an aspect of the species
 const PROPERTY_CROSSOVER_CHANCE = 0.5 // Chance of a aspect being inherited by another species
 
+/* istanbul ignore next */
 const create = (strategy) => {
   const r = {}
   for (const k in strategy) {
@@ -45,6 +46,7 @@ const create = (strategy) => {
   return r
 }
 
+/* istanbul ignore next */
 const range = (v, step, stepSize) => {
   let scale = step / (stepSize - 1)
 
@@ -70,6 +72,7 @@ const range = (v, step, stepSize) => {
   }
 }
 
+/* istanbul ignore next */
 const mutation = (oldPhenotype, strategy) => {
   const r = create(strategy)
   if (Math.random() > PROPERTY_RANDOM_CHANCE) {
@@ -83,6 +86,7 @@ const mutation = (oldPhenotype, strategy) => {
   return r
 }
 
+/* istanbul ignore next */
 const crossover = (phenotypeA, phenotypeB, strategy) => {
   const p1 = {}
   const p2 = {}
@@ -99,6 +103,7 @@ const crossover = (phenotypeA, phenotypeB, strategy) => {
   return [p1, p2]
 }
 
+/* istanbul ignore next */
 const fitness = (phenotype) => {
   if (typeof phenotype.sim === 'undefined') return 0
   let rate = 0
@@ -164,11 +169,13 @@ const fitness = (phenotype) => {
   return rate
 }
 
+/* istanbul ignore next */
 const competition = (phenotypeA, phenotypeB) => {
   // TODO: Refer to geneticalgorithm documentation on how to improve this with diverstiy
   return fitness(phenotypeA) >= fitness(phenotypeB)
 }
 
+/* istanbul ignore next */
 const range0 = (min, max) => {
   const r = {
     max,
@@ -178,6 +185,7 @@ const range0 = (min, max) => {
   return r
 }
 
+/* istanbul ignore next */
 const range1 = (min, max) => {
   const r = {
     max,
@@ -187,6 +195,7 @@ const range1 = (min, max) => {
   return r
 }
 
+/* istanbul ignore next */
 const rangeFactor = (min, max, factor) => {
   const r = {
     factor,
@@ -197,6 +206,7 @@ const rangeFactor = (min, max, factor) => {
   return r
 }
 
+/* istanbul ignore next */
 const rangeFloat = (min, max) => {
   const r = {
     max,
@@ -206,6 +216,7 @@ const rangeFloat = (min, max) => {
   return r
 }
 
+/* istanbul ignore next */
 const rangePeriod = (min, max, periodLength) => {
   const r = {
     max,
@@ -216,6 +227,7 @@ const rangePeriod = (min, max, periodLength) => {
   return r
 }
 
+/* istanbul ignore next */
 const rangeMaType = () => {
   const r = {
     options: ['SMA', 'EMA', 'WMA', 'DEMA', 'TEMA', 'TRIMA', 'KAMA', 'MAMA', 'T3'],
@@ -224,6 +236,7 @@ const rangeMaType = () => {
   return r
 }
 
+/* istanbul ignore next */
 const listOption = (options) => {
   const r = {
     options,
@@ -232,6 +245,7 @@ const listOption = (options) => {
   return r
 }
 
+/* istanbul ignore next */
 export const phenotypes = {
   competition,
   create,

@@ -12,9 +12,9 @@ import { SignalEvent, Signal } from '@m8bTypes'
  * should emit its results to the event-bus `EVENT.STRAT_CALC`
  *
  * If there is a period completed this will be published by the event-bus `EVENT.PERIOD_NEW`.
- * The `BaseStrategy` alrady subscrbied the `onPeriod`-method on this event.
+ * The `BaseStrategy` already subscribed the `onPeriod`-method on this event.
  * `onPeriod` should handle the indicator analysis and "calculate" a signal, which has to be
- * emited to the event-bus `EVENT.STRAT_SIGNAL`.
+ * emitted to the event-bus `EVENT.STRAT_SIGNAL`.
  */
 export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
   /**
@@ -31,6 +31,7 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
    * Emitter to publish new signals to the bot
    */
   protected signalEmitter: EventBusEmitter<SignalEvent>
+
   /**
    * Emitter to publish a calculation to the bot
    */
@@ -40,18 +41,22 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
     const periodUpdateListener: EventBusListener<PeriodItem[]> = eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol)(this.name).listen
     const periodNewListener: EventBusListener<void> = eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol)(this.name).listen
 
+    /* istanbul ignore next */
     periodUpdateListener((periods) => {
       const result = this.calculate(periods)
       if (result && Object.keys(result).length === 0) {
         this.calcEmitter(result)
       }
     })
+
+    /* istanbul ignore next */
     periodNewListener(() => {
       const signal = this.onPeriod()
       if (signal) {
         this.signalEmitter({ signal })
       }
     })
+
     this.signalEmitter = eventBus.get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(this.name).emit
     this.calcEmitter = eventBus.get(EVENT.STRAT_CALC)(exchange)(symbol)(this.name).emit
   }
@@ -65,6 +70,7 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
    * @param periods OHLC candles to calculate the strategy
    */
   public abstract calculate(periods: PeriodItem[]): TCalcResult
+
   /**
    * This method should implement the action, to do on evaluation of a "completed" period.
    * On construction this method is subscribed to the event-bus `EVENT.PERIOD_NEW`.
@@ -73,7 +79,7 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
   public abstract onPeriod(): Signal
 
   /**
-   * This method is called by the StragegyEngine, if preroll has been finished.
+   * This method is called by the StrategyEngine, if preroll has been finished.
    * Next periods will be "real" trades and no historical data
    */
   public prerollDone() {

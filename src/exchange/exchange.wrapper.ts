@@ -49,7 +49,7 @@ export class ExchangeWrapper {
     return Number(this.exchange.priceToPrecision(symbol, amount))
   }
 
-  public limits(symbol: string) {
+  public getLimits(symbol: string) {
     return this.exchange.market(symbol).limits
   }
 }

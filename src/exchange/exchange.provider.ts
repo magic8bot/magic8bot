@@ -81,8 +81,8 @@ export class ExchangeProvider {
     return this.exchanges.get(exchangeName).priceToPrecision(symbol, price)
   }
 
-  public limits(exchangeName: string, symbol: string) {
-    return this.exchanges.get(exchangeName).limits(symbol)
+  public getLimits(exchangeName: string, symbol: string) {
+    return this.exchanges.get(exchangeName).getLimits(symbol)
   }
 
   private async retry(fn: () => void, attempt = 0) {

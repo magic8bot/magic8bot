@@ -44,7 +44,7 @@ export class ExchangeProvider {
     return this.retry(fn)
   }
 
-  public getOrderbook(exchangeName: string, symbol: string): OrderBook {
+  public getOrderbook(exchangeName: string, symbol: string) {
     const fn = () => this.exchanges.get(exchangeName).fetchOrderBook(symbol)
     return this.retry(fn)
   }

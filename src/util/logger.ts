@@ -8,7 +8,7 @@ function* getWinstonTransports(): IterableIterator<Transport> {
         yield new winston.transports.File({ filename: magic8bot.loggerFile })
     }
 
-    if (process.env.NODE_ENV !== 'production' || !fileLogger) {
+    if (process.env.NODE_ENV === 'development' || !fileLogger) {
         yield new winston.transports.Console({
             format: formatter,
         })

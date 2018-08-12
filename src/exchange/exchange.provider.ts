@@ -84,7 +84,7 @@ export class ExchangeProvider {
     return this.exchanges.get(exchangeName).getLimits(symbol)
   }
 
-  private async retry(fn: () => void, attempt = 0) {
+  private async retry<T>(fn: () => Promise<T>, attempt = 0): Promise<T> | undefined {
     if (attempt > 5) return
 
     try {
@@ -98,7 +98,7 @@ export class ExchangeProvider {
     }
   }
 
-  private getExponentialBackoff(attempt: number) {
+  private getExponentialBackoff(attempt: number): number {
     return Array(attempt)
       .fill(3)
       .reduce((acc, curr) => acc * curr, 50)

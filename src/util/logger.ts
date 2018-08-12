@@ -1,14 +1,21 @@
 import winston from 'winston'
 import { magic8bot } from '../conf'
 import * as Transport from 'winston-transport'
+import DailyRotateFile from 'winston-daily-rotate-file'
 
 function* getWinstonTransports(): IterableIterator<Transport> {
     const fileLogger = isFileLoggerAvailable()
     if (fileLogger) {
-        yield new winston.transports.File({ filename: magic8bot.loggerFile })
+        yield new DailyRotateFile({
+            filename: magic8bot.loggerFile,
+            datePattern: 'YYYY-MM-DD-HH',
+            zippedArchive: true,
+            maxSize: '20m',
+            maxFiles: '7d',
+        })
     }
 
-    if (process.env.NODE_ENV !== 'production' || !fileLogger) {
+    if (process.env.NODE_ENV === 'development' || !fileLogger) {
         yield new winston.transports.Console({
             format: formatter,
         })

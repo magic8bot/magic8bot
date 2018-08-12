@@ -29,7 +29,7 @@ export class ExchangeProvider {
         throw new Error(`${exchangeName} missing required credentials. Requires: ${reqKeys.join(', ')}`)
       }
 
-      const exchange = new ccxt[exchangeName]({ ...auth, enableRateLimit: true, verbose })
+      const exchange = new ccxt[exchangeName]({ ...auth, verbose })
       this.exchanges.set(exchangeName, new ExchangeWrapper(exchangeName, exchange))
     })
   }

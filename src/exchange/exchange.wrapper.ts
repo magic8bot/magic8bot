@@ -1,48 +1,56 @@
-import { Exchange, Trade, Order } from 'ccxt'
+import { Exchange, Trade, Order, Balances, OrderBook } from 'ccxt'
 import { gdax, binance } from './adapters'
 import { ExchangeAdapter } from './adapters/base'
 import { OrderWithTrades } from '@lib'
+import Bottleneck from 'bottleneck'
 
 const adapters: Record<string, ExchangeAdapter> = { binance, gdax }
 
 export class ExchangeWrapper {
   public scan: 'back' | 'forward'
-
   private adapter: ExchangeAdapter
+  private bottleneck: Bottleneck
 
   constructor(exchangeName: string, private readonly exchange: Exchange) {
     if (!(exchangeName in adapters)) throw new Error(`No adapter for ${exchangeName}.`)
     this.adapter = adapters[exchangeName]
     this.scan = this.adapter.scan
+    this.bottleneck = new Bottleneck({ minTime: this.adapter.ratelimit })
   }
 
   public getTradeCursor(trade: Trade) {
     return this.adapter.getTradeCursor(trade)
   }
 
-  public fetchTrades(symbol: string, start: number) {
+  public fetchTrades(symbol: string, start: number): Promise<Trade[]> {
     const params = this.adapter.mapTradeParams(start)
-    return this.exchange.fetchTrades(symbol, undefined, undefined, params)
+    const fn = () => this.exchange.fetchTrades(symbol, undefined, undefined, params)
+    return this.bottleneck.schedule(fn)
   }
 
-  public fetchBalance() {
-    return this.exchange.fetchBalance()
+  public fetchBalance(): Promise<Balances> {
+    const fn = () => this.exchange.fetchBalance()
+    return this.bottleneck.schedule(fn)
   }
 
-  public fetchOrderBook(symbol: string) {
-    return this.exchange.fetchOrderBook(symbol)
+  public fetchOrderBook(symbol: string): Promise<OrderBook> {
+    const fn = () => this.exchange.fetchOrderBook(symbol)
+    return this.bottleneck.schedule(fn)
   }
 
   public createOrder(symbol: string, type: string, side: string, amount: number, price: number): Promise<Order> {
-    return this.exchange.createOrder(symbol, type, side, amount, price)
+    const fn = () => this.exchange.createOrder(symbol, type, side, amount, price)
+    return this.bottleneck.schedule(fn)
   }
 
   public checkOrder(orderId: string): Promise<OrderWithTrades> {
-    return this.exchange.fetchOrder(orderId)
+    const fn = () => this.exchange.fetchOrder(orderId)
+    return this.bottleneck.schedule(fn)
   }
 
   public cancelOrder(orderId: string): Promise<void> {
-    return this.exchange.cancelOrder(orderId)
+    const fn = () => this.exchange.cancelOrder(orderId)
+    return this.bottleneck.schedule(fn)
   }
 
   public priceToPrecision(symbol: string, amount: number) {

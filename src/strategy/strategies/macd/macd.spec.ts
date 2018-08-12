@@ -144,25 +144,26 @@ describe('Macd', () => {
       expect(signal).toEqual('sell')
     })
 
-    xit('macd sell', () => {
-      // @ts-ignore
-      macd.periods = [{ history: -1 }, { history: 1 }]
+    it('macd signal sell', () => {
+      // "mock" periods into current macd instance
+      Object.defineProperty(macd, 'periods', { get: () => [{ signal: -1 }, { signal: 1 }] })
+
       const signal = macd.onPeriod()
 
       expect(signal).toEqual('sell')
     })
 
-    xit('macd buy', () => {
-      // @ts-ignore
-      macd.periods = [{ history: 1 }, { history: -1 }]
+    it('macd signal buy', () => {
+      // "mock" periods into current macd instance
+      Object.defineProperty(macd, 'periods', { get: () => [{ signal: 1 }, { signal: -1 }] })
       const signal = macd.onPeriod()
 
       expect(signal).toEqual('buy')
     })
 
-    it('null', () => {
-      // @ts-ignore
-      macd.periods = [{ history: 1 }, { history: 2 }]
+    it('macd signal null', () => {
+      // "mock" periods into current macd instance
+      Object.defineProperty(macd, 'periods', { get: () => [{ signal: 1 }, { signal: 2 }] })
       const signal = macd.onPeriod()
 
       expect(signal).toBeNull()

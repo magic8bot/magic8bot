@@ -71,10 +71,9 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
 
     // prettier-ignore
     const { periods: [{ signal, rsi }] } = this
-    const [{ bucket }] = periods
 
     /* istanbul ignore next */
-    logger.silly(`calculated: ${JSON.stringify({ bucket, rsi: rsi ? rsi.toPrecision(4) : null, signal: signal ? signal.toPrecision(6) : null })}`)
+    logger.silly(`calculated: ${JSON.stringify({ rsi: rsi !== null ? rsi.toPrecision(4) : null, signal: signal !== null ? signal.toPrecision(6) : null })}`)
 
     return { rsi, signal }
   }
@@ -94,11 +93,13 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
   }
 
   public getEmaShort(periods: PeriodItem[]) {
-    this.periods[0].emaShort = EMA.calculate(this.periods[1].emaShort, periods as any, this.options.emaShortPeriod)
+    const prevEma = this.periods[1] ? this.periods[1].emaShort : 0
+    this.periods[0].emaShort = EMA.calculate(prevEma, periods as any, this.options.emaShortPeriod)
   }
 
   public getEmaLong(periods: PeriodItem[]) {
-    this.periods[0].emaLong = EMA.calculate(this.periods[1].emaLong, periods as any, this.options.emaLongPeriod)
+    const prevEma = this.periods[1] ? this.periods[1].emaLong : 0
+    this.periods[0].emaLong = EMA.calculate(prevEma, periods as any, this.options.emaLongPeriod)
   }
 
   public getEmaMacd() {
@@ -106,10 +107,14 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
   }
 
   public checkOverbought(periods: PeriodItem[]) {
-    const { rsi, avgGain, avgLoss } = RSI.calculate(this.periods[1].avgGain, this.periods[1].avgLoss, periods, this.options.overboughtRsiPeriods)
+    const preAvgGain = this.periods[1] ? this.periods[1].avgGain : 0
+    const preAvgLoss = this.periods[1] ? this.periods[1].avgLoss : 0
+
+    const { rsi, avgGain, avgLoss } = RSI.calculate(preAvgGain, preAvgLoss, periods, this.options.overboughtRsiPeriods)
 
     this.periods[0].rsi = rsi
     this.periods[0].avgGain = avgGain
+
     this.periods[0].avgLoss = avgLoss
     this.overbought = !this.isPreroll && rsi >= this.options.overboughtRsi && !this.overbought
   }
@@ -117,6 +122,14 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
   public onPeriod() {
     /* istanbul ignore next */
     const signal = this.isPreroll ? null : this.overboughtSell() ? 'sell' : this.getSignal()
+    /* istanbul ignore next */
+    if (this.periods.length) {
+      logger.verbose(
+        `MACD: ${this.periods[0].macd ? this.periods[0].macd.toPrecision(5) : null}  EMA: ${this.periods[0].emaMacd ? this.periods[0].emaMacd.toPrecision(5) : null}  Signal: ${
+          this.periods[0].signal ? this.periods[0].signal.toPrecision(6) : null
+        }`
+      )
+    }
     logger.verbose(`Period finished => Signal: ${signal === null ? 'no signal' : signal}`)
     this.newPeriod()
     return signal

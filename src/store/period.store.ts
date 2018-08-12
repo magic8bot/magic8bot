@@ -3,6 +3,7 @@ import { timebucket } from '@magic8bot/timebucket'
 import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
 import { PeriodItem, eventBus, EVENT } from '@lib'
 import { StoreOpts } from '@m8bTypes'
+import { logger } from '../util/logger'
 
 const singleton = Symbol()
 
@@ -24,6 +25,7 @@ export class PeriodStore {
   private updateEmitters: Map<string, EventBusEmitter<PeriodItem[]>> = new Map()
   private periodEmitters: Map<string, EventBusEmitter<PeriodItem[]>> = new Map()
   private tradeEventTimeouts: Map<string, NodeJS.Timer> = new Map()
+  private periodTimer: Map<string, NodeJS.Timer> = new Map()
 
   private constructor() {}
 
@@ -44,67 +46,134 @@ export class PeriodStore {
     this.periodEmitters.set(idStr, eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol)(strategy).emit)
   }
 
+  /* istanbul ignore next */
+  public startPeriodEmitter(storeOpts: StoreOpts) {
+    const idStr = this.makeIdStr(storeOpts)
+    this.periodTimer.set(idStr, setTimeout(() => this.publishPeriod(idStr), this.getPeriodTimeout(idStr)))
+  }
+
   public addTrade(idStr: string, trade: Trade) {
     const { period } = this.periodConfigs.get(idStr)
     const periods = this.periods.get(idStr)
-
     const { amount, price, timestamp } = trade
     const bucket = timebucket(timestamp)
       .resize(period)
       .toMilliseconds()
 
-    if (!periods.length || periods[0].time < bucket) return this.newPeriod(idStr, bucket, trade)
+    // aka prerolled data
+    const tradeBasedPeriodChange = !periods.length || periods[0].time < bucket
 
-    periods[0].low = Math.min(price, periods[0].low)
+    if (tradeBasedPeriodChange) {
+      this.newPeriod(idStr, bucket)
+    }
+
+    // special handling if the trade is the first within the period
+    if (!periods[0].open) periods[0].open = price
+    periods[0].low = !periods[0].low ? price : Math.min(price, periods[0].low)
     periods[0].high = Math.max(price, periods[0].high)
     periods[0].close = price
     periods[0].volume += amount
-
     this.emitTrades(idStr)
+    if (!tradeBasedPeriodChange) return
+
+    // should only happen if timer did something wrong or on Preroll
+    this.checkPeriodWithoutTrades(idStr)
+    this.emitTradeImmediate(idStr)
+    this.periodEmitters.get(idStr)()
   }
 
-  public newPeriod(idStr: string, bucket: number, { amount, price }: Trade) {
+  public newPeriod(idStr: string, bucket: number) {
     const { lookbackSize } = this.periodConfigs.get(idStr)
     const periods = this.periods.get(idStr)
-    // Events are fired on next tick. Spreading the array will
-    // prevent the new period from being injected.
-    this.updateEmitters.get(idStr)([...periods])
 
+    // create an empty period-skeleton
     periods.unshift({
-      close: price,
-      high: price,
-      low: price,
-      open: price,
+      close: null,
+      high: null,
+      low: null,
+      open: null,
       time: bucket,
-      volume: amount,
+      volume: null,
       bucket,
     })
 
     if (periods.length > lookbackSize) periods.pop()
-
-    this.periodEmitters.get(idStr)()
   }
 
   public clearPeriods(idStr: string) {
     this.periods.set(idStr, [])
   }
 
+  /**
+   * This method is throttling the `PERIOD_UPDATE` events to not result in a calculate call for every trade.
+   * Instead its called after 100ms timeout after a trade income was recognized
+   * @param idStr period identifier
+   */
   private emitTrades(idStr: string) {
-    clearTimeout(this.tradeEventTimeouts.get(idStr))
-    this.tradeEventTimeouts.set(
-      idStr,
-      setTimeout(
-        /* istanbul ignore next */
-        () => {
-          const periods = this.periods.get(idStr)
-          this.updateEmitters.get(idStr)([...periods])
-        },
-        100
-      )
-    )
+    if (this.tradeEventTimeouts.has(idStr)) return
+    const fn = () => this.emitTradeImmediate(idStr)
+    this.tradeEventTimeouts.set(idStr, setTimeout(fn, 100))
+  }
+
+  /**
+   * used to emit a immediate `PERIOD_UPDATE` event.
+   * Could be used if a period was finished and there is a calculation needed
+   * @param idStr period identifier
+   */
+  private emitTradeImmediate(idStr: string) {
+    const periods = this.periods.get(idStr)
+    this.updateEmitters.get(idStr)([...periods])
+    /* istanbul ignore else */
+    if (this.tradeEventTimeouts.has(idStr)) {
+      clearTimeout(this.tradeEventTimeouts.get(idStr))
+      this.tradeEventTimeouts.delete(idStr)
+    }
   }
 
   private makeIdStr({ exchange, symbol, strategy }: StoreOpts) {
     return `${exchange}.${symbol}.${strategy}`
+  }
+
+  /* istanbul ignore next */
+  private getPeriodTimeout(idStr: string) {
+    const period = this.periodConfigs.get(idStr).period
+    const bucketEnd = timebucket(period).getEndOfBucketMS()
+    const now = new Date().getTime()
+    logger.silly(`Next ${idStr} period will be published at ${new Date(bucketEnd).toTimeString()}`)
+    return bucketEnd > now ? bucketEnd - now : 0
+  }
+
+  /* istanbul ignore next */
+  private checkPeriodWithoutTrades(idStr: string) {
+    const periods = this.periods.get(idStr)
+    if (periods.length < 2) return
+
+    const [period, lastPeriod] = periods
+    const { close } = lastPeriod
+
+    // period has no open price, so there wasnt any trade.
+    if (!period.open && close) {
+      period.open = close
+      period.high = close
+      period.low = close
+      period.close = close
+      period.volume = 0
+      logger.silly(`Emitting PERIOD_UPDATE for empty period without any trade.`)
+      this.emitTrades(idStr)
+    }
+  }
+
+  /* istanbul ignore next */
+  private publishPeriod(idStr: string) {
+    clearTimeout(this.periodTimer.get(idStr))
+
+    this.checkPeriodWithoutTrades(idStr)
+    // Publish period to event bus
+    this.periodEmitters.get(idStr)()
+    // prepare new period
+    this.newPeriod(idStr, timebucket(this.periodConfigs.get(idStr).period).toMilliseconds())
+
+    const fn = () => this.publishPeriod(idStr)
+    this.periodTimer.set(idStr, setTimeout(fn, this.getPeriodTimeout(idStr)))
   }
 }

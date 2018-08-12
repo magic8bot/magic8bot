@@ -1,4 +1,4 @@
-import { dbDriver, Wallet, eventBus, EVENT, Adjustment } from '@lib'
+import { dbDriver, Wallet, eventBus, EVENT, Adjustment, wsServer } from '@lib'
 import { SessionStore } from './session.store'
 import { StoreOpts } from '@m8bTypes'
 
@@ -17,6 +17,8 @@ export class AdjustmentStore {
 
   public async adjustWallet(storeOpts: StoreOpts, adjustment: Adjustment) {
     const timestamp = new Date().getTime()
-    await dbDriver.adjustment.save({ sessionId: this.sessionId, ...storeOpts, timestamp, ...adjustment })
+    const data = { sessionId: this.sessionId, ...storeOpts, timestamp, ...adjustment }
+    await dbDriver.adjustment.save(data)
+    wsServer.broadcast('adjustment', data)
   }
 }

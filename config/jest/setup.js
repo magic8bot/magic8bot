@@ -18,8 +18,12 @@ jest.mock('../../src/lib/event-bus', () => {
 })
 
 jest.mock('../../src/lib/ws-server', () => {
-  const WsServer = class {}
-  return { WsServer }
+  const wsServer = {
+    init: jest.fn(),
+    broadcast: jest.fn(),
+    registerAction: jest.fn(),
+  }
+  return { wsServer }
 })
 
 jest.mock('../../src/lib/db/db-driver.lib', () => {

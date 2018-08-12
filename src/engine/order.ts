@@ -132,7 +132,7 @@ export class OrderEngine {
     this.adjustWallet(order)
 
     this.orderStore.updateOrder(this.storeOpts, order)
-    await this.orderStore.saveOrder(this.exchange, order)
+    await this.orderStore.saveOrder(this.storeOpts, order)
   }
 
   private adjustWallet(order: OrderWithTrades) {

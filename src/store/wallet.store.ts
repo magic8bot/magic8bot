@@ -1,5 +1,5 @@
 import { EventBusListener } from '@magic8bot/event-bus'
-import { dbDriver, Wallet, eventBus, EVENT, Adjustment } from '@lib'
+import { dbDriver, Wallet, eventBus, EVENT, Adjustment, wsServer } from '@lib'
 import { SessionStore } from './session.store'
 import { AdjustmentStore } from './adjustment.store'
 import { StoreOpts } from '@m8bTypes'
@@ -23,6 +23,7 @@ export class WalletStore {
   public async initWallet(storeOpts: StoreOpts, adjustment: Adjustment) {
     await this.loadOrNewWallet(storeOpts, adjustment)
     this.subcribeToWalletEvents(storeOpts)
+    wsServer.broadcast('wallet', { ...storeOpts, wallet: this.getWallet(storeOpts) })
   }
 
   public getWallet(storeOpts: StoreOpts) {
@@ -75,6 +76,7 @@ export class WalletStore {
     const timestamp = new Date().getTime()
     const wallet = this.wallets.get(idStr)
     await dbDriver.wallet.updateOne({ sessionId: this.sessionId, ...storeOpts }, { $set: { timestamp, ...wallet } }, { upsert: true })
+    wsServer.broadcast('wallet', { ...storeOpts, wallet: this.getWallet(storeOpts) })
   }
 
   private makeIdStr({ exchange, symbol, strategy }: StoreOpts) {

@@ -2,7 +2,7 @@ import WebSocket from 'ws'
 
 type Payload = Record<string, any>
 
-export class WsServer {
+class WsServer {
   private server: WebSocket.Server
   private actions: Map<string, (payload: Payload) => void> = new Map()
 
@@ -39,3 +39,5 @@ export class WsServer {
     }
   }
 }
+
+export const wsServer = new WsServer()

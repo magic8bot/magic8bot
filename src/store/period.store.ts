@@ -1,7 +1,7 @@
 import { Trade } from 'ccxt'
 import { timebucket } from '@magic8bot/timebucket'
 import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
-import { PeriodItem, eventBus, EVENT } from '@lib'
+import { PeriodItem, eventBus, EVENT, wsServer } from '@lib'
 import { StoreOpts } from '@m8bTypes'
 import { logger } from '../util/logger'
 
@@ -123,6 +123,7 @@ export class PeriodStore {
   private emitTradeImmediate(idStr: string) {
     const periods = this.periods.get(idStr)
     this.updateEmitters.get(idStr)([...periods])
+    wsServer.broadcast('period-update', { ...this.parseIdStr(idStr), period: periods[0] })
     /* istanbul ignore else */
     if (this.tradeEventTimeouts.has(idStr)) {
       clearTimeout(this.tradeEventTimeouts.get(idStr))
@@ -170,10 +171,16 @@ export class PeriodStore {
     this.checkPeriodWithoutTrades(idStr)
     // Publish period to event bus
     this.periodEmitters.get(idStr)()
+    wsServer.broadcast('period-new', { ...this.parseIdStr(idStr), period: this.periods.get(idStr)[0] })
     // prepare new period
     this.newPeriod(idStr, timebucket(this.periodConfigs.get(idStr).period).toMilliseconds())
 
     const fn = () => this.publishPeriod(idStr)
     this.periodTimer.set(idStr, setTimeout(fn, this.getPeriodTimeout(idStr)))
+  }
+
+  private parseIdStr(idStr: string): StoreOpts {
+    const [exchange, symbol, strategy] = idStr.split('.')
+    return { exchange, symbol, strategy }
   }
 }

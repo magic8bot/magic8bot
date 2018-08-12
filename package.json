@@ -24,7 +24,7 @@
     "test": "jest --detectOpenHandles --runInBand --forceExit"
   },
   "dependencies": {
-    "@magic8bot/event-bus": "^1.0.3",
+    "@magic8bot/event-bus": "^1.1.1",
     "@magic8bot/timebucket": "^1.1.0",
     "bottleneck": "^2.6.0",
     "ccxt": "^1.12.97",

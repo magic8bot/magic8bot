@@ -315,7 +315,7 @@ describe('OrderEngine', () => {
     expect(mockUpdateOrder).toHaveBeenCalledTimes(1)
     expect(mockUpdateOrder).toHaveBeenCalledWith(storeOpts, order)
     expect(mockSaveOrder).toHaveBeenCalledTimes(1)
-    expect(mockSaveOrder).toHaveBeenCalledWith(mockId, order)
+    expect(mockSaveOrder).toHaveBeenCalledWith(storeOpts, order)
   })
 
   test('adjust wallet when partial buy fill', async () => {

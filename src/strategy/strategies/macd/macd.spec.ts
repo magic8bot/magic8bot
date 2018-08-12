@@ -172,5 +172,11 @@ describe('Macd', () => {
     it('macd w/o periods', () => {
       expect(macd.calculate([])).toBeUndefined()
     })
+
+    it('test', () => {
+      const baseRsiMockReturn = { avgGain: null, avgLoss: null }
+      mockRsiCalculate.mockReturnValueOnce({ rsi: 80, ...baseRsiMockReturn })
+      expect(macd.calculate(candles.slice(0, 1))).toEqual({ rsi: 80, signal: null })
+    })
   })
 })

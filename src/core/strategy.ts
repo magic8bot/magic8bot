@@ -56,8 +56,9 @@ export class StrategyCore {
   }
 
   public run() {
-    logger.info(`Starting Strategy ${this.strategyName}`)
     this.strategy.prerollDone()
+    PeriodStore.instance.startPeriodEmitter({ exchange: this.exchangeName, symbol: this.symbol, strategy: this.strategyName })
+    logger.info(`Starting Strategy ${this.strategyName}`)
   }
 
   private onSignal(signal: 'buy' | 'sell', force = false) {

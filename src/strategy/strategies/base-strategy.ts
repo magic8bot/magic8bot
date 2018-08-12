@@ -44,7 +44,7 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
     /* istanbul ignore next */
     periodUpdateListener((periods) => {
       const result = this.calculate(periods)
-      if (result && Object.keys(result).length === 0) {
+      if (result && Object.keys(result).length !== 0) {
         this.calcEmitter(result)
       }
     })

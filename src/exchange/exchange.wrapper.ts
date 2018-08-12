@@ -9,6 +9,7 @@ export class ExchangeWrapper {
   public scan: 'back' | 'forward'
 
   private adapter: ExchangeAdapter
+
   constructor(exchangeName: string, private readonly exchange: Exchange) {
     if (!(exchangeName in adapters)) throw new Error(`No adapter for ${exchangeName}.`)
     this.adapter = adapters[exchangeName]
@@ -46,5 +47,9 @@ export class ExchangeWrapper {
 
   public priceToPrecision(symbol: string, amount: number) {
     return Number(this.exchange.priceToPrecision(symbol, amount))
+  }
+
+  public getLimits(symbol: string) {
+    return this.exchange.market(symbol).limits
   }
 }

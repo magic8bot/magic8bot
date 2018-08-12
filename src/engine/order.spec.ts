@@ -44,12 +44,14 @@ const mockPlaceOrder = jest.fn()
 const mockCheckOrder = jest.fn()
 const mockPriceToPrecision = jest.fn()
 const mockCancelOrder = jest.fn()
+const mockLimits = jest.fn().mockReturnValue({ amount: { min: 0, max: 100 } })
 const mockExchangeProvider: any = {
   amountToPrecision: mockAmountToPrecision,
   placeOrder: mockPlaceOrder,
   checkOrder: mockCheckOrder,
   priceToPrecision: mockPriceToPrecision,
   cancelOrder: mockCancelOrder,
+  getLimits: mockLimits,
 }
 
 jest.mock('../exchange/exchange.provider', () => {
@@ -704,5 +706,18 @@ describe('OrderEngine', () => {
     await orderEngine.executeBuy()
 
     expect(mockEmitWalletAdjustment).toHaveBeenLastCalledWith(expectedAdjustment)
+  })
+
+  test('order size over limit is adjusted', async () => {
+    mockAmountToPrecision.mockReturnValueOnce(150)
+    await orderEngine.executeBuy()
+    expect(mockPlaceOrder).toHaveBeenCalledWith('test', { amount: 100, price: undefined, side: 'buy', symbol: 'test', type: 'limit' })
+  })
+
+  test('no order placed if size to smaall', async () => {
+    mockAmountToPrecision.mockReturnValueOnce(0.01)
+    mockLimits.mockReturnValueOnce({ amount: { min: 1, max: 100 } })
+    await orderEngine.executeBuy()
+    expect(mockPlaceOrder).toHaveBeenCalledTimes(0)
   })
 })

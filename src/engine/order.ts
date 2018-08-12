@@ -72,7 +72,6 @@ export class OrderEngine {
     const { exchange, symbol } = this.opts
     const rawPrice = quote ? quote : await this.quoteEngine.getSellPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
-
     const amount = this.exchangeProvider.amountToPrecision(this.wallet.asset * strength)
 
     // @todo(notVitaliy): Add support for market
@@ -86,10 +85,21 @@ export class OrderEngine {
   }
 
   private async placeOrder(orderOpts: OrderOpts, adjustment: Adjustment) {
-    logger.info(`Placing a ${orderOpts.type} ${orderOpts.side}-order of ${orderOpts.amount} at ${orderOpts.price}.`)
+    const { exchange } = this.opts
+    const { symbol, side, type, price, amount } = orderOpts
+    const { min, max } = this.exchangeProvider.getLimits(exchange, symbol).amount
+    if (amount < min) {
+      logger.error(`Insufficient Funds in Wallet to place an minSize-order of ${amount}! (Min: ${min})`)
+      return false
+    }
+    // prevent order fail, if calculated order is over market limits
+    if (amount > max) {
+      orderOpts.amount = max
+    }
+
+    logger.info(`Placing a ${type} ${side}-order of ${amount} at ${price}.`)
 
     try {
-      const { exchange } = this.opts
       const order = await this.exchangeProvider.placeOrder(exchange, orderOpts)
       if (!order || !order.id) return false
 

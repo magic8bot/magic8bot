@@ -22,7 +22,7 @@ export class ExchangeWrapper {
     return this.adapter.getTradeCursor(trade)
   }
 
-  public fetchTrades(symbol: string, start: number): Promise<Trade[]> {
+  public fetchTrades(symbol: string, start: number) {
     const params = this.adapter.mapTradeParams(start)
     const fn = () => this.exchange.fetchTrades(symbol, undefined, undefined, params)
     return this.bottleneck.schedule(fn)

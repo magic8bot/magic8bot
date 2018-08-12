@@ -28,12 +28,12 @@ export class ExchangeWrapper {
     return this.bottleneck.schedule(fn)
   }
 
-  public fetchBalance(): Promise<Balances> {
+  public fetchBalance() {
     const fn = () => this.exchange.fetchBalance()
     return this.bottleneck.schedule(fn)
   }
 
-  public fetchOrderBook(symbol: string): Promise<OrderBook> {
+  public fetchOrderBook(symbol: string) {
     const fn = () => this.exchange.fetchOrderBook(symbol)
     return this.bottleneck.schedule(fn)
   }
@@ -48,7 +48,7 @@ export class ExchangeWrapper {
     return this.bottleneck.schedule(fn)
   }
 
-  public cancelOrder(orderId: string): Promise<void> {
+  public cancelOrder(orderId: string) {
     const fn = () => this.exchange.cancelOrder(orderId)
     return this.bottleneck.schedule(fn)
   }

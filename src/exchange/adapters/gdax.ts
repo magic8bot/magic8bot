@@ -3,6 +3,7 @@ import { ExchangeAdapter } from './base'
 
 export const gdax: ExchangeAdapter = {
   scan: 'back',
+  ratelimit: 1000 / 3,
 
   mapTradeParams: (after: number) => {
     if (after === null) return null

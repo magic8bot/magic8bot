@@ -477,6 +477,10 @@ bl@^1.0.0:
     readable-stream "^2.3.5"
     safe-buffer "^5.1.1"
 
+bottleneck@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/bottleneck/-/bottleneck-2.6.0.tgz#cbc557383fd1f63cadc87e1141b1ad766863b863"
+
 brace-expansion@^1.1.7:
   version "1.1.11"
   resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-1.1.11.tgz#3c7fcbf529d87226f3d2f52b966ff5271eb441dd"

@@ -4,6 +4,7 @@ import { time } from '@util'
 
 export const binance: ExchangeAdapter = {
   scan: 'forward',
+  ratelimit: 500,
 
   mapTradeParams: (startTime: number) => {
     if (startTime === null) return null

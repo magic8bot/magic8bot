@@ -1,37 +1,34 @@
-import { SessionStore } from '@store'
-import { Conf, ExchangeConf } from '@m8bTypes'
+import { SessionStore, ExchangeStore } from '@store'
 import { ExchangeProvider } from '@exchange'
 import { ExchangeCore } from './exchange'
+import { wsServer, ExchangeCollection, ExchangeConfig } from '@lib'
 
 export class Core {
-  constructor(private readonly conf: Conf) {}
+  private readonly exchangeProvider: ExchangeProvider
+  private readonly exchangeCores: Map<string, ExchangeCore> = new Map()
 
-  public async init() {
-    const { exchanges, resetSession } = this.conf
+  constructor() {
+    this.exchangeProvider = new ExchangeProvider()
 
-    // @todo(notVitaliy): Fix this shit... eventually
-    if (resetSession) {
-      await SessionStore.instance.newSession()
-    } else {
-      await SessionStore.instance.loadSession()
-    }
-
-    const exchangeProvider = new ExchangeProvider(exchanges)
-
-    exchanges.forEach((exchangeConf) => {
-      const engine = new ExchangeCore(exchangeProvider, this.mergeConfig(exchangeConf), this.conf.mode !== 'live')
-      engine.init()
+    // Registers a new action for the bot to execute
+    wsServer.registerAction('exchange-add', (exchangeConfig: ExchangeConfig) => {
+      this.addExchange(exchangeConfig)
     })
   }
 
-  private mergeConfig(exchangeConf: ExchangeConf): ExchangeConf {
-    const { mode, session_id, exchanges, ...baseConf } = this.conf
-    return {
-      ...exchangeConf,
-      options: {
-        base: { ...baseConf, ...exchangeConf.options.base },
-        strategies: exchangeConf.options.strategies,
-      },
-    }
+  public async init() {
+    await SessionStore.instance.loadSession()
+    const exchanges = await ExchangeStore.instance.loadAll()
+
+    exchanges.forEach((exchangeConfig) => this.addExchange(exchangeConfig))
+  }
+
+  private addExchange(exchangeConfig: ExchangeConfig) {
+    const addSuccess = this.exchangeProvider.addExchange(exchangeConfig)
+
+    if (!addSuccess) return
+
+    const exchangeCore = new ExchangeCore(this.exchangeProvider, exchangeConfig)
+    this.exchangeCores.set(exchangeConfig.exchange, exchangeCore)
   }
 }

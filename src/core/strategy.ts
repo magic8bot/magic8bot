@@ -2,7 +2,7 @@ import { Balances, Balance } from 'ccxt'
 import { EventBusListener } from '@magic8bot/event-bus'
 
 import { StrategyConf, Signal } from '@m8bTypes'
-import { eventBus, EVENT } from '@lib'
+import { eventBus, EVENT, StrategyConfig } from '@lib'
 
 import { PeriodStore, WalletStore } from '@store'
 import { BaseStrategy, strategyLoader } from '@strategy'
@@ -12,57 +12,57 @@ import { OrderEngine } from '@engine'
 import { logger } from '@util'
 
 export class StrategyCore {
-  public strategyName: string
+  private strategy: string
+  private exchange: string
+  private symbol: string
 
-  private strategy: BaseStrategy
+  private baseStrategy: BaseStrategy
+
   private orderEngine: OrderEngine
   private lastSignal: Signal = null
 
   private signalListener: EventBusListener<{ signal: Signal }>
 
-  constructor(
-    private readonly exchangeProvider: ExchangeProvider,
-    private readonly exchangeName: string,
-    private readonly symbol: string,
-    private readonly strategyConf: StrategyConf
-  ) {
-    const { strategyName, period } = strategyConf
-    this.strategyName = strategyName
+  constructor(private readonly exchangeProvider: ExchangeProvider, private readonly strategyConfig: StrategyConfig) {
+    const { exchange, symbol, strategy, period } = strategyConfig
+    this.exchange = exchange
+    this.symbol = symbol
+    this.strategy = strategy
 
-    this.signalListener = eventBus.get(EVENT.STRAT_SIGNAL)(exchangeName)(symbol)(strategyName).listen
+    this.signalListener = eventBus.get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(strategy).listen
     this.signalListener(({ signal }) => this.onSignal(signal))
 
-    this.strategy = new (strategyLoader(strategyName))(this.exchangeName, this.symbol, this.strategyConf)
+    this.baseStrategy = new (strategyLoader(strategy))(exchange, symbol, this.strategyConfig)
 
-    const storeOpts = { exchange: exchangeName, symbol, strategy: strategyName }
+    const storeOpts = { exchange, symbol, strategy }
     PeriodStore.instance.addSymbol(storeOpts, { period, lookbackSize: 250 })
 
-    this.orderEngine = new OrderEngine(this.exchangeProvider, this.exchangeName, this.symbol, this.strategyConf)
+    this.orderEngine = new OrderEngine(this.exchangeProvider, strategyConfig)
   }
 
   public async init(balances: Balances) {
-    const walletOpts = {
-      exchange: this.exchangeName,
-      symbol: this.symbol,
-      strategy: this.strategyName,
-    }
-
-    const [a, c] = this.symbol.split('/')
-    const assetBalance = balances[a] ? balances[a] : ({ free: 0, total: 0, used: 0 } as Balance)
-    const currencyBalance = balances[c] ? balances[c] : ({ free: 0, total: 0, used: 0 } as Balance)
-
-    const adjustment = { asset: assetBalance.total * this.strategyConf.share.asset, currency: currencyBalance.total * this.strategyConf.share.currency }
-    await WalletStore.instance.initWallet(walletOpts, { ...adjustment, type: 'init' })
+    // const walletOpts = {
+    //   exchange: this.exchange,
+    //   symbol: this.symbol,
+    //   strategy: this.strategy,
+    // }
+    // const [a, c] = this.symbol.split('/')
+    // const assetBalance = balances[a] ? balances[a] : ({ free: 0, total: 0, used: 0 } as Balance)
+    // const currencyBalance = balances[c] ? balances[c] : ({ free: 0, total: 0, used: 0 } as Balance)
+    // const adjustment = { asset: assetBalance.total * this.strategyConfig.share.asset, currency: currencyBalance.total * this.strategyConfig.share.currency }
+    // await WalletStore.instance.initWallet(walletOpts, { ...adjustment, type: 'init' })
   }
 
   public run() {
-    this.strategy.prerollDone()
-    PeriodStore.instance.startPeriodEmitter({ exchange: this.exchangeName, symbol: this.symbol, strategy: this.strategyName })
-    logger.info(`Starting Strategy ${this.strategyName}`)
+    this.baseStrategy.prerollDone()
+
+    const { exchange, symbol, strategy } = this
+    PeriodStore.instance.startPeriodEmitter({ exchange, symbol, strategy })
+    logger.info(`Starting Strategy ${this.strategy}`)
   }
 
   private onSignal(signal: 'buy' | 'sell', force = false) {
-    logger.info(`${this.strategyName} sent ${signal}-signal (force:${force})`)
+    logger.info(`${this.strategy} sent ${signal}-signal (force: ${force})`)
     if (!signal || (signal === this.lastSignal && !force)) return
     this.lastSignal = signal
 

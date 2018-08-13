@@ -1,4 +1,5 @@
 import WebSocket from 'ws'
+import { logger } from '@util'
 
 type Payload = Record<string, any>
 
@@ -6,8 +7,10 @@ class WsServer {
   private server: WebSocket.Server
   private actions: Map<string, (payload: Payload) => void> = new Map()
 
-  constructor() {
-    this.server = new WebSocket.Server({ port: 8080 })
+  constructor(port = 8080) {
+    this.server = new WebSocket.Server({ port }, () => {
+      logger.info(`WebSocket server running on ws://localhost:${port}`)
+    })
   }
 
   public init() {
@@ -40,4 +43,4 @@ class WsServer {
   }
 }
 
-export const wsServer = new WsServer()
+export const wsServer = new WsServer(Number(process.env.WS_PORT))

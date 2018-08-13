@@ -51,7 +51,7 @@ describe('TradeEngine', () => {
   let getNow: jest.Mock<any>
 
   beforeEach(() => {
-    tradeEngine = new TradeEngine(mockId, mockExchangeProvider, 0)
+    tradeEngine = new TradeEngine(mockExchangeProvider, mockId, 0)
     getNow = jest.spyOn<any, any>(tradeEngine, 'getNow').mockReturnValue(mockNow)
   })
 
@@ -74,7 +74,7 @@ describe('TradeEngine', () => {
     const scanBack = jest.spyOn<any, any>(tradeEngine, 'scanBack').mockResolvedValueOnce(null)
     const scanForward = jest.spyOn<any, any>(tradeEngine, 'scanForward').mockResolvedValueOnce(null)
 
-    await tradeEngine.scan(mockId, mockDays)
+    await tradeEngine.start(mockId, mockDays)
 
     expect(scanBack).toHaveBeenCalledTimes(1)
     expect(scanBack).toHaveBeenCalledWith(mockId, mockNow / 2)
@@ -88,7 +88,7 @@ describe('TradeEngine', () => {
     const scanBack = jest.spyOn<any, any>(tradeEngine, 'scanBack').mockResolvedValueOnce(null)
     const scanForward = jest.spyOn<any, any>(tradeEngine, 'scanForward').mockResolvedValueOnce(null)
 
-    await tradeEngine.scan(mockId, mockDays)
+    await tradeEngine.start(mockId, mockDays)
 
     expect(scanBack).toHaveBeenCalledTimes(0)
     expect(scanForward).toHaveBeenCalledTimes(1)
@@ -102,7 +102,7 @@ describe('TradeEngine', () => {
     jest.spyOn<any, any>(tradeEngine, 'scanBack').mockResolvedValueOnce(null)
     jest.spyOn<any, any>(tradeEngine, 'scanForward').mockResolvedValueOnce(null)
 
-    await tradeEngine.scan(mockId, mockDays)
+    await tradeEngine.start(mockId, mockDays)
 
     expect(mockLoadTrades).toHaveBeenCalledTimes(1)
   })
@@ -118,7 +118,7 @@ describe('TradeEngine', () => {
 
     const scanBack = jest.spyOn<any, any>(tradeEngine, 'scanBack')
 
-    await tradeEngine.scan(mockId, mockDays)
+    await tradeEngine.start(mockId, mockDays)
 
     expect(scanBack).toHaveBeenCalledTimes(1)
   })
@@ -134,7 +134,7 @@ describe('TradeEngine', () => {
 
     const scanBack = jest.spyOn<any, any>(tradeEngine, 'scanBack')
 
-    await tradeEngine.scan(mockId, mockDays)
+    await tradeEngine.start(mockId, mockDays)
 
     expect(scanBack).toHaveBeenCalledTimes(2)
   })
@@ -150,7 +150,7 @@ describe('TradeEngine', () => {
 
     const scanForward = jest.spyOn<any, any>(tradeEngine, 'scanForward')
 
-    await tradeEngine.scan(mockId, mockDays)
+    await tradeEngine.start(mockId, mockDays)
 
     expect(scanForward).toHaveBeenCalledTimes(1)
   })
@@ -166,7 +166,7 @@ describe('TradeEngine', () => {
 
     const scanForward = jest.spyOn<any, any>(tradeEngine, 'scanForward')
 
-    await tradeEngine.scan(mockId, mockDays)
+    await tradeEngine.start(mockId, mockDays)
 
     expect(scanForward).toHaveBeenCalledTimes(2)
   })
@@ -180,7 +180,7 @@ describe('TradeEngine', () => {
 
     const scanForward = jest.spyOn<any, any>(tradeEngine, 'scanForward')
 
-    await tradeEngine.scan(mockId, mockDays)
+    await tradeEngine.start(mockId, mockDays)
 
     expect(scanForward).toHaveBeenCalledTimes(1)
   })
@@ -195,6 +195,7 @@ describe('TradeEngine', () => {
     const scanForward = jest.spyOn<any, any>(tradeEngine, 'scanForward').mockResolvedValueOnce(null)
     const recursiveTick = jest.spyOn<any, any>(tradeEngine, 'recursiveTick').mockResolvedValueOnce(null)
 
+    // @ts-ignore
     await tradeEngine.tick(mockId)
 
     expect(tickBack).toHaveBeenCalledTimes(1)
@@ -213,6 +214,7 @@ describe('TradeEngine', () => {
     const scanForward = jest.spyOn<any, any>(tradeEngine, 'scanForward').mockResolvedValueOnce(null)
     const recursiveTick = jest.spyOn<any, any>(tradeEngine, 'recursiveTick').mockResolvedValueOnce(null)
 
+    // @ts-ignore
     await tradeEngine.tick(mockId)
 
     expect(tickBack).toHaveBeenCalledTimes(0)
@@ -231,6 +233,7 @@ describe('TradeEngine', () => {
     jest.spyOn<any, any>(tradeEngine, 'scanForward').mockResolvedValueOnce(null)
     jest.spyOn<any, any>(tradeEngine, 'recursiveTick').mockResolvedValueOnce(null)
 
+    // @ts-ignore
     await tradeEngine.tick(mockId)
 
     expect(mockLoadTrades).toHaveBeenCalledTimes(1)
@@ -247,6 +250,7 @@ describe('TradeEngine', () => {
     jest.spyOn<any, any>(tradeEngine, 'scanForward').mockResolvedValueOnce(null)
     jest.spyOn<any, any>(tradeEngine, 'recursiveTick').mockResolvedValueOnce(null)
 
+    // @ts-ignore
     await tradeEngine.tick(mockId)
 
     expect(tickBack).toHaveBeenCalledTimes(1)
@@ -263,6 +267,7 @@ describe('TradeEngine', () => {
     jest.spyOn<any, any>(tradeEngine, 'scanForward').mockResolvedValueOnce(null)
     jest.spyOn<any, any>(tradeEngine, 'recursiveTick').mockResolvedValueOnce(null)
 
+    // @ts-ignore
     await tradeEngine.tick(mockId)
 
     expect(tickBack).toHaveBeenCalledTimes(2)
@@ -281,7 +286,7 @@ describe('TradeEngine', () => {
 
   test('bullshit getNow', async () => {
     // tslint:disable-next-line:no-shadowed-variable
-    const tradeEngine = new TradeEngine(mockId, mockExchangeProvider, 0)
+    const tradeEngine = new TradeEngine(mockExchangeProvider, mockId, 0)
 
     // @ts-ignore
     const now = await tradeEngine.getNow()

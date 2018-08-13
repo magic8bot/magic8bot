@@ -2,27 +2,49 @@ import { ExchangeProvider } from '@exchange'
 import { TradeStore, MarkerStore } from '@store'
 import { sleep, logger } from '@util'
 
+enum SYNC_STATE {
+  STOPPED,
+  RUNNING,
+}
+
 export class TradeEngine {
+  private readonly symbols: Map<string, SYNC_STATE> = new Map()
   private readonly scanType: 'back' | 'forward'
 
   private readonly tradeStore = TradeStore.instance
   private readonly markerStore = MarkerStore.instance
 
-  constructor(private readonly exchange: string, private readonly exchangeProvider: ExchangeProvider, private readonly tradePollInterval: number) {
+  constructor(private readonly exchangeProvider: ExchangeProvider, private readonly exchange: string, private readonly tradePollInterval: number) {
     this.scanType = this.exchangeProvider.getScan(this.exchange)
   }
 
-  public async scan(symbol: string, days: number) {
+  public async start(symbol: string, days: number) {
+    this.symbols.set(symbol, SYNC_STATE.RUNNING)
+    this.tradeStore.addSymbol({ exchange: this.exchange, symbol })
+
+    await this.scan(symbol, days)
+    await this.tick(symbol)
+  }
+
+  public stop(symbol) {
+    this.symbols.set(symbol, SYNC_STATE.STOPPED)
+  }
+
+  private async scan(symbol: string, days: number) {
     const storeOpts = { exchange: this.exchange, symbol }
 
     const now = this.getNow()
     const target = now - 86400000 * days
 
     await (this.scanType === 'back' ? this.scanBack(symbol, target) : this.scanForward(symbol, target))
+    logger.info(`Backfill for ${this.exchange} on ${symbol} completed.`)
+
     await this.tradeStore.loadTrades(storeOpts)
   }
 
-  public async tick(symbol: string) {
+  private async tick(symbol: string) {
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
     const storeOpts = { exchange: this.exchange, symbol }
     const target = (await this.markerStore.findLatestTradeMarker(storeOpts)).newestTime
 

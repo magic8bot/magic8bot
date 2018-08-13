@@ -1,8 +1,8 @@
 import { EventBusEmitter } from '@magic8bot/event-bus'
 import { WalletStore, OrderStore, ORDER_STATE } from '@store'
-import { EVENT, eventBus, OrderWithTrades, Adjustment } from '@lib'
+import { EVENT, eventBus, OrderWithTrades, Adjustment, StrategyConfig } from '@lib'
 import { ExchangeProvider, OrderOpts } from '@exchange'
-import { StrategyConf, StoreOpts } from '@m8bTypes'
+import { StoreOpts } from '@m8bTypes'
 import { QuoteEngine } from './quote'
 import { sleep } from '@util'
 import { OrderNotFound, InsufficientFunds } from 'ccxt'
@@ -28,25 +28,25 @@ export class OrderEngine {
 
   private readonly storeOpts: StoreOpts
 
-  constructor(private readonly exchangeProvider: ExchangeProvider, private readonly exchange: string, private readonly symbol: string, strategyConf: StrategyConf) {
-    const { markUp, markDn } = strategyConf
+  constructor(
+    private readonly exchangeProvider: ExchangeProvider,
+    { exchange, symbol, strategy, orderPollInterval, orderSlippageAdjustmentTolerance, markDn, markUp }: StrategyConfig
+  ) {
     this.quoteEngine = new QuoteEngine(this.exchangeProvider, exchange, symbol, markUp, markDn)
-    const strategy = (this.strategy = strategyConf.strategyName)
-
     this.storeOpts = { exchange, symbol, strategy }
 
     this.opts = { exchange, symbol, strategy }
     this.orderStore.addSymbol(this.storeOpts)
 
-    this.orderPollInterval = strategyConf.orderPollInterval
-    this.orderSlippageAdjustmentTolerance = strategyConf.orderSlippageAdjustmentTolerance
+    this.orderPollInterval = orderPollInterval
+    this.orderSlippageAdjustmentTolerance = orderSlippageAdjustmentTolerance
 
     this.emitWalletAdjustment = eventBus.get(EVENT.WALLET_ADJUST)(exchange)(symbol)(strategy).emit
   }
 
   get wallet() {
     const wallet = this.walletStore.getWallet(this.opts)
-    logger.verbose(`Available wallet-size on ${this.exchange} (Asset: ${wallet.asset}/Currency: ${wallet.currency}).`)
+    logger.verbose(`Available wallet-size on ${this.opts.exchange} (Asset: ${wallet.asset}/Currency: ${wallet.currency}).`)
     return wallet
   }
 

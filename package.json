@@ -30,6 +30,7 @@
     "ccxt": "^1.12.97",
     "codecov": "^3.0.4",
     "cross-env": "5.2.0",
+    "dotenv": "^6.0.0",
     "module-alias": "^2.1.0",
     "mongodb": "^3.1.1",
     "semver": "^5.4.1",
@@ -39,6 +40,7 @@
     "winston-daily-rotate-file": "^3.3.0"
   },
   "devDependencies": {
+    "@types/dotenv": "^4.0.3",
     "@types/jest": "^23.3.0",
     "@types/mongodb": "^3.1.0",
     "@types/mongodb-memory-server": "^1.8.0",

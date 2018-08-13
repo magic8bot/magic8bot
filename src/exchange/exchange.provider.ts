@@ -2,7 +2,8 @@ import { ExchangeConf, ExchangeAuth } from '@m8bTypes'
 import ccxt, { Trade, OrderBook } from 'ccxt'
 import { ExchangeWrapper } from './exchange.wrapper'
 import { ExchangeErrorHandler } from './exchange.error'
-import { sleep } from '@util'
+import { sleep, logger } from '@util'
+import { wsServer, ExchangeCollection, ExchangeConfig } from '@lib'
 
 const verbose = false
 
@@ -18,34 +19,31 @@ export class ExchangeProvider {
   private exchanges: Map<string, ExchangeWrapper> = new Map()
   private errorHandler = new ExchangeErrorHandler()
 
-  constructor(exchangeConfs: ExchangeConf[]) {
-    exchangeConfs.forEach(({ auth, exchangeName }) => {
-      if (ccxt.exchanges.indexOf(exchangeName) === -1) throw new Error(`Invalid exchange: ${exchangeName}`)
+  public addExchange({ auth, exchange }: ExchangeConfig) {
+    if (ccxt.exchanges.indexOf(exchange) === -1) return this.error(`Invalid exchange: ${exchange}`)
 
-      // no clean way to do this, afaik
-      const reqKeys = this.getReqCreds((new ccxt[exchangeName]() as ccxt.Exchange).describe().requiredCredentials)
+    // no clean way to do this, afaik
+    const reqKeys = this.getReqCreds((new ccxt[exchange]() as ccxt.Exchange).describe().requiredCredentials)
 
-      if (!this.hasAllReqCreds(auth, reqKeys)) {
-        throw new Error(`${exchangeName} missing required credentials. Requires: ${reqKeys.join(', ')}`)
-      }
+    if (!this.hasAllReqCreds(auth, reqKeys)) return this.error(`${exchange} missing required credentials. Requires: ${reqKeys.join(', ')}`)
 
-      const exchange = new ccxt[exchangeName]({ ...auth, verbose })
-      this.exchanges.set(exchangeName, new ExchangeWrapper(exchangeName, exchange))
-    })
+    const exchangeConnection = new ccxt[exchange]({ ...auth, verbose })
+    this.exchanges.set(exchange, new ExchangeWrapper(exchange, exchangeConnection))
+    return true
   }
 
-  public getTrades(exchangeName: string, symbol: string, since: number) {
-    const fn = () => this.exchanges.get(exchangeName).fetchTrades(symbol, since)
+  public getTrades(exchange: string, symbol: string, since: number) {
+    const fn = () => this.exchanges.get(exchange).fetchTrades(symbol, since)
     return this.retry(fn)
   }
 
-  public getBalances(exchangeName: string) {
-    const fn = () => this.exchanges.get(exchangeName).fetchBalance()
+  public getBalances(exchange: string) {
+    const fn = () => this.exchanges.get(exchange).fetchBalance()
     return this.retry(fn)
   }
 
-  public getOrderbook(exchangeName: string, symbol: string) {
-    const fn = () => this.exchanges.get(exchangeName).fetchOrderBook(symbol)
+  public getOrderbook(exchange: string, symbol: string) {
+    const fn = () => this.exchanges.get(exchange).fetchOrderBook(symbol)
     return this.retry(fn)
   }
 
@@ -54,30 +52,30 @@ export class ExchangeProvider {
     return this.retry(fn)
   }
 
-  public checkOrder(exchangeName: string, orderId: string) {
-    const fn = () => this.exchanges.get(exchangeName).checkOrder(orderId)
+  public checkOrder(exchange: string, orderId: string) {
+    const fn = () => this.exchanges.get(exchange).checkOrder(orderId)
     return this.retry(fn)
   }
 
-  public cancelOrder(exchangeName: string, orderId: string) {
-    const fn = () => this.exchanges.get(exchangeName).cancelOrder(orderId)
+  public cancelOrder(exchange: string, orderId: string) {
+    const fn = () => this.exchanges.get(exchange).cancelOrder(orderId)
     return this.retry(fn)
   }
 
-  public getScan(exchangeName: string) {
-    return this.exchanges.get(exchangeName).scan
+  public getScan(exchange: string) {
+    return this.exchanges.get(exchange).scan
   }
 
-  public getTradeCursor(exchangeName: string, trade: Trade) {
-    return this.exchanges.get(exchangeName).getTradeCursor(trade)
+  public getTradeCursor(exchange: string, trade: Trade) {
+    return this.exchanges.get(exchange).getTradeCursor(trade)
   }
 
   public amountToPrecision(amount: number) {
     return Math.floor(amount * 100000000) / 100000000
   }
 
-  public priceToPrecision(exchangeName: string, symbol: string, price: number) {
-    return this.exchanges.get(exchangeName).priceToPrecision(symbol, price)
+  public priceToPrecision(exchange: string, symbol: string, price: number) {
+    return this.exchanges.get(exchange).priceToPrecision(symbol, price)
   }
 
   public getLimits(exchangeName: string, symbol: string) {
@@ -112,5 +110,11 @@ export class ExchangeProvider {
 
   private hasAllReqCreds(auth: ExchangeAuth, reqKeys: string[]) {
     return reqKeys.filter((key) => Boolean(auth[key])).length === reqKeys.length
+  }
+
+  private error(error: string) {
+    logger.error(error)
+    wsServer.broadcast('error', { error })
+    return false
   }
 }

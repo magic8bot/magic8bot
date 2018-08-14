@@ -88,7 +88,7 @@ describe('OrderEngine', () => {
   let mockEmitWalletAdjustment
 
   beforeEach(() => {
-    orderEngine = new OrderEngine(mockExchangeProvider, mockId, mockId, mockStrategyConf)
+    orderEngine = new OrderEngine(mockExchangeProvider, mockStrategyConf)
     mockEmitWalletAdjustment = jest.spyOn<any, any>(orderEngine, 'emitWalletAdjustment').mockReturnValueOnce(undefined)
   })
 

@@ -7,7 +7,8 @@ class WsServer {
   private server: WebSocket.Server
   private actions: Map<string, (payload: Payload) => void> = new Map()
 
-  constructor(port = 8080) {
+  constructor(port?: number) {
+    port = port ? port : this.getPort()
     this.server = new WebSocket.Server({ port }, () => {
       logger.info(`WebSocket server running on ws://localhost:${port}`)
     })
@@ -31,16 +32,21 @@ class WsServer {
     const body = raw.toString()
     try {
       const parsed = JSON.parse(body)
-      if (!parsed.action || !parsed.payload) return
+      if (!parsed.action) return this.broadcast('error', { error: 'Invalid input: "action" missing' })
+      if (!parsed.payload) return this.broadcast('error', { error: 'Invalid input: "payload" missing' })
 
       const { action, payload } = parsed
       if (!this.actions.has(action)) return
 
       this.actions.get(action)(payload)
     } catch (e) {
-      console.error(e)
+      this.broadcast('error', { error: `Invalid input: ${e.message}` })
     }
+  }
+
+  private getPort() {
+    return process.env.WS_PORT ? Number(process.env.WS_PORT) : 19807
   }
 }
 
-export const wsServer = new WsServer(Number(process.env.WS_PORT))
+export const wsServer = new WsServer()

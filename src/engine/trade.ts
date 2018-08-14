@@ -1,10 +1,12 @@
 import { ExchangeProvider } from '@exchange'
 import { TradeStore, MarkerStore } from '@store'
 import { sleep, logger } from '@util'
+import { wsServer } from '@lib'
 
 enum SYNC_STATE {
   STOPPED,
-  RUNNING,
+  SYNCING,
+  READY,
 }
 
 export class TradeEngine {
@@ -18,15 +20,26 @@ export class TradeEngine {
     this.scanType = this.exchangeProvider.getScan(this.exchange)
   }
 
+  public isReady(symbol: string) {
+    return this.symbols.get(symbol) === SYNC_STATE.READY
+  }
+
   public async start(symbol: string, days: number) {
-    this.symbols.set(symbol, SYNC_STATE.RUNNING)
+    if (this.symbols.has(symbol) && this.symbols.get(symbol) !== SYNC_STATE.STOPPED) return
+
+    logger.info(`Trade sync for ${this.exchange} on ${symbol} started.`)
+    this.symbols.set(symbol, SYNC_STATE.SYNCING)
     this.tradeStore.addSymbol({ exchange: this.exchange, symbol })
 
     await this.scan(symbol, days)
+    this.symbols.set(symbol, SYNC_STATE.READY)
     await this.tick(symbol)
   }
 
   public stop(symbol) {
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
+    logger.info(`Trade sync for ${this.exchange} on ${symbol} stopped.`)
     this.symbols.set(symbol, SYNC_STATE.STOPPED)
   }
 
@@ -36,8 +49,12 @@ export class TradeEngine {
     const now = this.getNow()
     const target = now - 86400000 * days
 
+    logger.info(`Trade sync for ${this.exchange} on ${symbol} started backfill for ${days} days.`)
+
     await (this.scanType === 'back' ? this.scanBack(symbol, target) : this.scanForward(symbol, target))
-    logger.info(`Backfill for ${this.exchange} on ${symbol} completed.`)
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
+    logger.info(`Trade sync for ${this.exchange} on ${symbol} completed backfill.`)
 
     await this.tradeStore.loadTrades(storeOpts)
   }
@@ -64,6 +81,8 @@ export class TradeEngine {
   }
 
   private async scanBack(symbol: string, end: number) {
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
     const storeOpts = { exchange: this.exchange, symbol }
     // The next "to" is the previous "from"
     const to = await this.markerStore.getNextBackMarker(storeOpts)
@@ -83,6 +102,8 @@ export class TradeEngine {
   }
 
   private async scanForward(symbol: string, start: number) {
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
     const storeOpts = { exchange: this.exchange, symbol }
     const from = await this.markerStore.getNextForwardMarker(storeOpts, start)
 
@@ -104,6 +125,8 @@ export class TradeEngine {
   }
 
   private async tickBack(symbol: string, target: number, lastFrom: number = null) {
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
     const storeOpts = { exchange: this.exchange, symbol }
     const trades = await this.exchangeProvider.getTrades(this.exchange, symbol, lastFrom)
 

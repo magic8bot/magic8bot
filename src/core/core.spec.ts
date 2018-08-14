@@ -46,7 +46,7 @@ describe('Core', () => {
   })
 
   test('inits the ExchangeCore', async () => {
-    const core = new Core({ mode: 'live', exchanges })
+    const core = new Core()
 
     await core.init()
 
@@ -55,7 +55,7 @@ describe('Core', () => {
   })
 
   test('creates a new session', async () => {
-    const core = new Core({ mode: 'live', exchanges, resetSession: true })
+    const core = new Core()
 
     await core.init()
 
@@ -63,7 +63,7 @@ describe('Core', () => {
   })
 
   test('loads a session', async () => {
-    const core = new Core({ mode: 'live', exchanges, resetSession: false })
+    const core = new Core()
 
     await core.init()
 
@@ -71,7 +71,7 @@ describe('Core', () => {
   })
 
   test('creates EngineCore for each exchange', async () => {
-    const core = new Core({ mode: 'live', exchanges: [exchange, exchange] })
+    const core = new Core()
 
     await core.init()
 

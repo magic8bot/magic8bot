@@ -22,6 +22,7 @@ services:
       - MONGO_DB=
       - MONGO_REPLICA_SET=
       - MONGO_AUTH_MECHANISM=
+      - WS_PORT=
 
   mongodb:
     image: mongo:latest

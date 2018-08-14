@@ -18,6 +18,10 @@ export class WalletStore {
   private sessionId: string = SessionStore.instance.sessionId
   private wallets: Map<string, Wallet> = new Map()
 
+  private get store() {
+    return dbDriver.wallet
+  }
+
   private constructor() {}
 
   public async initWallet(storeOpts: StoreOpts, adjustment: Adjustment) {
@@ -29,6 +33,10 @@ export class WalletStore {
   public getWallet(storeOpts: StoreOpts) {
     const idStr = this.makeIdStr(storeOpts)
     return this.wallets.get(idStr)
+  }
+
+  public loadAll(exchange: string) {
+    return this.store.find({ sessionId: this.sessionId, exchange }).toArray()
   }
 
   private async loadOrNewWallet(storeOpts: StoreOpts, adjustment: Adjustment) {
@@ -45,7 +53,7 @@ export class WalletStore {
   }
 
   private async loadWallet(storeOpts: StoreOpts): Promise<Wallet> {
-    const wallet = await dbDriver.wallet.findOne({ sessionId: this.sessionId, ...storeOpts })
+    const wallet = await this.store.findOne({ sessionId: this.sessionId, ...storeOpts })
 
     return !wallet ? null : { asset: wallet.asset, currency: wallet.currency }
   }
@@ -75,7 +83,7 @@ export class WalletStore {
     const idStr = this.makeIdStr(storeOpts)
     const timestamp = new Date().getTime()
     const wallet = this.wallets.get(idStr)
-    await dbDriver.wallet.updateOne({ sessionId: this.sessionId, ...storeOpts }, { $set: { timestamp, ...wallet } }, { upsert: true })
+    await this.store.updateOne({ sessionId: this.sessionId, ...storeOpts }, { $set: { timestamp, ...wallet } }, { upsert: true })
     wsServer.broadcast('wallet', { ...storeOpts, wallet: this.getWallet(storeOpts) })
   }
 

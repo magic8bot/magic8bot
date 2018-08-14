@@ -12,6 +12,11 @@ interface PeriodConf {
   lookbackSize: number
 }
 
+enum PERIOD_STATE {
+  STOPPED,
+  RUNNING,
+}
+
 export class PeriodStore {
   public static get instance(): PeriodStore {
     /* istanbul ignore next */
@@ -26,6 +31,7 @@ export class PeriodStore {
   private periodEmitters: Map<string, EventBusEmitter<PeriodItem[]>> = new Map()
   private tradeEventTimeouts: Map<string, NodeJS.Timer> = new Map()
   private periodTimer: Map<string, NodeJS.Timer> = new Map()
+  private periodStates: Map<string, PERIOD_STATE> = new Map()
 
   private constructor() {}
 
@@ -47,12 +53,21 @@ export class PeriodStore {
   }
 
   /* istanbul ignore next */
-  public startPeriodEmitter(storeOpts: StoreOpts) {
+  public start(storeOpts: StoreOpts) {
     const idStr = this.makeIdStr(storeOpts)
+    this.periodStates.set(idStr, PERIOD_STATE.RUNNING)
+
     this.periodTimer.set(idStr, setTimeout(() => this.publishPeriod(idStr), this.getPeriodTimeout(idStr)))
   }
 
+  public stop(storeOpts: StoreOpts) {
+    const idStr = this.makeIdStr(storeOpts)
+    this.periodStates.set(idStr, PERIOD_STATE.RUNNING)
+  }
+
   public addTrade(idStr: string, trade: Trade) {
+    if (this.periodStates.get(idStr) !== PERIOD_STATE.RUNNING) return
+
     const { period } = this.periodConfigs.get(idStr)
     const periods = this.periods.get(idStr)
     const { amount, price, timestamp } = trade
@@ -110,6 +125,8 @@ export class PeriodStore {
    * @param idStr period identifier
    */
   private emitTrades(idStr: string) {
+    if (this.periodStates.get(idStr) !== PERIOD_STATE.RUNNING) return
+
     if (this.tradeEventTimeouts.has(idStr)) return
     const fn = () => this.emitTradeImmediate(idStr)
     this.tradeEventTimeouts.set(idStr, setTimeout(fn, 100))
@@ -121,6 +138,8 @@ export class PeriodStore {
    * @param idStr period identifier
    */
   private emitTradeImmediate(idStr: string) {
+    if (this.periodStates.get(idStr) !== PERIOD_STATE.RUNNING) return
+
     const periods = this.periods.get(idStr)
     this.updateEmitters.get(idStr)([...periods])
     wsServer.broadcast('period-update', { ...this.parseIdStr(idStr), period: periods[0] })
@@ -146,6 +165,8 @@ export class PeriodStore {
 
   /* istanbul ignore next */
   private checkPeriodWithoutTrades(idStr: string) {
+    if (this.periodStates.get(idStr) !== PERIOD_STATE.RUNNING) return
+
     const periods = this.periods.get(idStr)
     if (periods.length < 2) return
 
@@ -167,6 +188,7 @@ export class PeriodStore {
   /* istanbul ignore next */
   private publishPeriod(idStr: string) {
     clearTimeout(this.periodTimer.get(idStr))
+    if (this.periodStates.get(idStr) !== PERIOD_STATE.RUNNING) return
 
     this.checkPeriodWithoutTrades(idStr)
     // Publish period to event bus

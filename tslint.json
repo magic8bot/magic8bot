@@ -11,10 +11,7 @@
     "ban-types": {
       "options": [
         ["Object", "Avoid using the `Object` type. Did you mean `object`?"],
-        [
-          "Function",
-          "Avoid using the `Function` type. Prefer a specific function type, like `() => void`, or use `ts.AnyFunction`."
-        ],
+        ["Function", "Avoid using the `Function` type. Prefer a specific function type, like `() => void`, or use `ts.AnyFunction`."],
         ["Boolean", "Avoid using the `Boolean` type. Did you mean `boolean`?"],
         ["Number", "Avoid using the `Number` type. Did you mean `number`?"],
         ["String", "Avoid using the `String` type. Did you mean `string`?"]
@@ -45,7 +42,7 @@
     "one-line": [true, "check-open-brace", "check-whitespace"],
     "ordered-imports": false,
     "prefer-const": true,
-    "quotemark": [true, "single", "avoid-escape"],
+    "quotemark": [true, "single", "avoid-escape", "jsx-double"],
     "semicolon": [true, "never"],
     "space-within-parens": true,
     "trailing-comma": [
@@ -78,19 +75,11 @@
         "variable-declaration": "onespace"
       }
     ],
-    "whitespace": [
-      true,
-      "check-branch",
-      "check-decl",
-      "check-operator",
-      "check-module",
-      "check-separator",
-      "check-type"
-    ],
+    "whitespace": [true, "check-branch", "check-decl", "check-operator", "check-module", "check-separator", "check-type"],
 
     // Config different from tslint:latest
     "no-implicit-dependencies": false,
     "object-literal-key-quotes": [true, "consistent-as-needed"],
-    "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"]
+    "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore", "allow-pascal-case"]
   }
 }

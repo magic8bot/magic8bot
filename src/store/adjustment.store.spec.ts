@@ -11,6 +11,6 @@ describe('AdjustmentStore', () => {
   })
 
   test('saves an adjustment', async () => {
-    await adjustmentStore.adjustWallet(storeOpts, { asset: 0, currency: 100, type: 'init' })
+    await adjustmentStore.adjustWallet(storeOpts, { asset: 0, currency: 100, type: 'user' })
   })
 })

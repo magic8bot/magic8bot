@@ -23,13 +23,14 @@ export class ExchangeStore {
     })
 
     wsServer.registerAction('exchange-load', ({ exchange }) => {
-      const exchangeAuth = this.load(exchange)
-      wsServer.broadcast('exchange-load', { exchange, ...exchangeAuth })
+      const exchangeConfig = this.load(exchange)
+      wsServer.broadcast('exchange-load', { exchangeConfig })
     })
   }
 
-  public async save({ exchange, ...exchangeConfig }: ExchangeConfig) {
-    await this.store.update({ sessionId: this.sessionId, exchange }, { $set: { ...exchangeConfig } }, { upsert: true })
+  public async save(exchangeConfig: ExchangeConfig) {
+    const { exchange, ...exchangeConf } = exchangeConfig
+    await this.store.update({ sessionId: this.sessionId, exchange }, { $set: { ...exchangeConf } }, { upsert: true })
   }
 
   public load(exchange: string) {

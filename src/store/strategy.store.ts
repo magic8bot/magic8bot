@@ -1,4 +1,4 @@
-import { dbDriver, wsServer } from '@lib'
+import { dbDriver, wsServer, StrategyConfig } from '@lib'
 import { SessionStore } from './session.store'
 import { StoreOpts } from '@m8bTypes'
 
@@ -20,9 +20,8 @@ export class StrategyStore {
   }
 
   private constructor() {
-    wsServer.registerAction('strategy-save', (payload: StrategyOpts & StoreOpts) => {
-      const { exchange, symbol, strategy, ...strategyOpts } = payload
-      this.save({ exchange, symbol, strategy }, strategyOpts)
+    wsServer.registerAction('strategy-save', (strategyConfig: StrategyConfig) => {
+      this.save(strategyConfig)
     })
 
     wsServer.registerAction('strategy-load', (storeOpts: StoreOpts) => {
@@ -31,15 +30,16 @@ export class StrategyStore {
     })
   }
 
-  public async save(storeOpts: StoreOpts, strategyOpts: StrategyOpts) {
-    await this.store.update({ sessionId: this.sessionId, ...storeOpts }, { $set: { ...strategyOpts } }, { upsert: true })
+  public async save(strategyConfig: StrategyConfig) {
+    const { exchange, symbol, strategy, ...stratConf } = strategyConfig
+    await this.store.update({ sessionId: this.sessionId, exchange, symbol, strategy }, { $set: { ...stratConf } }, { upsert: true })
   }
 
   public async load(storeOpts: StoreOpts) {
     return this.store.findOne({ sessionId: this.sessionId, ...storeOpts })
   }
 
-  public async loadAll() {
-    return this.store.find({ sessionId: this.sessionId }).toArray()
+  public async loadAll(exchange: string) {
+    return this.store.find({ sessionId: this.sessionId, exchange }).toArray()
   }
 }

@@ -2,7 +2,7 @@ import { Balances, Balance } from 'ccxt'
 import { EventBusListener } from '@magic8bot/event-bus'
 
 import { StrategyConf, Signal } from '@m8bTypes'
-import { eventBus, EVENT, StrategyConfig } from '@lib'
+import { eventBus, EVENT, StrategyConfig, Adjustment } from '@lib'
 
 import { PeriodStore, WalletStore } from '@store'
 import { BaseStrategy, strategyLoader } from '@strategy'
@@ -10,6 +10,11 @@ import { ExchangeProvider } from '@exchange'
 import { OrderEngine } from '@engine'
 
 import { logger } from '@util'
+
+enum STRAT_STATE {
+  STOPPED,
+  RUNNING,
+}
 
 export class StrategyCore {
   private strategy: string
@@ -22,6 +27,8 @@ export class StrategyCore {
   private lastSignal: Signal = null
 
   private signalListener: EventBusListener<{ signal: Signal }>
+
+  private state: STRAT_STATE = STRAT_STATE.STOPPED
 
   constructor(private readonly exchangeProvider: ExchangeProvider, private readonly strategyConfig: StrategyConfig) {
     const { exchange, symbol, strategy, period } = strategyConfig
@@ -40,28 +47,34 @@ export class StrategyCore {
     this.orderEngine = new OrderEngine(this.exchangeProvider, strategyConfig)
   }
 
-  public async init(balances: Balances) {
-    // const walletOpts = {
-    //   exchange: this.exchange,
-    //   symbol: this.symbol,
-    //   strategy: this.strategy,
-    // }
-    // const [a, c] = this.symbol.split('/')
-    // const assetBalance = balances[a] ? balances[a] : ({ free: 0, total: 0, used: 0 } as Balance)
-    // const currencyBalance = balances[c] ? balances[c] : ({ free: 0, total: 0, used: 0 } as Balance)
-    // const adjustment = { asset: assetBalance.total * this.strategyConfig.share.asset, currency: currencyBalance.total * this.strategyConfig.share.currency }
-    // await WalletStore.instance.initWallet(walletOpts, { ...adjustment, type: 'init' })
-  }
+  public start() {
+    if (this.state === STRAT_STATE.RUNNING) return
+    this.state = STRAT_STATE.RUNNING
 
-  public run() {
     this.baseStrategy.prerollDone()
 
     const { exchange, symbol, strategy } = this
-    PeriodStore.instance.startPeriodEmitter({ exchange, symbol, strategy })
-    logger.info(`Starting Strategy ${this.strategy}`)
+    PeriodStore.instance.start({ exchange, symbol, strategy })
+    logger.info(`Starting Strategy ${strategy}`)
+  }
+
+  public stop() {
+    if (this.state === STRAT_STATE.STOPPED) return
+    this.state = STRAT_STATE.STOPPED
+
+    const { exchange, symbol, strategy } = this
+    PeriodStore.instance.stop({ exchange, symbol, strategy })
+    logger.info(`Stopping Strategy ${strategy}`)
+  }
+
+  public async adjustWallet(adjustment: Adjustment) {
+    const walletOpts = { exchange: this.exchange, symbol: this.symbol, strategy: this.strategy }
+    await WalletStore.instance.initWallet(walletOpts, adjustment)
   }
 
   private onSignal(signal: 'buy' | 'sell', force = false) {
+    if (this.state === STRAT_STATE.STOPPED) return
+
     logger.info(`${this.strategy} sent ${signal}-signal (force: ${force})`)
     if (!signal || (signal === this.lastSignal && !force)) return
     this.lastSignal = signal

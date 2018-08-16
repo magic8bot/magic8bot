@@ -34,10 +34,14 @@ export class ExchangeStore {
   }
 
   public load(exchange: string) {
-    return this.store.findOne({ sessionId: this.sessionId, exchange })
+    return this.store.findOne({ sessionId: this.sessionId, exchange }, { projection: { _id: 0, sessionId: 0, auth: 0 } })
   }
 
   public loadAll() {
-    return this.store.find({ sessionId: this.sessionId }).toArray()
+    return this.store.find({ sessionId: this.sessionId }, { projection: { _id: 0, sessionId: 0, auth: 0 } }).toArray()
+  }
+
+  public loadAllWithAuth() {
+    return this.store.find({ sessionId: this.sessionId }, { projection: { _id: 0, sessionId: 0 } }).toArray()
   }
 }

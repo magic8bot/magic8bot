@@ -33,7 +33,7 @@ class WsServer {
     try {
       const parsed = JSON.parse(body)
       if (!parsed.action) return this.broadcast('error', { error: 'Invalid input: "action" missing' })
-      if (!parsed.payload) return this.broadcast('error', { error: 'Invalid input: "payload" missing' })
+      if (!/^get-/.test(parsed.action) && !parsed.payload) return this.broadcast('error', { error: 'Invalid input: "payload" missing' })
 
       const { action, payload } = parsed
       if (!this.actions.has(action)) return

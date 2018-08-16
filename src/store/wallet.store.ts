@@ -36,7 +36,13 @@ export class WalletStore {
   }
 
   public loadAll(exchange: string) {
-    return this.store.find({ sessionId: this.sessionId, exchange }).toArray()
+    return this.store.find({ sessionId: this.sessionId, exchange }, { projection: { _id: 0, sessionId: 0 } }).toArray()
+  }
+
+  public async loadWallet(storeOpts: StoreOpts): Promise<Wallet> {
+    const wallet = await this.store.findOne({ sessionId: this.sessionId, ...storeOpts }, { projection: { _id: 0, sessionId: 0 } })
+
+    return !wallet ? null : { asset: wallet.asset, currency: wallet.currency }
   }
 
   private async loadOrNewWallet(storeOpts: StoreOpts, adjustment: Adjustment) {
@@ -50,12 +56,6 @@ export class WalletStore {
 
     this.wallets.set(idStr, { asset: 0, currency: 0 })
     await this.adjustWallet(storeOpts, adjustment)
-  }
-
-  private async loadWallet(storeOpts: StoreOpts): Promise<Wallet> {
-    const wallet = await this.store.findOne({ sessionId: this.sessionId, ...storeOpts })
-
-    return !wallet ? null : { asset: wallet.asset, currency: wallet.currency }
   }
 
   private subcribeToWalletEvents(storeOpts: StoreOpts) {

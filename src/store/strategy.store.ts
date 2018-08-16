@@ -36,10 +36,14 @@ export class StrategyStore {
   }
 
   public async load(storeOpts: StoreOpts) {
-    return this.store.findOne({ sessionId: this.sessionId, ...storeOpts })
+    return this.store.findOne({ sessionId: this.sessionId, ...storeOpts }, { projection: { _id: 0, sessionId: 0 } })
   }
 
-  public async loadAll(exchange: string) {
-    return this.store.find({ sessionId: this.sessionId, exchange }).toArray()
+  public async loadAll() {
+    return this.store.find({ sessionId: this.sessionId }, { projection: { _id: 0, sessionId: 0 } }).toArray()
+  }
+
+  public async loadAllForExchange(exchange: string) {
+    return this.store.find({ sessionId: this.sessionId, exchange }, { projection: { _id: 0, sessionId: 0 } }).toArray()
   }
 }

@@ -2,102 +2,109 @@ import { SessionStore, ExchangeStore, StrategyStore } from '@store'
 import { ExchangeProvider } from '@exchange'
 import { ExchangeCore } from './exchange'
 import { wsServer, ExchangeConfig, StrategyConfig } from '@lib'
-import { logger } from '@util'
+import { CoreHelpers } from './core.helpers'
 
 export class Core {
   private readonly exchangeProvider: ExchangeProvider
   private readonly exchangeCores: Map<string, ExchangeCore> = new Map()
+  private readonly helpers: CoreHelpers
 
   constructor() {
     this.exchangeProvider = new ExchangeProvider()
+    this.helpers = new CoreHelpers()
     this.registerActions()
   }
 
   public async init() {
     await SessionStore.instance.loadSession()
-    const exchanges = await ExchangeStore.instance.loadAll()
+    const exchanges = await ExchangeStore.instance.loadAllWithAuth()
 
-    exchanges.forEach((exchangeConfig) => this.addExchange(exchangeConfig))
+    exchanges.forEach((exchangeConfig) => this.initExchangeCore(exchangeConfig))
   }
 
-  private async addExchange(exchangeConfig: ExchangeConfig) {
-    const addSuccess = this.exchangeProvider.addExchange(exchangeConfig)
+  private registerActions() {
+    wsServer.registerAction('add-exchange', this.addExchange)
+    wsServer.registerAction(`add-strategy`, this.addStrategy)
+    wsServer.registerAction('get-my-config', this.getMyConfig)
+    wsServer.registerAction(`get-balance`, this.getBalance)
+    wsServer.registerAction(`start-sync`, this.startSync)
+    wsServer.registerAction(`stop-sync`, this.stopSync)
+    wsServer.registerAction(`start-strategy`, this.startStrategy)
+    wsServer.registerAction(`stop-strategy`, this.stopStrategy)
+    wsServer.registerAction(`adjust-wallet`, this.adjustWallet)
+  }
 
-    if (!addSuccess) return false
+  private addExchange = async (exchangeConfig: ExchangeConfig) => {
+    if (!this.helpers.checkAddExchangeParams(exchangeConfig)) return
+
+    await ExchangeStore.instance.save(exchangeConfig)
+    this.initExchangeCore(exchangeConfig)
+    const { auth, ...config } = exchangeConfig
+    wsServer.broadcast('add-exchange', { ...config })
+  }
+
+  private addStrategy = async (strategyConfig: StrategyConfig) => {
+    const { exchange } = strategyConfig
+    if (!this.checkForExchange(exchange)) return
+
+    await StrategyStore.instance.save(strategyConfig)
+    this.exchangeCores.get(exchange).addStrategy(strategyConfig)
+    wsServer.broadcast('add-strategy', { ...strategyConfig })
+  }
+
+  private getMyConfig = async () => {
+    const exchanges = await this.helpers.getExchanges()
+    wsServer.broadcast('get-my-config', { exchanges })
+  }
+
+  private getBalance = async ({ exchange }) => {
+    if (!this.checkForExchange(exchange)) return
+
+    const balance = await this.exchangeCores.get(exchange).getBalances()
+    wsServer.broadcast(`get-balance`, { exchange, balance })
+  }
+
+  private startSync = async ({ exchange, symbol, days }) => {
+    if (!this.checkForExchange(exchange)) return
+
+    this.exchangeCores.get(exchange).startSync(symbol, days)
+  }
+
+  private stopSync = async ({ exchange, symbol }) => {
+    if (!this.checkForExchange(exchange)) return
+
+    this.exchangeCores.get(exchange).stopSync(symbol)
+  }
+
+  private startStrategy = async ({ exchange, symbol, strategy }) => {
+    if (!this.checkForExchange(exchange)) return
+
+    this.exchangeCores.get(exchange).startStrategy(symbol, strategy)
+  }
+
+  private stopStrategy = async ({ exchange, symbol, strategy }) => {
+    if (!this.checkForExchange(exchange)) return
+
+    this.exchangeCores.get(exchange).stopStrategy(symbol, strategy)
+  }
+
+  private adjustWallet = async ({ exchange, symbol, strategy, asset, currency }) => {
+    if (!this.checkForExchange(exchange)) return
+
+    this.exchangeCores.get(exchange).adjustWallet(symbol, strategy, asset, currency)
+  }
+
+  private async initExchangeCore(exchangeConfig: ExchangeConfig) {
+    if (!this.exchangeProvider.addExchange(exchangeConfig)) return false
 
     const exchangeCore = new ExchangeCore(this.exchangeProvider, exchangeConfig)
     await exchangeCore.init()
     this.exchangeCores.set(exchangeConfig.exchange, exchangeCore)
+
     return true
   }
 
-  private registerActions() {
-    wsServer.registerAction('add-exchange', (exchangeConfig: ExchangeConfig) => {
-      if (!exchangeConfig.exchange) return this.error('exchange name is required')
-      if (!exchangeConfig.auth) return this.error('auth is required')
-      if (!exchangeConfig.auth.apiKey) return this.error('auth.apiKey is required')
-      if (!exchangeConfig.auth.secret) return this.error('auth.secret is required')
-      if (!exchangeConfig.tradePollInterval) return this.error('tradePollInterval is required')
-
-      ExchangeStore.instance.save(exchangeConfig)
-      this.addExchange(exchangeConfig)
-      wsServer.broadcast('add-exchange', { ...exchangeConfig })
-    })
-
-    wsServer.registerAction(`add-strategy`, (strategyConfig: StrategyConfig) => {
-      const { exchange } = strategyConfig
-      if (!this.checkForExchange(exchange)) return
-
-      StrategyStore.instance.save(strategyConfig)
-      this.exchangeCores.get(exchange).addStrategy(strategyConfig)
-      wsServer.broadcast('add-strategy', { ...strategyConfig })
-    })
-
-    wsServer.registerAction(`get-balance`, async ({ exchange }) => {
-      if (!this.checkForExchange(exchange)) return
-
-      const balance = await this.exchangeCores.get(exchange).getBalances()
-      wsServer.broadcast(`get-balance`, { exchange, balance })
-    })
-
-    wsServer.registerAction(`start-sync`, ({ exchange, symbol, days }) => {
-      if (!this.checkForExchange(exchange)) return
-
-      this.exchangeCores.get(exchange).startSync(symbol, days)
-    })
-
-    wsServer.registerAction(`stop-sync`, ({ exchange, symbol }) => {
-      if (!this.checkForExchange(exchange)) return
-
-      this.exchangeCores.get(exchange).stopSync(symbol)
-    })
-
-    wsServer.registerAction(`start-strategy`, ({ exchange, symbol, strategy }) => {
-      if (!this.checkForExchange(exchange)) return
-
-      this.exchangeCores.get(exchange).startStrategy(symbol, strategy)
-    })
-
-    wsServer.registerAction(`stop-strategy`, ({ exchange, symbol, strategy }) => {
-      if (!this.checkForExchange(exchange)) return
-
-      this.exchangeCores.get(exchange).stopStrategy(symbol, strategy)
-    })
-
-    wsServer.registerAction(`adjust-wallet`, ({ exchange, symbol, strategy, asset, currency }) => {
-      if (!this.checkForExchange(exchange)) return
-
-      this.exchangeCores.get(exchange).adjustWallet(symbol, strategy, asset, currency)
-    })
-  }
-
   private checkForExchange(exchange: string) {
-    return this.exchangeCores.has(exchange) ? true : this.error(`exchange ${exchange} not configured`)
-  }
-
-  private error(error: string) {
-    logger.error(error)
-    wsServer.broadcast('error', { error: `Core Error: ${error}` })
-    return false
+    return this.exchangeCores.has(exchange) ? true : this.helpers.error(`exchange ${exchange} not configured`)
   }
 }

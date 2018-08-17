@@ -16,11 +16,13 @@ jest.mock('../exchange/exchange.provider', () => {
   return { ExchangeProvider: mockExchangeProvider }
 })
 
+const mockAddSymbol = jest.fn()
 const mockLoadTrades = jest.fn()
 const mockInsertTrades = jest.fn()
 
 const mockTradeStore: any = {
   instance: {
+    addSymbol: mockAddSymbol,
     loadTrades: mockLoadTrades,
     insertTrades: mockInsertTrades,
   },
@@ -73,12 +75,14 @@ describe('TradeEngine', () => {
 
     const scanBack = jest.spyOn<any, any>(tradeEngine, 'scanBack').mockResolvedValueOnce(null)
     const scanForward = jest.spyOn<any, any>(tradeEngine, 'scanForward').mockResolvedValueOnce(null)
+    const tick = jest.spyOn<any, any>(tradeEngine, 'tick').mockResolvedValueOnce(null)
 
     await tradeEngine.start(mockId, mockDays)
 
     expect(scanBack).toHaveBeenCalledTimes(1)
     expect(scanBack).toHaveBeenCalledWith(mockId, mockNow / 2)
     expect(scanForward).toHaveBeenCalledTimes(0)
+    expect(tick).toHaveBeenCalledTimes(1)
   })
 
   test('should scan forward', async () => {
@@ -87,12 +91,14 @@ describe('TradeEngine', () => {
 
     const scanBack = jest.spyOn<any, any>(tradeEngine, 'scanBack').mockResolvedValueOnce(null)
     const scanForward = jest.spyOn<any, any>(tradeEngine, 'scanForward').mockResolvedValueOnce(null)
+    const tick = jest.spyOn<any, any>(tradeEngine, 'tick').mockResolvedValueOnce(null)
 
     await tradeEngine.start(mockId, mockDays)
 
     expect(scanBack).toHaveBeenCalledTimes(0)
     expect(scanForward).toHaveBeenCalledTimes(1)
     expect(scanForward).toHaveBeenCalledWith(mockId, mockNow / 2)
+    expect(tick).toHaveBeenCalledTimes(1)
   })
 
   test('should load trades after scan', async () => {
@@ -101,6 +107,7 @@ describe('TradeEngine', () => {
 
     jest.spyOn<any, any>(tradeEngine, 'scanBack').mockResolvedValueOnce(null)
     jest.spyOn<any, any>(tradeEngine, 'scanForward').mockResolvedValueOnce(null)
+    jest.spyOn<any, any>(tradeEngine, 'tick').mockResolvedValueOnce(null)
 
     await tradeEngine.start(mockId, mockDays)
 
@@ -117,6 +124,7 @@ describe('TradeEngine', () => {
     mockSaveMarker.mockReturnValueOnce({ oldestTime: mockNow / 2 - 1 })
 
     const scanBack = jest.spyOn<any, any>(tradeEngine, 'scanBack')
+    jest.spyOn<any, any>(tradeEngine, 'tick').mockResolvedValueOnce(null)
 
     await tradeEngine.start(mockId, mockDays)
 
@@ -133,6 +141,7 @@ describe('TradeEngine', () => {
     mockSaveMarker.mockReturnValueOnce({ oldestTime: mockNow - 1 }).mockReturnValueOnce({ oldestTime: mockNow / 2 - 1 })
 
     const scanBack = jest.spyOn<any, any>(tradeEngine, 'scanBack')
+    jest.spyOn<any, any>(tradeEngine, 'tick').mockResolvedValueOnce(null)
 
     await tradeEngine.start(mockId, mockDays)
 
@@ -149,6 +158,7 @@ describe('TradeEngine', () => {
     mockSaveMarker.mockReturnValueOnce({ newestTime: mockNow + 1 })
 
     const scanForward = jest.spyOn<any, any>(tradeEngine, 'scanForward')
+    jest.spyOn<any, any>(tradeEngine, 'tick').mockResolvedValueOnce(null)
 
     await tradeEngine.start(mockId, mockDays)
 
@@ -165,6 +175,7 @@ describe('TradeEngine', () => {
     mockSaveMarker.mockReturnValueOnce({ newestTime: mockNow - 1 }).mockReturnValueOnce({ newestTime: mockNow + 1 })
 
     const scanForward = jest.spyOn<any, any>(tradeEngine, 'scanForward')
+    jest.spyOn<any, any>(tradeEngine, 'tick').mockResolvedValueOnce(null)
 
     await tradeEngine.start(mockId, mockDays)
 
@@ -179,6 +190,7 @@ describe('TradeEngine', () => {
     mockGetTrades.mockReturnValueOnce([])
 
     const scanForward = jest.spyOn<any, any>(tradeEngine, 'scanForward')
+    jest.spyOn<any, any>(tradeEngine, 'tick').mockResolvedValueOnce(null)
 
     await tradeEngine.start(mockId, mockDays)
 

@@ -72,6 +72,9 @@ jest.mock('./quote', () => {
 
 const mockId = 'test'
 const mockStrategyConf: any = {
+  exchange: mockId,
+  symbol: mockId,
+  strategy: mockId,
   markUp: 0,
   markDown: 0,
   strategyName: mockId,

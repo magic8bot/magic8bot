@@ -1,7 +1,6 @@
 import { ExchangeProvider } from '@exchange'
 import { TradeStore, MarkerStore } from '@store'
 import { sleep, logger } from '@util'
-import { wsServer } from '@lib'
 
 enum SYNC_STATE {
   STOPPED,

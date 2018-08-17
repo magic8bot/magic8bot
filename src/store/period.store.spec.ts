@@ -5,11 +5,13 @@ import { timebucket } from '@magic8bot/timebucket'
 import { Trade } from 'ccxt'
 
 describe('PeriodStore', () => {
+  const storeOpts = { exchange: 'test', symbol: 'test', strategy: 'test' }
   let periodStore: PeriodStore
 
   beforeAll(() => {
     periodStore = PeriodStore.instance
-    periodStore.addSymbol({ exchange: 'test', symbol: 'test', strategy: 'test' }, { period: '1m', lookbackSize: 2 })
+    periodStore.addSymbol(storeOpts, { period: '1m', lookbackSize: 2 })
+    periodStore.start(storeOpts)
   })
 
   afterEach(() => {

@@ -32,6 +32,8 @@ export class Core {
     wsServer.registerAction(`start-strategy`, this.startStrategy)
     wsServer.registerAction(`stop-strategy`, this.stopStrategy)
     wsServer.registerAction(`adjust-wallet`, this.adjustWallet)
+    wsServer.registerAction(`start-ticker`, this.startTicker)
+    wsServer.registerAction(`stop-ticker`, this.stopTicker)
   }
 
   private addExchange = async (exchangeConfig: ExchangeConfig) => {
@@ -92,6 +94,14 @@ export class Core {
     if (!this.checkForExchange(exchange)) return
 
     this.exchangeCores.get(exchange).adjustWallet(symbol, strategy, asset, currency)
+  }
+
+  private startTicker = async ({ exchange, symbol }) => {
+    this.exchangeCores.get(exchange).startTicker(symbol)
+  }
+
+  private stopTicker = async ({ exchange, symbol }) => {
+    this.exchangeCores.get(exchange).stopTicker(symbol)
   }
 
   private async initExchangeCore(exchangeConfig: ExchangeConfig) {

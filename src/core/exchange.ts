@@ -6,16 +6,19 @@ import { TradeEngine } from '@engine'
 import { logger } from '@util'
 import { wsServer, ExchangeConfig, StrategyConfig } from '@lib'
 import { Balance } from 'ccxt'
+import { TickerEngine } from '../engine/ticker'
 
 export class ExchangeCore {
   private exchange: string
   private strategyCores: Map<string, Map<string, StrategyCore>> = new Map()
 
   private tradeEngine: TradeEngine
+  private tickerEngine: TickerEngine
 
   constructor(private readonly exchangeProvider: ExchangeProvider, { exchange, tradePollInterval }: ExchangeConfig) {
     this.exchange = exchange
     this.tradeEngine = new TradeEngine(this.exchangeProvider, exchange, tradePollInterval)
+    this.tickerEngine = new TickerEngine(this.exchangeProvider, this.exchange)
   }
 
   public async init() {
@@ -42,6 +45,14 @@ export class ExchangeCore {
 
   public stopSync(symbol: string) {
     this.tradeEngine.stop(symbol)
+  }
+
+  public startTicker(symbol: string) {
+    this.tickerEngine.start(symbol)
+  }
+
+  public stopTicker(symbol: string) {
+    this.tickerEngine.stop(symbol)
   }
 
   public startStrategy(symbol: string, strategy: string) {

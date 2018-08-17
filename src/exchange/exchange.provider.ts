@@ -62,6 +62,11 @@ export class ExchangeProvider {
     return this.retry(fn)
   }
 
+  public fetchTicker(exchange: string, symbol: string) {
+    const fn = () => this.exchanges.get(exchange).fetchTicker(symbol)
+    return this.retry(fn)
+  }
+
   public getScan(exchange: string) {
     return this.exchanges.get(exchange).scan
   }

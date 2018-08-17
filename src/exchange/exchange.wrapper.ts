@@ -53,6 +53,11 @@ export class ExchangeWrapper {
     return this.bottleneck.schedule(fn)
   }
 
+  public fetchTicker(symbol: string) {
+    const fn = () => this.exchangeConnection.fetchTicker(symbol)
+    return this.bottleneck.schedule(fn)
+  }
+
   public priceToPrecision(symbol: string, amount: number) {
     return Number(this.exchangeConnection.priceToPrecision(symbol, amount))
   }

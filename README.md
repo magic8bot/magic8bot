@@ -3,18 +3,17 @@
 
 ![logo](https://rawgit.com/magic8bot/magic8bot/master/assets/logo.svg)
 
-## Current Status (UPDATE July 17th '18) - PreAlpha (Not ready for live trading)
+## Current Status (UPDATE Aug 16th '18) - Alpha (Ready for live testing -- kinda)
 
-Magic8bot a crypto trading bot originally based on Zenbot4. It is a complete rewrite and rethinking of the entire platform.
-The overall goals are:
+This has been a wild and wonderful journey so far. First off, I wanted to say that I really appreciate the work that some of you have been putting in to this whether it be code, design, documentation, testing or project management contributions. Thank you all. I would have probably given up a long time ago if it wasn't for you guys.
 
-- reducing code repetition
-- separation of concerns
-- everything in typescript
-- allow multiple strategies to run simultaneously
-- expose all trading data via a websocket api
-- event based signal processing
-- creating a new plugin type: position strategy
+Now, the update. M8b is ready for live testing. It's functional but limited in scope and functionality. A few users have reported making some profitable trades with the stock `MACD` strategy.
+
+I've been working on the frontend aspect of the bot and exposed a lot of the data through a websocket server. That feature is still in a work in progress state but it completely gets rid of the concept of a configuration file. However, that means the bot is no longer "always on" and must be configured through a UI or at least some commands piped in through the WS connection.
+
+As of writing, master branch is still relying on the configuration file and should be tested to make sure core components actually function like they're supposed to.
+
+I'm hoping that the next update will be the announcement of the actual UI, which lives in it's own repo.
 
 ~notVitaliy
 

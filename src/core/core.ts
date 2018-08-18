@@ -12,10 +12,10 @@ export class Core {
   constructor() {
     this.exchangeProvider = new ExchangeProvider()
     this.helpers = new CoreHelpers()
-    this.registerActions()
   }
 
   public async init() {
+    this.registerActions()
     await SessionStore.instance.loadSession()
     const exchanges = await ExchangeStore.instance.loadAllWithAuth()
 
@@ -105,7 +105,8 @@ export class Core {
   }
 
   private async initExchangeCore(exchangeConfig: ExchangeConfig) {
-    if (!this.exchangeProvider.addExchange(exchangeConfig)) return false
+    const exchangeAdded = await this.exchangeProvider.addExchange(exchangeConfig)
+    if (!exchangeAdded) return false
 
     const exchangeCore = new ExchangeCore(this.exchangeProvider, exchangeConfig)
     await exchangeCore.init()

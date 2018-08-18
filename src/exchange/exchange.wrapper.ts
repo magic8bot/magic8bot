@@ -1,10 +1,11 @@
 import { Exchange, Trade, Order } from 'ccxt'
-import { gdax, binance } from './adapters'
+import { gdax, binance, chaos } from './adapters'
 import { ExchangeAdapter } from './adapters/base'
 import { OrderWithTrades } from '@lib'
 import Bottleneck from 'bottleneck'
+import { logger } from '@util'
 
-const adapters: Record<string, ExchangeAdapter> = { binance, gdax }
+const adapters: Record<string, ExchangeAdapter> = { binance, gdax, chaos }
 
 export class ExchangeWrapper {
   public scan: 'back' | 'forward'
@@ -22,40 +23,75 @@ export class ExchangeWrapper {
     return this.adapter.getTradeCursor(trade)
   }
 
-  public fetchTrades(symbol: string, start: number) {
+  public async fetchTrades(symbol: string, start: number) {
     const params = this.adapter.mapTradeParams(start)
     const fn = () => this.exchangeConnection.fetchTrades(symbol, undefined, undefined, params)
-    return this.bottleneck.schedule(fn)
+    const res = await this.bottleneck.schedule(fn)
+
+    // const debug = { name: 'fetchTrades', req: { symbol, params }, res: res.length }
+    // logger.debug(JSON.stringify(debug))
+
+    return res
   }
 
-  public fetchBalance() {
+  public async fetchBalance() {
     const fn = () => this.exchangeConnection.fetchBalance()
-    return this.bottleneck.schedule(fn)
+    const res = await this.bottleneck.schedule(fn)
+
+    const debug = { name: 'fetchBalance', req: {}, res }
+    logger.debug(JSON.stringify(debug))
+
+    return res
   }
 
-  public fetchOrderBook(symbol: string) {
+  public async fetchOrderBook(symbol: string) {
     const fn = () => this.exchangeConnection.fetchOrderBook(symbol)
-    return this.bottleneck.schedule(fn)
+    const res = await this.bottleneck.schedule(fn)
+
+    const debug = { name: 'fetchOrderBook', req: { symbol }, res }
+    logger.debug(JSON.stringify(debug))
+
+    return res
   }
 
-  public createOrder(symbol: string, type: string, side: string, amount: number, price: number): Promise<Order> {
+  public async createOrder(symbol: string, type: string, side: string, amount: number, price: number): Promise<Order> {
     const fn = () => this.exchangeConnection.createOrder(symbol, type, side, amount, price)
-    return this.bottleneck.schedule(fn)
+    const res = await this.bottleneck.schedule(fn)
+
+    const debug = { name: 'createOrder', req: { symbol, type, side, amount, price }, res }
+    logger.debug(JSON.stringify(debug))
+
+    return res
   }
 
-  public checkOrder(orderId: string): Promise<OrderWithTrades> {
+  public async checkOrder(orderId: string): Promise<OrderWithTrades> {
     const fn = () => this.exchangeConnection.fetchOrder(orderId)
-    return this.bottleneck.schedule(fn)
+    const res: any = await this.bottleneck.schedule(fn)
+
+    const debug = { name: 'checkOrder', req: { orderId }, res }
+    logger.debug(JSON.stringify(debug))
+
+    return res
   }
 
-  public cancelOrder(orderId: string) {
+  public async cancelOrder(orderId: string) {
     const fn = () => this.exchangeConnection.cancelOrder(orderId)
-    return this.bottleneck.schedule(fn)
+    const res = await this.bottleneck.schedule(fn)
+
+    const debug = { name: 'cancelOrder', req: { orderId }, res }
+    logger.debug(JSON.stringify(debug))
+
+    return res
   }
 
-  public fetchTicker(symbol: string) {
+  public async fetchTicker(symbol: string) {
     const fn = () => this.exchangeConnection.fetchTicker(symbol)
-    return this.bottleneck.schedule(fn)
+    const res = await this.bottleneck.schedule(fn)
+
+    const debug = { name: 'fetchTicker', req: { symbol }, res }
+    logger.debug(JSON.stringify(debug))
+
+    return res
   }
 
   public priceToPrecision(symbol: string, amount: number) {

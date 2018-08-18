@@ -64,7 +64,7 @@ export class TradeEngine {
     const storeOpts = { exchange: this.exchange, symbol }
     const target = (await this.markerStore.findLatestTradeMarker(storeOpts)).newestTime
 
-    await (this.scanType === 'back' ? this.tickBack(symbol, target) : this.scanForward(symbol, target))
+    await (this.scanType === 'back' ? this.tickBack(symbol, target) : this.scanForward(symbol, target, true))
     await sleep(this.tradePollInterval)
 
     await this.tradeStore.loadTrades(storeOpts)
@@ -100,9 +100,7 @@ export class TradeEngine {
     }
   }
 
-  private async scanForward(symbol: string, start: number) {
-    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
-
+  private async scanForward(symbol: string, start: number, isTick = false) {
     const storeOpts = { exchange: this.exchange, symbol }
     const from = await this.markerStore.getNextForwardMarker(storeOpts, start)
 
@@ -115,11 +113,11 @@ export class TradeEngine {
     const to = Math.max(...trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
     const { newestTime } = await this.markerStore.saveMarker(storeOpts, to, from, trades)
 
-    logger.debug(`${this.exchange}.${symbol} scanForward ${JSON.stringify({ now: new Date(newestTime), end: new Date() })}`)
+    if (!isTick) logger.debug(`${this.exchange}.${symbol} scanForward ${JSON.stringify({ now: new Date(newestTime), end: new Date() })}`)
 
     // Always get current time so backfill can catch up to "now"
     if (newestTime < this.getNow()) {
-      await this.scanForward(symbol, to)
+      await this.scanForward(symbol, to, isTick)
     }
   }
 

@@ -1,9 +1,10 @@
-import { ExchangeConf, ExchangeAuth } from '@m8bTypes'
-import ccxt, { Trade, OrderBook } from 'ccxt'
+import { ExchangeAuth } from '@m8bTypes'
+import ccxt, { Trade } from 'ccxt'
 import { ExchangeWrapper } from './exchange.wrapper'
 import { ExchangeErrorHandler } from './exchange.error'
+import { wsServer, ExchangeConfig } from '@lib'
 import { sleep, logger } from '@util'
-import { wsServer, ExchangeCollection, ExchangeConfig } from '@lib'
+import { ChaosXcg } from '../seed/chaos.exchange'
 
 const verbose = false
 
@@ -19,7 +20,14 @@ export class ExchangeProvider {
   private exchanges: Map<string, ExchangeWrapper> = new Map()
   private errorHandler = new ExchangeErrorHandler()
 
-  public addExchange({ auth, exchange }: ExchangeConfig) {
+  public async addExchange({ auth, exchange }: ExchangeConfig) {
+    if (exchange === 'chaos') {
+      const chaos: any = new ChaosXcg()
+      await chaos.connect({})
+      this.exchanges.set(exchange, new ExchangeWrapper(exchange, chaos))
+      return
+    }
+
     if (ccxt.exchanges.indexOf(exchange) === -1) return this.error(`Invalid exchange: ${exchange}`)
 
     // no clean way to do this, afaik

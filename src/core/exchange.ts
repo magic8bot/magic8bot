@@ -39,23 +39,31 @@ export class ExchangeCore {
     return this.exchangeProvider.getBalances(this.exchange)
   }
 
-  public startSync(symbol: string, days: number) {
+  public syncStart(symbol: string, days: number) {
     this.tradeEngine.start(symbol, days)
   }
 
-  public stopSync(symbol: string) {
+  public syncStop(symbol: string) {
     this.tradeEngine.stop(symbol)
   }
 
-  public startTicker(symbol: string) {
+  public syncIsRunning(symbol: string) {
+    return this.tradeEngine.isRunning(symbol)
+  }
+
+  public tickerStart(symbol: string) {
     this.tickerEngine.start(symbol)
   }
 
-  public stopTicker(symbol: string) {
+  public tickerStop(symbol: string) {
     this.tickerEngine.stop(symbol)
   }
 
-  public startStrategy(symbol: string, strategy: string) {
+  public tickerIsRunning(symbol: string) {
+    return this.tickerEngine.isRunning(symbol)
+  }
+
+  public strategyStart(symbol: string, strategy: string) {
     if (!this.checkForStrategy(symbol, strategy)) return
     if (!this.tradeEngine.isReady(symbol)) return this.error(`symbol ${symbol} is not ready yet.`)
 
@@ -63,11 +71,16 @@ export class ExchangeCore {
     this.strategyCores.get(symbol).get(strategy).start()
   }
 
-  public stopStrategy(symbol: string, strategy: string) {
+  public strategyStop(symbol: string, strategy: string) {
     if (!this.checkForStrategy(symbol, strategy)) return
 
     // prettier-ignore
     this.strategyCores.get(symbol).get(strategy).stop()
+  }
+
+  public strategyIsRunning(symbol: string, strategy: string) {
+    // prettier-ignore
+    return this.strategyCores.get(symbol).get(strategy).isRunning()
   }
 
   public async adjustWallet(symbol: string, strategy: string, asset: number, currency: number) {

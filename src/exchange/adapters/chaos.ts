@@ -1,8 +1,11 @@
 import { Trade } from 'ccxt'
-import { ExchangeAdapter } from './base'
+import { ExchangeAdapter, tradePollIntervalField } from './base'
 import { time } from '@util'
 
 export const chaos: ExchangeAdapter = {
+  fields: [tradePollIntervalField],
+  description: 'ChaosXcg is an internal test-only exchange with support for BTC/USD, ETH/USD, and ETH/BTC.',
+
   scan: 'forward',
   ratelimit: 500,
 

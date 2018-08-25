@@ -47,6 +47,10 @@ export class StrategyCore {
     this.orderEngine = new OrderEngine(this.exchangeProvider, strategyConfig)
   }
 
+  public isRunning() {
+    return this.state === STRAT_STATE.RUNNING
+  }
+
   public start() {
     if (this.state === STRAT_STATE.RUNNING) return
     this.state = STRAT_STATE.RUNNING

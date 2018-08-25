@@ -21,6 +21,8 @@ export class ExchangeProvider {
   private errorHandler = new ExchangeErrorHandler()
 
   public async addExchange({ auth, exchange }: ExchangeConfig) {
+    if (this.exchanges.has(exchange)) return this.error(`Exchange already added: ${exchange}`)
+
     if (exchange === 'chaos') {
       const chaos: any = new ChaosXcg()
       await chaos.connect({})
@@ -38,6 +40,11 @@ export class ExchangeProvider {
     const exchangeConnection = new ccxt[exchange]({ ...auth, verbose })
     this.exchanges.set(exchange, new ExchangeWrapper(exchange, exchangeConnection))
     return true
+  }
+
+  public async replaceExchange(exchangeConfig: ExchangeConfig) {
+    this.exchanges.delete(exchangeConfig.exchange)
+    await this.addExchange(exchangeConfig)
   }
 
   public getTrades(exchange: string, symbol: string, since: number) {

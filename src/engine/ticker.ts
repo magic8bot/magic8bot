@@ -12,6 +12,10 @@ export class TickerEngine {
 
   constructor(private readonly exchangeProvider: ExchangeProvider, private readonly exchange: string) {}
 
+  public isRunning(symbol: string) {
+    return this.symbols.get(symbol) === TICKER_STATE.RUNNING
+  }
+
   public start(symbol: string) {
     if (this.symbols.has(symbol) && this.symbols.get(symbol) === TICKER_STATE.RUNNING) return
 

@@ -3,6 +3,7 @@ import { ExchangeProvider } from '@exchange'
 import { ExchangeCore } from './exchange'
 import { wsServer, ExchangeConfig, StrategyConfig } from '@lib'
 import { CoreHelpers } from './core.helpers'
+import * as Adapters from '../exchange/adapters'
 
 export class Core {
   private readonly exchangeProvider: ExchangeProvider
@@ -24,6 +25,7 @@ export class Core {
 
   private registerActions() {
     wsServer.registerAction('add-exchange', this.addExchange)
+    wsServer.registerAction('update-exchange', this.updateExchange)
     wsServer.registerAction(`add-strategy`, this.addStrategy)
     wsServer.registerAction('get-my-config', this.getMyConfig)
     wsServer.registerAction(`get-balance`, this.getBalance)
@@ -34,6 +36,8 @@ export class Core {
     wsServer.registerAction(`adjust-wallet`, this.adjustWallet)
     wsServer.registerAction(`start-ticker`, this.startTicker)
     wsServer.registerAction(`stop-ticker`, this.stopTicker)
+    wsServer.registerAction(`get-exchanges`, this.getExchanges)
+    wsServer.registerAction(`get-strategies`, this.getStrategies)
   }
 
   private addExchange = async (exchangeConfig: ExchangeConfig) => {
@@ -43,6 +47,32 @@ export class Core {
     this.initExchangeCore(exchangeConfig)
     const { auth, ...config } = exchangeConfig
     wsServer.broadcast('add-exchange', { ...config })
+  }
+
+  private updateExchange = async (exchangeConfig: Partial<ExchangeConfig>) => {
+    await ExchangeStore.instance.save(exchangeConfig as ExchangeConfig)
+
+    const exchanges = await this.helpers.getExchanges()
+    const exchange = exchanges.find((e) => e.exchange === exchangeConfig.exchange)
+    const strategies = exchange.strategies
+    const exchangeCore = this.exchangeCores.get(exchange.exchange)
+
+    strategies.forEach(({ symbol, strategy }) => {
+      if (exchangeCore.syncIsRunning(symbol)) exchangeCore.syncStop(symbol)
+      if (exchangeCore.tickerIsRunning(symbol)) exchangeCore.tickerStop(symbol)
+      if (exchangeCore.strategyIsRunning(symbol, strategy)) exchangeCore.strategyStop(symbol, strategy)
+    })
+
+    const fullConfig: ExchangeConfig = {
+      exchange: exchange.exchange,
+      auth: exchange.auth,
+      tradePollInterval: exchange.tradePollInterval,
+    }
+
+    this.exchangeProvider.replaceExchange(fullConfig)
+
+    const { auth, ...config } = exchangeConfig
+    wsServer.broadcast('update-exchange', { ...config })
   }
 
   private addStrategy = async (strategyConfig: StrategyConfig) => {
@@ -69,25 +99,25 @@ export class Core {
   private startSync = async ({ exchange, symbol, days }) => {
     if (!this.checkForExchange(exchange)) return
 
-    this.exchangeCores.get(exchange).startSync(symbol, days)
+    this.exchangeCores.get(exchange).syncStart(symbol, days)
   }
 
   private stopSync = async ({ exchange, symbol }) => {
     if (!this.checkForExchange(exchange)) return
 
-    this.exchangeCores.get(exchange).stopSync(symbol)
+    this.exchangeCores.get(exchange).syncStop(symbol)
   }
 
   private startStrategy = async ({ exchange, symbol, strategy }) => {
     if (!this.checkForExchange(exchange)) return
 
-    this.exchangeCores.get(exchange).startStrategy(symbol, strategy)
+    this.exchangeCores.get(exchange).strategyStart(symbol, strategy)
   }
 
   private stopStrategy = async ({ exchange, symbol, strategy }) => {
     if (!this.checkForExchange(exchange)) return
 
-    this.exchangeCores.get(exchange).stopStrategy(symbol, strategy)
+    this.exchangeCores.get(exchange).strategyStop(symbol, strategy)
   }
 
   private adjustWallet = async ({ exchange, symbol, strategy, asset, currency }) => {
@@ -97,11 +127,11 @@ export class Core {
   }
 
   private startTicker = async ({ exchange, symbol }) => {
-    this.exchangeCores.get(exchange).startTicker(symbol)
+    this.exchangeCores.get(exchange).tickerStart(symbol)
   }
 
   private stopTicker = async ({ exchange, symbol }) => {
-    this.exchangeCores.get(exchange).stopTicker(symbol)
+    this.exchangeCores.get(exchange).tickerStop(symbol)
   }
 
   private async initExchangeCore(exchangeConfig: ExchangeConfig) {
@@ -113,6 +143,18 @@ export class Core {
     this.exchangeCores.set(exchangeConfig.exchange, exchangeCore)
 
     return true
+  }
+
+  private getExchanges() {
+    const exchanges = Object.entries(Adapters).reduce((acc, [name, { description, fields }]) => {
+      acc[name] = { description, fields }
+      return acc
+    }, {})
+    wsServer.broadcast('get-exchanges', { exchanges })
+  }
+
+  private getStrategies() {
+    wsServer.broadcast('get-strategies', { strategies: ['macd'] })
   }
 
   private checkForExchange(exchange: string) {

@@ -231,7 +231,7 @@ describe('TradeEngine', () => {
 
     expect(tickBack).toHaveBeenCalledTimes(0)
     expect(scanForward).toHaveBeenCalledTimes(1)
-    expect(scanForward).toHaveBeenCalledWith(mockId, mockNow - 1)
+    expect(scanForward).toHaveBeenCalledWith(mockId, mockNow - 1, true)
     expect(recursiveTick).toHaveBeenCalledTimes(1)
   })
 

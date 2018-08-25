@@ -23,6 +23,10 @@ export class TradeEngine {
     return this.symbols.get(symbol) === SYNC_STATE.READY
   }
 
+  public isRunning(symbol: string) {
+    return this.symbols.get(symbol) !== SYNC_STATE.STOPPED
+  }
+
   public async start(symbol: string, days: number) {
     if (this.symbols.has(symbol) && this.symbols.get(symbol) !== SYNC_STATE.STOPPED) return
 
@@ -35,7 +39,7 @@ export class TradeEngine {
     await this.tick(symbol)
   }
 
-  public stop(symbol) {
+  public stop(symbol: string) {
     if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
 
     logger.info(`Trade sync for ${this.exchange} on ${symbol} stopped.`)

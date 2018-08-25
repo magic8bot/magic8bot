@@ -8,13 +8,21 @@ services:
     volumes:
       - /app
     ports:
-      - "9999:9999"
-    expose: 
+      - '9999:9999'
+    expose:
       - 9999
     depends_on:
       - mongodb
     environment:
       - MONGODB_PORT_27017_TCP_ADDR=mongodb
+      - MONGO_USERNAME=
+      - MONGO_PASSWORD=
+      - MONGO_HOST=
+      - MONGO_PORT=
+      - MONGO_DB=
+      - MONGO_REPLICA_SET=
+      - MONGO_AUTH_MECHANISM=
+      - WS_PORT=
 
   mongodb:
     image: mongo:latest
@@ -24,19 +32,19 @@ services:
     expose:
       - 27017
 
-# AdminMongo is a Web based user interface for MongoDB administration
+  # AdminMongo is a Web based user interface for MongoDB administration
   adminmongo:
-   image: mrvautin/adminmongo
-   links:
-     - mongodb
-   tty: true
-   ports:
-     - "1234:1234"
-   environment:
-     - CONN_NAME=magic8bot_mongodb
-     - DB_HOST=mongodb
-     - DB_PORT=27017
-   command: "npm start"
+    image: mrvautin/adminmongo
+    links:
+      - mongodb
+    tty: true
+    ports:
+      - '1234:1234'
+    environment:
+      - CONN_NAME=magic8bot_mongodb
+      - DB_HOST=mongodb
+      - DB_PORT=27017
+    command: 'npm start'
 
-volumes: 
-  database:
+volumes:
+  ? database

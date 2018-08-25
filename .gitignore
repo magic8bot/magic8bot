@@ -10,4 +10,5 @@ coverage
 config/jest/globalConfig.json
 database
 *.log
-log
+log.log*
+.audit.json

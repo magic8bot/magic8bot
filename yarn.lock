@@ -16,9 +16,9 @@
     esutils "^2.0.2"
     js-tokens "^3.0.0"
 
-"@magic8bot/event-bus@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@magic8bot/event-bus/-/event-bus-1.0.3.tgz#e0c83650f31332f33f71a4ac0dd7982f8806fae9"
+"@magic8bot/event-bus@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@magic8bot/event-bus/-/event-bus-1.1.1.tgz#05fb3235acf2cc908546248ce257f9cf36de9eb1"
 
 "@magic8bot/timebucket@^1.1.0":
   version "1.1.0"
@@ -29,6 +29,12 @@
 "@types/bson@*":
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/@types/bson/-/bson-1.0.9.tgz#0a042ac50d879c4a842a269586162e12010f6ebd"
+  dependencies:
+    "@types/node" "*"
+
+"@types/dotenv@^4.0.3":
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/@types/dotenv/-/dotenv-4.0.3.tgz#ebcfc40da7bc0728b705945b7db48485ec5b4b67"
   dependencies:
     "@types/node" "*"
 
@@ -1059,6 +1065,10 @@ domexception@^1.0.0:
   resolved "https://registry.yarnpkg.com/domexception/-/domexception-1.0.1.tgz#937442644ca6a31261ef36e3ec677fe805582c90"
   dependencies:
     webidl-conversions "^4.0.2"
+
+dotenv@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-6.0.0.tgz#24e37c041741c5f4b25324958ebbc34bca965935"
 
 duplexer@^0.1.1:
   version "0.1.1"
@@ -3940,9 +3950,9 @@ typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
 
-typescript@^2.9.2:
-  version "2.9.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.9.2.tgz#1cbf61d05d6b96269244eb6a3bce4bd914e0f00c"
+typescript@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.0.1.tgz#43738f29585d3a87575520a4b93ab6026ef11fdb"
 
 uglify-js@^2.6:
   version "2.8.29"

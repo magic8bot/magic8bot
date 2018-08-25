@@ -1,4 +1,4 @@
-import { dbDriver, OrderWithTrades } from '@lib'
+import { dbDriver, OrderWithTrades, wsServer } from '@lib'
 import { SessionStore } from './session.store'
 import { Order } from 'ccxt'
 import { StoreOpts } from '@m8bTypes'
@@ -44,7 +44,9 @@ export class OrderStore {
 
     const { sessionId } = this
 
-    await dbDriver.order.insertOne({ ...order, sessionId, exchange, symbol, strategy })
+    const data = { ...order, sessionId, exchange, symbol, strategy }
+    await dbDriver.order.insertOne(data)
+    wsServer.broadcast('order-new', data)
   }
 
   public getOpenOrder(storeOpts: StoreOpts, id: string) {
@@ -83,9 +85,11 @@ export class OrderStore {
   }
 
   /* istanbul ignore next */
-  public async saveOrder(exchange: string, order: OrderWithTrades) {
+  public async saveOrder(storeOpts: StoreOpts, order: OrderWithTrades) {
+    const { exchange } = storeOpts
     const { id, ...updatedOrder } = order
-    return dbDriver.order.updateOne({ id, exchange }, { $set: { ...updatedOrder } })
+    await dbDriver.order.updateOne({ id, exchange }, { $set: { ...updatedOrder } })
+    wsServer.broadcast('order-update', { ...order, ...storeOpts })
   }
 
   private makeIdStr({ exchange, symbol, strategy }: StoreOpts) {

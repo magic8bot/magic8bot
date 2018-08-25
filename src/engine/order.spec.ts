@@ -72,6 +72,9 @@ jest.mock('./quote', () => {
 
 const mockId = 'test'
 const mockStrategyConf: any = {
+  exchange: mockId,
+  symbol: mockId,
+  strategy: mockId,
   markUp: 0,
   markDown: 0,
   strategyName: mockId,
@@ -88,7 +91,7 @@ describe('OrderEngine', () => {
   let mockEmitWalletAdjustment
 
   beforeEach(() => {
-    orderEngine = new OrderEngine(mockExchangeProvider, mockId, mockId, mockStrategyConf)
+    orderEngine = new OrderEngine(mockExchangeProvider, mockStrategyConf)
     mockEmitWalletAdjustment = jest.spyOn<any, any>(orderEngine, 'emitWalletAdjustment').mockReturnValueOnce(undefined)
   })
 
@@ -315,7 +318,7 @@ describe('OrderEngine', () => {
     expect(mockUpdateOrder).toHaveBeenCalledTimes(1)
     expect(mockUpdateOrder).toHaveBeenCalledWith(storeOpts, order)
     expect(mockSaveOrder).toHaveBeenCalledTimes(1)
-    expect(mockSaveOrder).toHaveBeenCalledWith(mockId, order)
+    expect(mockSaveOrder).toHaveBeenCalledWith(storeOpts, order)
   })
 
   test('adjust wallet when partial buy fill', async () => {

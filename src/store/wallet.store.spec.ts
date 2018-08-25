@@ -33,7 +33,7 @@ describe('WalletStore', () => {
     loadOrNewWallet.mockReturnValueOnce(null)
     subcribeToWalletEvents.mockReturnValueOnce(null)
 
-    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'init' })
+    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'user' })
 
     expect(loadOrNewWallet).toHaveBeenCalledTimes(1)
     expect(subcribeToWalletEvents).toHaveBeenCalledTimes(1)
@@ -42,7 +42,7 @@ describe('WalletStore', () => {
   test('subscribes to wallet events', async () => {
     loadOrNewWallet.mockReturnValueOnce(null)
 
-    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'init' })
+    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'user' })
 
     expect(loadOrNewWallet).toHaveBeenCalledTimes(1)
     expect(subcribeToWalletEvents).toHaveBeenCalledTimes(1)
@@ -52,7 +52,7 @@ describe('WalletStore', () => {
     loadWallet.mockReturnValueOnce(true)
     subcribeToWalletEvents.mockReturnValueOnce(null)
 
-    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'init' })
+    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'user' })
 
     expect(loadWallet).toHaveBeenCalledTimes(1)
     expect(adjustWallet).toHaveBeenCalledTimes(0)
@@ -69,7 +69,7 @@ describe('WalletStore', () => {
     // @ts-ignore
     walletStore.wallets = new Map()
 
-    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'init' })
+    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'user' })
 
     expect(loadWallet).toHaveBeenCalledTimes(1)
     expect(adjustWallet).toHaveBeenCalledTimes(0)
@@ -79,7 +79,7 @@ describe('WalletStore', () => {
     adjustWallet.mockReturnValueOnce(null)
     subcribeToWalletEvents.mockReturnValueOnce(null)
 
-    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'init' })
+    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'user' })
 
     expect(loadWallet).toHaveBeenCalledTimes(1)
     expect(adjustWallet).toHaveBeenCalledTimes(1)
@@ -90,7 +90,7 @@ describe('WalletStore', () => {
     adjustWallet.mockReturnValueOnce(null)
     subcribeToWalletEvents.mockReturnValueOnce(null)
 
-    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'init' })
+    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'user' })
 
     expect(loadWallet).toHaveBeenCalledTimes(1)
     expect(adjustWallet).toHaveBeenCalledTimes(1)
@@ -100,7 +100,7 @@ describe('WalletStore', () => {
     loadWallet.mockReturnValueOnce(null)
     subcribeToWalletEvents.mockReturnValueOnce(null)
 
-    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'init' })
+    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'user' })
 
     expect(loadWallet).toHaveBeenCalledTimes(1)
     expect(adjustWallet).toHaveBeenCalledTimes(1)

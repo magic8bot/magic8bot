@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2018",
     "module": "commonjs",
-    "lib": ["es2018"],
+    "lib": ["es2018", "dom"],
     "moduleResolution": "node",
     "sourceMap": true,
     "esModuleInterop": true,
@@ -24,5 +24,5 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "exclude": ["./legacy"]
+  "exclude": ["./legacy", "./client"]
 }

@@ -1,5 +1,5 @@
 import { Order, Trade } from 'ccxt'
-import { Filter } from '@m8bTypes'
+import { Filter, ExchangeAuth } from '@m8bTypes'
 
 export interface SessionCollection {
   sessionId: string
@@ -109,7 +109,7 @@ export type WalletCollection = Wallet & {
 }
 
 export type Adjustment = Wallet & {
-  type: 'init' | 'newOrder' | 'cancelOrder' | 'fillOrder'
+  type: 'user' | 'newOrder' | 'cancelOrder' | 'fillOrder'
 }
 
 export type AdjustmentCollection = Adjustment & {
@@ -118,4 +118,47 @@ export type AdjustmentCollection = Adjustment & {
   symbol: string
   strategy: string
   time: number
+}
+
+export interface ExchangeAuthentication {
+  apiKey: string
+  secret: string
+  uid?: string
+  login?: string
+  password?: string
+  twofa?: string
+  privateKey?: string
+  walletAdress?: string
+  client_id?: string
+  sandbox?: boolean
+  apiURI?: string
+  websocketURI?: string
+}
+
+export interface ExchangeConfig {
+  exchange: string
+  tradePollInterval: number
+  auth: ExchangeAuthentication
+}
+
+export type ExchangeCollection = ExchangeConfig & {
+  sessionId: string
+}
+
+export interface StrategyConfig {
+  [key: string]: string | number | boolean
+  symbol: string
+  exchange: string
+  strategy: string
+
+  days: number
+  period: string
+  markDn: number
+  markUp: number
+  orderPollInterval: number
+  orderSlippageAdjustmentTolerance: number
+}
+
+export type StrategyCollection = StrategyConfig & {
+  sessionId: string
 }

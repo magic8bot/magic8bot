@@ -1,85 +1,132 @@
-import { ExchangeConf, StrategyConf, Base } from '@m8bTypes'
-import { TradeStore } from '@store'
+import { StrategyStore, WalletStore } from '@store'
 import { ExchangeProvider } from '@exchange'
 
 import { StrategyCore } from '@core'
 import { TradeEngine } from '@engine'
 import { logger } from '@util'
+import { wsServer, ExchangeConfig, StrategyConfig } from '@lib'
+import { Balance } from 'ccxt'
+import { TickerEngine } from '../engine/ticker'
 
 export class ExchangeCore {
-  private exchangeName: string
-
-  private baseConf: Base
+  private exchange: string
+  private strategyCores: Map<string, Map<string, StrategyCore>> = new Map()
 
   private tradeEngine: TradeEngine
-  private tradeEngineOpts: Map<string, number> = new Map()
+  private tickerEngine: TickerEngine
 
-  private strategyCores: Map<string, Set<StrategyCore>> = new Map()
-
-  private readonly tradeStore = TradeStore.instance
-
-  constructor(private readonly exchangeProvider: ExchangeProvider, { exchangeName, tradePollInterval, options: { strategies, base } }: ExchangeConf, isPaper: boolean) {
-    this.exchangeName = exchangeName
-    this.baseConf = base
-
-    this.tradeEngine = new TradeEngine(this.exchangeName, this.exchangeProvider, tradePollInterval)
-
-    const currencyPairDays = this.getBackfillerDays(strategies, base.days)
-
-    strategies.forEach(({ symbol }) => this.setupBackfillers(currencyPairDays[symbol], symbol))
-    strategies.forEach((strategyConf) => this.setupStrategies(strategyConf))
+  constructor(private readonly exchangeProvider: ExchangeProvider, { exchange, tradePollInterval }: ExchangeConfig) {
+    this.exchange = exchange
+    this.tradeEngine = new TradeEngine(this.exchangeProvider, exchange, tradePollInterval)
+    this.tickerEngine = new TickerEngine(this.exchangeProvider, this.exchange)
   }
 
   public async init() {
-    await this.initWallets()
-
-    this.backfill()
+    const strategies = await StrategyStore.instance.loadAllForExchange(this.exchange)
+    strategies.forEach((strategyConfig) => this.addStrategy(strategyConfig))
   }
 
-  private async initWallets() {
-    const balances = await this.exchangeProvider.getBalances(this.exchangeName)
+  public async addStrategy(strategyConfig: StrategyConfig) {
+    const { symbol, strategy } = strategyConfig
+    if (!this.strategyCores.has(symbol)) this.strategyCores.set(symbol, new Map())
+    if (this.strategyCores.get(symbol).has(strategy)) return
 
-    this.strategyCores.forEach(async (strategyEngines) => strategyEngines.forEach((strategyEngine) => strategyEngine.init(balances)))
+    const strategyCore = new StrategyCore(this.exchangeProvider, strategyConfig)
+    this.strategyCores.get(symbol).set(strategy, strategyCore)
   }
 
-  private backfill() {
-    this.tradeEngineOpts.forEach(async (days, symbol) => {
-      await this.tradeEngine.scan(symbol, days)
-      await this.tradeStore.loadTrades({ exchange: this.exchangeName, symbol })
-      logger.info(`Backfill for ${this.exchangeName} on ${symbol} completed.`)
-      this.strategyCores.get(symbol).forEach((strategyEngine) => strategyEngine.run())
-      this.tradeEngine.tick(symbol)
-    })
+  public async getBalances() {
+    return this.exchangeProvider.getBalances(this.exchange)
   }
 
-  private getBackfillerDays(strategies: StrategyConf[], baseDays: number): Record<string, number> {
-    return strategies.reduce((acc, { days, symbol }) => {
-      if (!acc[symbol]) acc[symbol] = days ? days : baseDays
-      else if (acc[symbol] < days) acc[symbol] = days
-      return acc
-    }, {})
+  public syncStart(symbol: string, days: number) {
+    this.tradeEngine.start(symbol, days)
   }
 
-  private setupBackfillers(days: number, symbol: string) {
-    if (!this.tradeEngineOpts.has(symbol)) this.tradeEngineOpts.set(symbol, days)
-    logger.debug(`Setting up Backfiller for Symbol ${symbol} and ${days} days.`)
-    this.tradeStore.addSymbol({ exchange: this.exchangeName, symbol })
+  public syncStop(symbol: string) {
+    this.tradeEngine.stop(symbol)
   }
 
-  private setupStrategies(strategyConf: StrategyConf) {
-    const fullConf = this.mergeConfig(strategyConf)
-
-    const { symbol } = fullConf
-
-    if (!this.strategyCores.has(symbol)) this.strategyCores.set(symbol, new Set())
-    const strategyEngines = this.strategyCores.get(symbol)
-
-    logger.debug(`Setting up Strategy ${strategyConf.strategyName}`)
-
-    strategyEngines.add(new StrategyCore(this.exchangeProvider, this.exchangeName, symbol, fullConf))
+  public syncIsRunning(symbol: string) {
+    return this.tradeEngine.isRunning(symbol)
   }
 
-  private mergeConfig(strategyConf: StrategyConf): StrategyConf {
-    return { ...this.baseConf, ...strategyConf }
+  public tickerStart(symbol: string) {
+    this.tickerEngine.start(symbol)
+  }
+
+  public tickerStop(symbol: string) {
+    this.tickerEngine.stop(symbol)
+  }
+
+  public tickerIsRunning(symbol: string) {
+    return this.tickerEngine.isRunning(symbol)
+  }
+
+  public strategyStart(symbol: string, strategy: string) {
+    if (!this.checkForStrategy(symbol, strategy)) return
+    if (!this.tradeEngine.isReady(symbol)) return this.error(`symbol ${symbol} is not ready yet.`)
+
+    // prettier-ignore
+    this.strategyCores.get(symbol).get(strategy).start()
+  }
+
+  public strategyStop(symbol: string, strategy: string) {
+    if (!this.checkForStrategy(symbol, strategy)) return
+
+    // prettier-ignore
+    this.strategyCores.get(symbol).get(strategy).stop()
+  }
+
+  public strategyIsRunning(symbol: string, strategy: string) {
+    // prettier-ignore
+    return this.strategyCores.get(symbol).get(strategy).isRunning()
+  }
+
+  public async adjustWallet(symbol: string, strategy: string, asset: number, currency: number) {
+    if (!this.checkForStrategy(symbol, strategy)) return
+
+    const balances = await this.getBalances()
+
+    const [a, c] = symbol.split('/')
+    const assetBalance = balances[a] ? balances[a].total : 0
+    const currencyBalance = balances[c] ? balances[c].total : 0
+
+    if (asset > assetBalance) return this.error(`asset ${a} has insufficient funds (${assetBalance})`)
+    if (currency > currencyBalance) return this.error(`currency ${currency} has insufficient funds (${currencyBalance})`)
+
+    const wallets = await WalletStore.instance.loadAll(this.exchange)
+    const { assetFree, currencyFree } = this.getFreeFunds(wallets, a, c, assetBalance, currencyBalance)
+
+    console.log({ asset, currency, assetBalance, currencyBalance, assetFree, currencyFree })
+
+    if (asset > assetFree) return this.error(`asset ${a} does not have enough free funds (${assetFree})`)
+    if (currency > currencyFree) return this.error(`currency ${c} does not have enough free funds (${currencyFree})`)
+
+    // prettier-ignore
+    await this.strategyCores.get(symbol).get(strategy).adjustWallet({ asset, currency, type: 'user' })
+  }
+
+  private getFreeFunds(wallets, a: string, c: string, assetBalance: number, currencyBalance: number): { assetFree: any; currencyFree: any } {
+    return wallets.reduce((acc, wallet) => this.reduceWallet(a, c, acc, wallet), { assetFree: assetBalance, currencyFree: currencyBalance })
+  }
+
+  private reduceWallet(a, c, acc, wallet) {
+    const [wA, wC] = wallet.symbol.split('/')
+    if (a === wA) acc.assetFree -= wallet.asset
+    if (c === wC) acc.currencyFree -= wallet.currency
+    return acc
+  }
+
+  private checkForStrategy(symbol: string, strategy: string) {
+    if (!this.strategyCores.has(symbol)) return this.error(`symbol ${symbol} not configured`)
+    if (!this.strategyCores.get(symbol).has(strategy)) return this.error(`strategy ${strategy} not configured`)
+    return true
+  }
+
+  private error(error: string) {
+    logger.error(error)
+    wsServer.broadcast('error', { error: `Exchange Error: ${error}` })
+    return false
   }
 }

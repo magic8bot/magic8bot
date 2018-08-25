@@ -2,31 +2,73 @@ import { ExchangeProvider } from '@exchange'
 import { TradeStore, MarkerStore } from '@store'
 import { sleep, logger } from '@util'
 
+enum SYNC_STATE {
+  STOPPED,
+  SYNCING,
+  READY,
+}
+
 export class TradeEngine {
+  private readonly symbols: Map<string, SYNC_STATE> = new Map()
   private readonly scanType: 'back' | 'forward'
 
   private readonly tradeStore = TradeStore.instance
   private readonly markerStore = MarkerStore.instance
 
-  constructor(private readonly exchange: string, private readonly exchangeProvider: ExchangeProvider, private readonly tradePollInterval: number) {
+  constructor(private readonly exchangeProvider: ExchangeProvider, private readonly exchange: string, private readonly tradePollInterval: number) {
     this.scanType = this.exchangeProvider.getScan(this.exchange)
   }
 
-  public async scan(symbol: string, days: number) {
+  public isReady(symbol: string) {
+    return this.symbols.get(symbol) === SYNC_STATE.READY
+  }
+
+  public isRunning(symbol: string) {
+    return this.symbols.get(symbol) !== SYNC_STATE.STOPPED
+  }
+
+  public async start(symbol: string, days: number) {
+    if (this.symbols.has(symbol) && this.symbols.get(symbol) !== SYNC_STATE.STOPPED) return
+
+    logger.info(`Trade sync for ${this.exchange} on ${symbol} started.`)
+    this.symbols.set(symbol, SYNC_STATE.SYNCING)
+    this.tradeStore.addSymbol({ exchange: this.exchange, symbol })
+
+    await this.scan(symbol, days)
+    this.symbols.set(symbol, SYNC_STATE.READY)
+    await this.tick(symbol)
+  }
+
+  public stop(symbol: string) {
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
+    logger.info(`Trade sync for ${this.exchange} on ${symbol} stopped.`)
+    this.symbols.set(symbol, SYNC_STATE.STOPPED)
+  }
+
+  private async scan(symbol: string, days: number) {
     const storeOpts = { exchange: this.exchange, symbol }
 
     const now = this.getNow()
     const target = now - 86400000 * days
 
+    logger.info(`Trade sync for ${this.exchange} on ${symbol} started backfill for ${days} days.`)
+
     await (this.scanType === 'back' ? this.scanBack(symbol, target) : this.scanForward(symbol, target))
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
+    logger.info(`Trade sync for ${this.exchange} on ${symbol} completed backfill.`)
+
     await this.tradeStore.loadTrades(storeOpts)
   }
 
-  public async tick(symbol: string) {
+  private async tick(symbol: string) {
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
     const storeOpts = { exchange: this.exchange, symbol }
     const target = (await this.markerStore.findLatestTradeMarker(storeOpts)).newestTime
 
-    await (this.scanType === 'back' ? this.tickBack(symbol, target) : this.scanForward(symbol, target))
+    await (this.scanType === 'back' ? this.tickBack(symbol, target) : this.scanForward(symbol, target, true))
     await sleep(this.tradePollInterval)
 
     await this.tradeStore.loadTrades(storeOpts)
@@ -42,6 +84,8 @@ export class TradeEngine {
   }
 
   private async scanBack(symbol: string, end: number) {
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
     const storeOpts = { exchange: this.exchange, symbol }
     // The next "to" is the previous "from"
     const to = await this.markerStore.getNextBackMarker(storeOpts)
@@ -60,7 +104,7 @@ export class TradeEngine {
     }
   }
 
-  private async scanForward(symbol: string, start: number) {
+  private async scanForward(symbol: string, start: number, isTick = false) {
     const storeOpts = { exchange: this.exchange, symbol }
     const from = await this.markerStore.getNextForwardMarker(storeOpts, start)
 
@@ -73,15 +117,17 @@ export class TradeEngine {
     const to = Math.max(...trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
     const { newestTime } = await this.markerStore.saveMarker(storeOpts, to, from, trades)
 
-    logger.debug(`${this.exchange}.${symbol} scanForward ${JSON.stringify({ now: new Date(newestTime), end: new Date() })}`)
+    if (!isTick) logger.debug(`${this.exchange}.${symbol} scanForward ${JSON.stringify({ now: new Date(newestTime), end: new Date() })}`)
 
     // Always get current time so backfill can catch up to "now"
     if (newestTime < this.getNow()) {
-      await this.scanForward(symbol, to)
+      await this.scanForward(symbol, to, isTick)
     }
   }
 
   private async tickBack(symbol: string, target: number, lastFrom: number = null) {
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
     const storeOpts = { exchange: this.exchange, symbol }
     const trades = await this.exchangeProvider.getTrades(this.exchange, symbol, lastFrom)
 

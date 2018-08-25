@@ -1,7 +1,7 @@
 import { Trade } from 'ccxt'
 import { timebucket } from '@magic8bot/timebucket'
 import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
-import { PeriodItem, eventBus, EVENT } from '@lib'
+import { PeriodItem, eventBus, EVENT, wsServer } from '@lib'
 import { StoreOpts } from '@m8bTypes'
 import { logger } from '../util/logger'
 
@@ -10,6 +10,11 @@ const singleton = Symbol()
 interface PeriodConf {
   period: string
   lookbackSize: number
+}
+
+enum PERIOD_STATE {
+  STOPPED,
+  RUNNING,
 }
 
 export class PeriodStore {
@@ -26,6 +31,7 @@ export class PeriodStore {
   private periodEmitters: Map<string, EventBusEmitter<PeriodItem[]>> = new Map()
   private tradeEventTimeouts: Map<string, NodeJS.Timer> = new Map()
   private periodTimer: Map<string, NodeJS.Timer> = new Map()
+  private periodStates: Map<string, PERIOD_STATE> = new Map()
 
   private constructor() {}
 
@@ -47,12 +53,21 @@ export class PeriodStore {
   }
 
   /* istanbul ignore next */
-  public startPeriodEmitter(storeOpts: StoreOpts) {
+  public start(storeOpts: StoreOpts) {
     const idStr = this.makeIdStr(storeOpts)
+    this.periodStates.set(idStr, PERIOD_STATE.RUNNING)
+
     this.periodTimer.set(idStr, setTimeout(() => this.publishPeriod(idStr), this.getPeriodTimeout(idStr)))
   }
 
+  public stop(storeOpts: StoreOpts) {
+    const idStr = this.makeIdStr(storeOpts)
+    this.periodStates.set(idStr, PERIOD_STATE.RUNNING)
+  }
+
   public addTrade(idStr: string, trade: Trade) {
+    if (this.periodStates.get(idStr) !== PERIOD_STATE.RUNNING) return
+
     const { period } = this.periodConfigs.get(idStr)
     const periods = this.periods.get(idStr)
     const { amount, price, timestamp } = trade
@@ -110,6 +125,8 @@ export class PeriodStore {
    * @param idStr period identifier
    */
   private emitTrades(idStr: string) {
+    if (this.periodStates.get(idStr) !== PERIOD_STATE.RUNNING) return
+
     if (this.tradeEventTimeouts.has(idStr)) return
     const fn = () => this.emitTradeImmediate(idStr)
     this.tradeEventTimeouts.set(idStr, setTimeout(fn, 100))
@@ -121,8 +138,11 @@ export class PeriodStore {
    * @param idStr period identifier
    */
   private emitTradeImmediate(idStr: string) {
+    if (this.periodStates.get(idStr) !== PERIOD_STATE.RUNNING) return
+
     const periods = this.periods.get(idStr)
     this.updateEmitters.get(idStr)([...periods])
+    wsServer.broadcast('period-update', { ...this.parseIdStr(idStr), period: periods[0] })
     /* istanbul ignore else */
     if (this.tradeEventTimeouts.has(idStr)) {
       clearTimeout(this.tradeEventTimeouts.get(idStr))
@@ -145,6 +165,8 @@ export class PeriodStore {
 
   /* istanbul ignore next */
   private checkPeriodWithoutTrades(idStr: string) {
+    if (this.periodStates.get(idStr) !== PERIOD_STATE.RUNNING) return
+
     const periods = this.periods.get(idStr)
     if (periods.length < 2) return
 
@@ -166,14 +188,21 @@ export class PeriodStore {
   /* istanbul ignore next */
   private publishPeriod(idStr: string) {
     clearTimeout(this.periodTimer.get(idStr))
+    if (this.periodStates.get(idStr) !== PERIOD_STATE.RUNNING) return
 
     this.checkPeriodWithoutTrades(idStr)
     // Publish period to event bus
     this.periodEmitters.get(idStr)()
+    wsServer.broadcast('period-new', { ...this.parseIdStr(idStr), period: this.periods.get(idStr)[0] })
     // prepare new period
     this.newPeriod(idStr, timebucket(this.periodConfigs.get(idStr).period).toMilliseconds())
 
     const fn = () => this.publishPeriod(idStr)
     this.periodTimer.set(idStr, setTimeout(fn, this.getPeriodTimeout(idStr)))
+  }
+
+  private parseIdStr(idStr: string): StoreOpts {
+    const [exchange, symbol, strategy] = idStr.split('.')
+    return { exchange, symbol, strategy }
   }
 }

@@ -1,8 +1,11 @@
 import { Trade } from 'ccxt'
-import { ExchangeAdapter } from './base'
+import { ExchangeAdapter, baseFields } from './base'
 import { time } from '@util'
 
 export const binance: ExchangeAdapter = {
+  fields: [...baseFields],
+  description: 'Binance Exchange is one of the fastest growing and most popular cryptocurrency exchanges in the world.',
+
   scan: 'forward',
   ratelimit: 500,
 

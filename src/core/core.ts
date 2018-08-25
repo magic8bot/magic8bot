@@ -43,6 +43,16 @@ export class Core {
   private addExchange = async (exchangeConfig: ExchangeConfig) => {
     if (!this.helpers.checkAddExchangeParams(exchangeConfig)) return
 
+    Object.keys(exchangeConfig)
+      .filter((key) => key.includes('auth.'))
+      .forEach((key) => {
+        if (!exchangeConfig.auth) exchangeConfig.auth = {} as any
+        const authKey = key.split('.').pop()
+
+        exchangeConfig.auth[authKey] = exchangeConfig[key]
+        delete exchangeConfig[key]
+      })
+
     await ExchangeStore.instance.save(exchangeConfig)
     this.initExchangeCore(exchangeConfig)
     const { auth, ...config } = exchangeConfig
@@ -52,9 +62,8 @@ export class Core {
   private updateExchange = async (exchangeConfig: Partial<ExchangeConfig>) => {
     await ExchangeStore.instance.save(exchangeConfig as ExchangeConfig)
 
-    const exchanges = await this.helpers.getExchanges()
-    const exchange = exchanges.find((e) => e.exchange === exchangeConfig.exchange)
-    const strategies = exchange.strategies
+    const exchange = await ExchangeStore.instance.loadWithAuth(exchangeConfig.exchange)
+    const strategies = await StrategyStore.instance.loadAllForExchange(exchangeConfig.exchange)
     const exchangeCore = this.exchangeCores.get(exchange.exchange)
 
     strategies.forEach(({ symbol, strategy }) => {
@@ -69,9 +78,11 @@ export class Core {
       tradePollInterval: exchange.tradePollInterval,
     }
 
+    console.log({ fullConfig })
+
     this.exchangeProvider.replaceExchange(fullConfig)
 
-    const { auth, ...config } = exchangeConfig
+    const { auth, ...config } = fullConfig
     wsServer.broadcast('update-exchange', { ...config })
   }
 

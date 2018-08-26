@@ -48,4 +48,8 @@ export class ExchangeStore {
   public loadAllWithAuth() {
     return this.store.find({ sessionId: this.sessionId }, { projection: { _id: 0, sessionId: 0 } }).toArray()
   }
+
+  public delete(exchange: string) {
+    return this.store.deleteOne({ sessionId: this.sessionId, exchange })
+  }
 }

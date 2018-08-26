@@ -98,8 +98,6 @@ export class ExchangeCore {
     const wallets = await WalletStore.instance.loadAll(this.exchange)
     const { assetFree, currencyFree } = this.getFreeFunds(wallets, a, c, assetBalance, currencyBalance)
 
-    console.log({ asset, currency, assetBalance, currencyBalance, assetFree, currencyFree })
-
     if (asset > assetFree) return this.error(`asset ${a} does not have enough free funds (${assetFree})`)
     if (currency > currencyFree) return this.error(`currency ${c} does not have enough free funds (${currencyFree})`)
 

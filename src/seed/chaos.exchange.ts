@@ -84,7 +84,6 @@ export class ChaosXcg {
   }
 
   public fetchOrderBook(symbol: string) {
-    console.log({ symbol })
     if (!this.trades.has(symbol)) this.makeFakeTrade(symbol, 0)
     const lastTrade = this.trades.get(symbol)
     const largeSpread = this.rand(0, 3) === 3

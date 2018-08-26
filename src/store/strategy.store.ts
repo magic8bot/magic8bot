@@ -46,4 +46,8 @@ export class StrategyStore {
   public async loadAllForExchange(exchange: string) {
     return this.store.find({ sessionId: this.sessionId, exchange }, { projection: { _id: 0, sessionId: 0 } }).toArray()
   }
+
+  public deleteAllForExchange(exchange: string) {
+    return this.store.deleteOne({ sessionId: this.sessionId, exchange })
+  }
 }

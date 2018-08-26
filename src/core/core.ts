@@ -26,6 +26,7 @@ export class Core {
   private registerActions() {
     wsServer.registerAction('add-exchange', this.addExchange)
     wsServer.registerAction('update-exchange', this.updateExchange)
+    wsServer.registerAction('delete-exchange', this.deleteExchange)
     wsServer.registerAction(`add-strategy`, this.addStrategy)
     wsServer.registerAction('get-my-config', this.getMyConfig)
     wsServer.registerAction(`get-balance`, this.getBalance)
@@ -62,8 +63,30 @@ export class Core {
   private updateExchange = async (exchangeConfig: Partial<ExchangeConfig>) => {
     await ExchangeStore.instance.save(exchangeConfig as ExchangeConfig)
 
-    const exchange = await ExchangeStore.instance.loadWithAuth(exchangeConfig.exchange)
-    const strategies = await StrategyStore.instance.loadAllForExchange(exchangeConfig.exchange)
+    const exchange = await this.stopExchange(exchangeConfig.exchange)
+
+    const fullConfig: ExchangeConfig = {
+      exchange: exchange.exchange,
+      auth: exchange.auth,
+      tradePollInterval: exchange.tradePollInterval,
+    }
+
+    this.exchangeProvider.replaceExchange(fullConfig)
+
+    const { auth, ...config } = fullConfig
+    wsServer.broadcast('update-exchange', { ...config })
+  }
+
+  private deleteExchange = async ({ exchange }) => {
+    await this.stopExchange(exchange)
+    await ExchangeStore.instance.delete(exchange)
+    await StrategyStore.instance.deleteAllForExchange(exchange)
+    wsServer.broadcast('delete.exchange', { success: true })
+  }
+
+  private async stopExchange(name: string) {
+    const exchange = await ExchangeStore.instance.loadWithAuth(name)
+    const strategies = await StrategyStore.instance.loadAllForExchange(name)
     const exchangeCore = this.exchangeCores.get(exchange.exchange)
 
     strategies.forEach(({ symbol, strategy }) => {
@@ -72,18 +95,7 @@ export class Core {
       if (exchangeCore.strategyIsRunning(symbol, strategy)) exchangeCore.strategyStop(symbol, strategy)
     })
 
-    const fullConfig: ExchangeConfig = {
-      exchange: exchange.exchange,
-      auth: exchange.auth,
-      tradePollInterval: exchange.tradePollInterval,
-    }
-
-    console.log({ fullConfig })
-
-    this.exchangeProvider.replaceExchange(fullConfig)
-
-    const { auth, ...config } = fullConfig
-    wsServer.broadcast('update-exchange', { ...config })
+    return exchange
   }
 
   private addStrategy = async (strategyConfig: StrategyConfig) => {

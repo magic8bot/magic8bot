@@ -2,6 +2,14 @@ import { PeriodItem, EVENT, eventBus } from '@lib'
 import { EventBusListener, EventBusEmitter } from '@magic8bot/event-bus'
 import { SignalEvent, Signal } from '@m8bTypes'
 
+export interface StrategyField {
+  name: string
+  type: 'string' | 'number' | 'boolean'
+  prettyName: string
+  description: string
+  default: string | number | boolean
+}
+
 /**
  * This class defines the base functionality of a strategy.
  *
@@ -17,6 +25,9 @@ import { SignalEvent, Signal } from '@m8bTypes'
  * emitted to the event-bus `EVENT.STRAT_SIGNAL`.
  */
 export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
+  public static description: string
+  public static fields: StrategyField[]
+
   /**
    * Defines the options used by a strategy
    */

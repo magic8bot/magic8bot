@@ -1,12 +1,11 @@
 import { PeriodItem } from '@lib'
 import { EMA, RSI } from '../../indicators'
-import { BaseStrategy } from '../base-strategy'
+import { BaseStrategy, StrategyField } from '../base-strategy'
 import { Signal } from '@m8bTypes'
 import { logger } from '../../../util/logger'
 
 export interface MacdOptions {
   period: string
-  minPeriods: number
   emaShortPeriod: number
   emaLongPeriod: number
   signalPeriod: number
@@ -28,9 +27,70 @@ interface MacdPeriod {
 }
 
 export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: number }> {
+  public static description =
+    'Moving average convergence divergence (MACD) is a trend-following momentum indicator that shows the relationship between two moving averages of prices.'
+
+  public static fields: StrategyField[] = [
+    {
+      name: 'period',
+      type: 'string',
+      prettyName: 'Period Length',
+      description: 'Length of time to sample.',
+      default: '1m',
+    },
+    {
+      name: 'emaShortPeriod',
+      type: 'number',
+      prettyName: 'EMA Short Period',
+      description: 'Amount of periods to sample for short exponential moving average.',
+      default: 12,
+    },
+    {
+      name: 'emaLongPeriod',
+      type: 'number',
+      prettyName: 'EMA Long Period',
+      description: 'Amount of periods to sample for long exponential moving average.',
+      default: 26,
+    },
+    {
+      name: 'signalPeriod',
+      type: 'number',
+      prettyName: 'Signal Period',
+      description: 'Amount of periods to sample for signal line.',
+      default: 9,
+    },
+    {
+      name: 'upTrendThreshold',
+      type: 'number',
+      prettyName: 'Up Trend Threshold',
+      description: 'Buffer amount to add for up trend crossover.',
+      default: 0.5,
+    },
+    {
+      name: 'downTrendThreshold',
+      type: 'number',
+      prettyName: 'Down Trend Threshold',
+      description: 'Buffer amount to subtract for down trend crossover.',
+      default: 0.5,
+    },
+    {
+      name: 'overboughtRsiPeriods',
+      type: 'number',
+      prettyName: 'Overbought RSI Periods',
+      description: 'Amount of periods to sample for RSI.',
+      default: 14,
+    },
+    {
+      name: 'overboughtRsi',
+      type: 'number',
+      prettyName: 'Overbought RSI',
+      description: 'RSI level to trigger sell signal for overbought conditions.',
+      default: 70,
+    },
+  ]
+
   public options: MacdOptions = {
     period: '1m',
-    minPeriods: 52,
     emaShortPeriod: 12,
     emaLongPeriod: 26,
     signalPeriod: 9,

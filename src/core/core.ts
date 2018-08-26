@@ -4,6 +4,7 @@ import { ExchangeCore } from './exchange'
 import { wsServer, ExchangeConfig, StrategyConfig } from '@lib'
 import { CoreHelpers } from './core.helpers'
 import * as Adapters from '../exchange/adapters'
+import { Strategies } from '../strategy/strategies/strategies'
 
 export class Core {
   private readonly exchangeProvider: ExchangeProvider
@@ -213,7 +214,14 @@ export class Core {
   }
 
   private getStrategies() {
-    wsServer.broadcast('get-strategies', { strategies: ['macd'] })
+    const strategies = Object.entries(Strategies).reduce((acc, [name, strategy]) => {
+      console.log(strategy)
+      const { description, fields } = strategy
+      acc[name] = { description, fields }
+      return acc
+    }, {})
+
+    wsServer.broadcast('get-strategies', { strategies })
   }
 
   private checkForExchange(exchange: string) {

@@ -47,7 +47,11 @@ export class StrategyStore {
     return this.store.find({ sessionId: this.sessionId, exchange }, { projection: { _id: 0, sessionId: 0 } }).toArray()
   }
 
+  public delete(exchange: string, symbol: string, strategy: string) {
+    return this.store.deleteOne({ sessionId: this.sessionId, exchange, symbol, strategy })
+  }
+
   public deleteAllForExchange(exchange: string) {
-    return this.store.deleteOne({ sessionId: this.sessionId, exchange })
+    return this.store.deleteMany({ sessionId: this.sessionId, exchange })
   }
 }

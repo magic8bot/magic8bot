@@ -24,21 +24,27 @@ export class Core {
   }
 
   private registerActions() {
+    wsServer.registerAction('get-my-config', this.getMyConfig)
+
+    wsServer.registerAction(`get-exchanges`, this.getExchanges)
+    wsServer.registerAction(`get-balance`, this.getBalance)
     wsServer.registerAction('add-exchange', this.addExchange)
     wsServer.registerAction('update-exchange', this.updateExchange)
     wsServer.registerAction('delete-exchange', this.deleteExchange)
-    wsServer.registerAction(`add-strategy`, this.addStrategy)
-    wsServer.registerAction('get-my-config', this.getMyConfig)
-    wsServer.registerAction(`get-balance`, this.getBalance)
+
     wsServer.registerAction(`start-sync`, this.startSync)
     wsServer.registerAction(`stop-sync`, this.stopSync)
-    wsServer.registerAction(`start-strategy`, this.startStrategy)
-    wsServer.registerAction(`stop-strategy`, this.stopStrategy)
-    wsServer.registerAction(`adjust-wallet`, this.adjustWallet)
     wsServer.registerAction(`start-ticker`, this.startTicker)
     wsServer.registerAction(`stop-ticker`, this.stopTicker)
-    wsServer.registerAction(`get-exchanges`, this.getExchanges)
+
     wsServer.registerAction(`get-strategies`, this.getStrategies)
+    wsServer.registerAction(`add-strategy`, this.addStrategy)
+    wsServer.registerAction(`update-strategy`, this.updateStrategy)
+    wsServer.registerAction(`delete-strategy`, this.deleteStrategy)
+    wsServer.registerAction(`adjust-wallet`, this.adjustWallet)
+
+    wsServer.registerAction(`start-strategy`, this.startStrategy)
+    wsServer.registerAction(`stop-strategy`, this.stopStrategy)
   }
 
   private addExchange = async (exchangeConfig: ExchangeConfig) => {
@@ -105,6 +111,36 @@ export class Core {
     await StrategyStore.instance.save(strategyConfig)
     this.exchangeCores.get(exchange).addStrategy(strategyConfig)
     wsServer.broadcast('add-strategy', { ...strategyConfig })
+  }
+
+  private updateStrategy = async (strategyConfig: StrategyConfig) => {
+    const { exchange, symbol, strategy } = strategyConfig
+    if (!this.checkForExchange(exchange)) return
+
+    const exchangeCore = this.exchangeCores.get(exchange)
+    const isRunning = exchangeCore.strategyIsRunning(symbol, strategy)
+
+    // @note(notVitaliy): Hot reloading the strategy will not preload it with trade data
+    // unless the symbol trade sync is restarted, which is not a good idea since another
+    // strategy might be using that same symbol. That will double load the other strategy.
+    if (isRunning) exchangeCore.strategyStop(symbol, strategy)
+    await StrategyStore.instance.save(strategyConfig)
+    exchangeCore.updateStrategy(strategyConfig)
+    if (isRunning) exchangeCore.strategyStart(symbol, strategy)
+
+    wsServer.broadcast('update-strategy', { ...strategyConfig })
+  }
+
+  private deleteStrategy = async ({ exchange, symbol, strategy }: StrategyConfig) => {
+    if (!this.checkForExchange(exchange)) return
+
+    const exchangeCore = this.exchangeCores.get(exchange)
+    if (exchangeCore.strategyIsRunning(symbol, strategy)) exchangeCore.strategyStop(symbol, strategy)
+
+    exchangeCore.deleteStrategy(symbol, strategy)
+    await StrategyStore.instance.delete(exchange, symbol, strategy)
+
+    wsServer.broadcast('delete-strategy', { exchange, symbol, strategy })
   }
 
   private getMyConfig = async () => {

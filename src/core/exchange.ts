@@ -26,13 +26,33 @@ export class ExchangeCore {
     strategies.forEach((strategyConfig) => this.addStrategy(strategyConfig))
   }
 
-  public async addStrategy(strategyConfig: StrategyConfig) {
+  public addStrategy(strategyConfig: StrategyConfig) {
     const { symbol, strategy } = strategyConfig
     if (!this.strategyCores.has(symbol)) this.strategyCores.set(symbol, new Map())
     if (this.strategyCores.get(symbol).has(strategy)) return
 
     const strategyCore = new StrategyCore(this.exchangeProvider, strategyConfig)
     this.strategyCores.get(symbol).set(strategy, strategyCore)
+  }
+
+  public updateStrategy(strategyConfig: StrategyConfig) {
+    const { symbol, strategy } = strategyConfig
+    if (!this.strategyCores.has(symbol)) this.strategyCores.set(symbol, new Map())
+
+    const strategyCore = new StrategyCore(this.exchangeProvider, strategyConfig)
+    this.strategyCores.get(symbol).set(strategy, strategyCore)
+  }
+
+  public deleteStrategy(symbol: string, strategy: string) {
+    if (!this.strategyCores.has(symbol) || !this.strategyCores.get(symbol).has(strategy)) return
+
+    const symbols = this.strategyCores.get(symbol)
+    symbols.delete(strategy)
+
+    if (symbols.size === 0) {
+      this.syncStop(symbol)
+      this.tickerStop(symbol)
+    }
   }
 
   public async getBalances() {

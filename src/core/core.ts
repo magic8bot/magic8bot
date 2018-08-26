@@ -81,7 +81,7 @@ export class Core {
     await this.stopExchange(exchange)
     await ExchangeStore.instance.delete(exchange)
     await StrategyStore.instance.deleteAllForExchange(exchange)
-    wsServer.broadcast('delete.exchange', { success: true })
+    wsServer.broadcast('delete-exchange', { success: true })
   }
 
   private async stopExchange(name: string) {

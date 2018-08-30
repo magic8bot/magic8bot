@@ -62,6 +62,7 @@ export class StrategyCore {
     if ((newOrderStrength >= 0) && (newOrderStrength <= 1) {
       this.orderStrength = newOrderStrength }
   }
+
   public isRunning() {
     return this.state === STRAT_STATE.RUNNING
   }

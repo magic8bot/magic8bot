@@ -50,7 +50,7 @@ export class OrderEngine {
     return wallet
   }
 
-  public async executeBuy(quote?: number, strength = 1, orderType:'limit' | 'market' = 'limit') {
+  public async executeBuy(quote?: number, strength = 1, orderType: 'limit' | 'market' = 'limit') {
     const { exchange, symbol } = this.opts
     const rawPrice = quote ? quote : await this.quoteEngine.getBuyPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
@@ -67,7 +67,7 @@ export class OrderEngine {
     await this.checkOrder(order.id)
   }
 
-  public async executeSell(quote?: number, strength = 1, orderType:'limit' | 'market' = 'limit') {
+  public async executeSell(quote?: number, strength = 1, orderType: 'limit' | 'market' = 'limit') {
     const { exchange, symbol } = this.opts
     const rawPrice = quote ? quote : await this.quoteEngine.getSellPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
@@ -82,7 +82,7 @@ export class OrderEngine {
     await this.checkOrder(order.id)
   }
 
-  private async placeOrder(orderOpts: OrderOpts, adjustment: Adjustment,) {
+  private async placeOrder(orderOpts: OrderOpts, adjustment: Adjustment) {
     const { exchange } = this.opts
     const { symbol, side, type, price, amount } = orderOpts
     const { min, max } = this.exchangeProvider.getLimits(exchange, symbol).amount

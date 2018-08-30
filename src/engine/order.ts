@@ -50,7 +50,7 @@ export class OrderEngine {
     return wallet
   }
 
-  public async executeBuy(quote?: number, strength = 1) {
+  public async executeBuy(quote?: number, strength = 1, orderType:'limit' | 'market' = 'limit') {
     const { exchange, symbol } = this.opts
     const rawPrice = quote ? quote : await this.quoteEngine.getBuyPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
@@ -58,8 +58,7 @@ export class OrderEngine {
     const purchasingPower = this.exchangeProvider.priceToPrecision(exchange, symbol, this.wallet.currency * strength)
     const amount = this.exchangeProvider.amountToPrecision((purchasingPower / price) * 0.995)
 
-    // @todo(notVitaliy): Add support for market
-    const orderOpts: OrderOpts = { symbol, price, amount, type: 'limit', side: 'buy' }
+    const orderOpts: OrderOpts = { symbol, price, amount, type: orderType, side: 'buy' }
     const adjustment: Adjustment = { asset: 0, currency: -(amount * price), type: 'newOrder' }
 
     const order = await this.placeOrder(orderOpts, adjustment)
@@ -68,14 +67,13 @@ export class OrderEngine {
     await this.checkOrder(order.id)
   }
 
-  public async executeSell(quote?: number, strength = 1) {
+  public async executeSell(quote?: number, strength = 1, orderType:'limit' | 'market' = 'limit') {
     const { exchange, symbol } = this.opts
     const rawPrice = quote ? quote : await this.quoteEngine.getSellPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
     const amount = this.exchangeProvider.amountToPrecision(this.wallet.asset * strength)
 
-    // @todo(notVitaliy): Add support for market
-    const orderOpts: OrderOpts = { symbol, price, amount, type: 'limit', side: 'sell' }
+    const orderOpts: OrderOpts = { symbol, price, amount, type: orderType, side: 'sell' }
     const adjustment: Adjustment = { asset: -amount, currency: 0, type: 'newOrder' }
 
     const order = await this.placeOrder(orderOpts, adjustment)
@@ -84,7 +82,7 @@ export class OrderEngine {
     await this.checkOrder(order.id)
   }
 
-  private async placeOrder(orderOpts: OrderOpts, adjustment: Adjustment) {
+  private async placeOrder(orderOpts: OrderOpts, adjustment: Adjustment,) {
     const { exchange } = this.opts
     const { symbol, side, type, price, amount } = orderOpts
     const { min, max } = this.exchangeProvider.getLimits(exchange, symbol).amount

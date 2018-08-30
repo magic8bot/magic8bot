@@ -33,7 +33,7 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
   public static fields: StrategyField[] = [
     {
       name: 'period',
-      type: 'string',
+      type: 'text',
       prettyName: 'Period Length',
       description: 'Length of time to sample.',
       default: '1m',

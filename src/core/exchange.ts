@@ -5,7 +5,7 @@ import { StrategyCore } from '@core'
 import { TradeEngine } from '@engine'
 import { logger } from '@util'
 import { wsServer, ExchangeConfig, StrategyConfig } from '@lib'
-import { Balance } from 'ccxt'
+
 import { TickerEngine } from '../engine/ticker'
 
 export class ExchangeCore {

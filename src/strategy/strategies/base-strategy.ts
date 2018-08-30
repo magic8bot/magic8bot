@@ -4,7 +4,7 @@ import { SignalEvent, Signal } from '@m8bTypes'
 
 export interface StrategyField {
   name: string
-  type: 'string' | 'number' | 'boolean'
+  type: 'text' | 'number'
   prettyName: string
   description: string
   default: string | number | boolean
@@ -26,7 +26,36 @@ export interface StrategyField {
  */
 export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
   public static description: string
-  public static fields: StrategyField[]
+  public static fields: StrategyField[] = [
+    {
+      name: 'orderPollInterval',
+      type: 'number',
+      prettyName: 'Order Poll Interval',
+      description: 'Time delay in milliseconds for open order check.',
+      default: 0,
+    },
+    {
+      name: 'orderSlippageAdjustmentTolerance',
+      type: 'number',
+      prettyName: 'Order Slippage Adjustment Tolerance',
+      description: 'Amount of price slippage to allow before adjusting an open order.',
+      default: 0,
+    },
+    {
+      name: 'markUp',
+      type: 'number',
+      prettyName: 'Mark Up Amount',
+      description: 'Amount to add to sell order quote.',
+      default: 0,
+    },
+    {
+      name: 'markDn',
+      type: 'number',
+      prettyName: 'Mark Down Amount',
+      description: 'Amount to subtract from buy order quote.',
+      default: 0,
+    },
+  ]
 
   /**
    * Defines the options used by a strategy

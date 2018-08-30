@@ -27,7 +27,7 @@ export class ExchangeProvider {
       const chaos: any = new ChaosXcg()
       await chaos.connect({})
       this.exchanges.set(exchange, new ExchangeWrapper(exchange, chaos))
-      return
+      return true
     }
 
     if (ccxt.exchanges.indexOf(exchange) === -1) return this.error(`Invalid exchange: ${exchange}`)
@@ -45,6 +45,10 @@ export class ExchangeProvider {
   public async replaceExchange(exchangeConfig: ExchangeConfig) {
     this.exchanges.delete(exchangeConfig.exchange)
     await this.addExchange(exchangeConfig)
+  }
+
+  public getSymbols(exchange: string) {
+    return this.exchanges.get(exchange).getSymbols()
   }
 
   public getTrades(exchange: string, symbol: string, since: number) {

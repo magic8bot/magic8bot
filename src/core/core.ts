@@ -5,6 +5,7 @@ import { wsServer, ExchangeConfig, StrategyConfig } from '@lib'
 import { CoreHelpers } from './core.helpers'
 import * as Adapters from '../exchange/adapters'
 import { Strategies } from '../strategy/strategies/strategies'
+import { BaseStrategy } from '@strategy'
 
 export class Core {
   private readonly exchangeProvider: ExchangeProvider
@@ -28,6 +29,7 @@ export class Core {
     wsServer.registerAction('get-my-config', this.getMyConfig)
 
     wsServer.registerAction(`get-exchanges`, this.getExchanges)
+    wsServer.registerAction(`get-symbols`, this.getSymbols)
     wsServer.registerAction(`get-balance`, this.getBalance)
     wsServer.registerAction('add-exchange', this.addExchange)
     wsServer.registerAction('update-exchange', this.updateExchange)
@@ -146,7 +148,13 @@ export class Core {
 
   private getMyConfig = async () => {
     const exchanges = await this.helpers.getExchanges()
+
     wsServer.broadcast('get-my-config', { exchanges })
+  }
+
+  private getSymbols = async ({ exchange }) => {
+    const symbols = this.exchangeProvider.getSymbols(exchange)
+    wsServer.broadcast('get-symbols', { exchange, symbols })
   }
 
   private getBalance = async ({ exchange }) => {
@@ -214,10 +222,9 @@ export class Core {
   }
 
   private getStrategies() {
-    const strategies = Object.entries(Strategies).reduce((acc, [name, strategy]) => {
-      console.log(strategy)
-      const { description, fields } = strategy
-      acc[name] = { description, fields }
+    const baseFields = BaseStrategy.fields
+    const strategies = Object.entries(Strategies).reduce((acc, [name, { description, fields }]) => {
+      acc[name] = { description, fields: [...baseFields, ...fields] }
       return acc
     }, {})
 

@@ -23,6 +23,10 @@ export class ExchangeWrapper {
     return this.adapter.getTradeCursor(trade)
   }
 
+  public getSymbols() {
+    return this.exchangeConnection.symbols
+  }
+
   public async fetchTrades(symbol: string, start: number) {
     const params = this.adapter.mapTradeParams(start)
     const fn = () => this.exchangeConnection.fetchTrades(symbol, undefined, undefined, params)

@@ -30,6 +30,9 @@ export class StrategyCore {
 
   private state: STRAT_STATE = STRAT_STATE.STOPPED
 
+  private orderType: 'market' | 'limit' = 'limit'
+  private orderStrength: number = 1
+
   constructor(private readonly exchangeProvider: ExchangeProvider, private readonly strategyConfig: StrategyConfig) {
     const { exchange, symbol, strategy, period } = strategyConfig
     this.exchange = exchange
@@ -47,6 +50,17 @@ export class StrategyCore {
     this.orderEngine = new OrderEngine(this.exchangeProvider, strategyConfig)
   }
 
+  public setOrderType(newOrderType: 'market' | 'limit') {
+    if (newOrderType === 'limit') {
+      this.orderType = 'limit'
+    } else if (newOrderType === 'market') {
+      this.orderType = 'market'
+    }
+  }
+
+  public setOrderStrength(newOrderStrength:number) {
+    this.orderStrength = newOrderStrength
+  }
   public isRunning() {
     return this.state === STRAT_STATE.RUNNING
   }
@@ -83,7 +97,7 @@ export class StrategyCore {
     if (!signal || (signal === this.lastSignal && !force)) return
     this.lastSignal = signal
 
-    if (signal === 'buy') this.orderEngine.executeBuy()
-    else if (signal === 'sell') this.orderEngine.executeSell()
+    if (signal === 'buy') this.orderEngine.executeBuy(undefined,this.orderStrength,this.orderType)
+    else if (signal === 'sell') this.orderEngine.executeSell(undefined,this.orderStrength,this.orderType)
   }
 }

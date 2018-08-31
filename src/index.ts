@@ -6,6 +6,8 @@ import { dbDriver, wsServer } from '@lib'
 import { Core } from '@core'
 import { logger } from '@util'
 
+import './server'
+
 if (semver.gt('10.0.0', process.versions.node)) {
   console.error('You are running a node.js version older than 10.x.x, please upgrade via https://nodejs.org/en/')
   process.exit(1)

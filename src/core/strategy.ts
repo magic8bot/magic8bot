@@ -52,10 +52,9 @@ export class StrategyCore {
 
   public setOrderType(newOrderType: 'market' | 'limit') {
     if (newOrderType === 'limit') {
-      this.orderType = 'limit'
-    } else if (newOrderType === 'market') {
-      this.orderType = 'market'
-    }
+      this.orderType = 'limit' }
+    else if (newOrderType === 'market') {
+      this.orderType = 'market' }
   }
 
   public setOrderStrength(newOrderStrength: number) {

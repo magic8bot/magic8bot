@@ -55,6 +55,7 @@ export class OrderEngine {
     const rawPrice = quote ? quote : await this.quoteEngine.getBuyPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
 
+    if (strength > 1) { strength = 1 } // keep strat inside its own wallet
     const purchasingPower = this.exchangeProvider.priceToPrecision(exchange, symbol, this.wallet.currency * strength)
     const amount = this.exchangeProvider.amountToPrecision((purchasingPower / price) * 0.995)
 

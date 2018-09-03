@@ -32,6 +32,7 @@ export class StrategyCore {
 
   private orderType: 'market' | 'limit' = 'limit'
   private orderStrength = 1
+  private isMultiOrder = false
 
   constructor(private readonly exchangeProvider: ExchangeProvider, private readonly strategyConfig: StrategyConfig) {
     const { exchange, symbol, strategy, period } = strategyConfig
@@ -60,6 +61,14 @@ export class StrategyCore {
   public setOrderStrength(newOrderStrength: number) {
     if ((newOrderStrength >= 0) && (newOrderStrength <= 1)) {
       this.orderStrength = newOrderStrength }
+  }
+
+  public setMultiOrder(isMultiOrder = false) {
+    this.isMultiOrder = isMultiOrder
+  }
+
+  public getMultiOrder() {
+    return this.isMultiOrder
   }
 
   public getOrderType() {
@@ -103,7 +112,7 @@ export class StrategyCore {
     if (this.state === STRAT_STATE.STOPPED) return
 
     logger.info(`${this.strategy} sent ${signal}-signal (force: ${force})`)
-    if (!signal || (signal === this.lastSignal && !force)) return
+    if ((!signal || (signal === this.lastSignal && !force)) && !this.isMultiOrder) return
     this.lastSignal = signal
 
     if (signal === 'buy') this.orderEngine.executeBuy(undefined, this.orderStrength, this.orderType)

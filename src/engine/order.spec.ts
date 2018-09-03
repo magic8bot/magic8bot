@@ -156,6 +156,126 @@ describe('OrderEngine', () => {
     expect(checkOrder).toHaveBeenCalledTimes(1)
   })
 
+  test('executes a market buy', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    const placeOrder = jest.spyOn<any, any>(orderEngine, 'placeOrder').mockReturnValueOnce({ id: mockId })
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
+
+    await orderEngine.executeBuy(undefined, undefined, 'market')
+
+    const currency = -(amount * mockPrice)
+    const expectedAdjustment = { asset: 0, currency, type: 'newOrder' }
+    const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount, type: 'market', side: 'buy' }
+
+    expect(mockPriceToPrecision).toHaveBeenCalledTimes(2)
+    expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledWith(expectedOrderOpts, expectedAdjustment)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
+  test('executes a market sell', async () => {
+    mockAmountToPrecision.mockReturnValueOnce(mockAsset)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice)
+
+    const placeOrder = jest.spyOn<any, any>(orderEngine, 'placeOrder').mockReturnValueOnce({ id: mockId })
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
+
+    await orderEngine.executeSell(undefined, undefined, 'market')
+
+    const expectedAdjustment = { asset: -mockAsset, currency: 0, type: 'newOrder' }
+    const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount: mockAsset, type: 'market', side: 'sell' }
+
+    expect(mockPriceToPrecision).toHaveBeenCalledTimes(1)
+    expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledWith(expectedOrderOpts, expectedAdjustment)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
+  test('executes a 50 percent buy', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    const placeOrder = jest.spyOn<any, any>(orderEngine, 'placeOrder').mockReturnValueOnce({ id: mockId })
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
+
+    await orderEngine.executeBuy(undefined, 0.5)
+
+    const currency = -(amount * mockPrice)
+    const expectedAdjustment = { asset: 0, currency, type: 'newOrder' }
+    const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount, type: 'limit', side: 'buy' }
+
+    expect(mockPriceToPrecision).toHaveBeenCalledTimes(2)
+    expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledWith(expectedOrderOpts, expectedAdjustment)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
+  test('executes a 50 percent sell', async () => {
+    mockAmountToPrecision.mockReturnValueOnce(mockAsset)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice)
+
+    const placeOrder = jest.spyOn<any, any>(orderEngine, 'placeOrder').mockReturnValueOnce({ id: mockId })
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
+
+    await orderEngine.executeSell(undefined, 0.5)
+
+    const expectedAdjustment = { asset: -mockAsset, currency: 0, type: 'newOrder' }
+    const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount: mockAsset, type: 'limit', side: 'sell' }
+
+    expect(mockPriceToPrecision).toHaveBeenCalledTimes(1)
+    expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledWith(expectedOrderOpts, expectedAdjustment)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
+  test('should not let us do a 150 percent buy', async () => {
+    const amount = (mockCurrency / mockPrice) * 0.995
+    mockAmountToPrecision.mockReturnValueOnce(amount)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice).mockReturnValueOnce(mockCurrency)
+
+    const placeOrder = jest.spyOn<any, any>(orderEngine, 'placeOrder').mockReturnValueOnce({ id: mockId })
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
+
+    await orderEngine.executeBuy(undefined, 1.5)
+
+    const currency = -(amount * mockPrice)
+    const expectedAdjustment = { asset: 0, currency, type: 'newOrder' }
+    const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount, type: 'limit', side: 'buy' }
+
+    expect(mockPriceToPrecision).toHaveBeenCalledTimes(2)
+    expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledWith(expectedOrderOpts, expectedAdjustment)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
+  test('should not let us do a 150 percent sell', async () => {
+    mockAmountToPrecision.mockReturnValueOnce(mockAsset)
+    mockPriceToPrecision.mockReturnValueOnce(mockPrice)
+
+    const placeOrder = jest.spyOn<any, any>(orderEngine, 'placeOrder').mockReturnValueOnce({ id: mockId })
+    const checkOrder = jest.spyOn<any, any>(orderEngine, 'checkOrder').mockReturnValueOnce(undefined)
+
+    await orderEngine.executeSell(undefined, 1.5)
+
+    const expectedAdjustment = { asset: -mockAsset, currency: 0, type: 'newOrder' }
+    const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount: mockAsset, type: 'limit', side: 'sell' }
+
+    expect(mockPriceToPrecision).toHaveBeenCalledTimes(1)
+    expect(mockAmountToPrecision).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledTimes(1)
+    expect(placeOrder).toHaveBeenCalledWith(expectedOrderOpts, expectedAdjustment)
+    expect(checkOrder).toHaveBeenCalledTimes(1)
+  })
+
   test('does not check order after execute buy fails', async () => {
     const amount = (mockCurrency / mockPrice) * 0.995
     mockAmountToPrecision.mockReturnValueOnce(amount)
@@ -717,7 +837,7 @@ describe('OrderEngine', () => {
     expect(mockPlaceOrder).toHaveBeenCalledWith('test', { amount: 100, price: undefined, side: 'buy', symbol: 'test', type: 'limit' })
   })
 
-  test('no order placed if size to smaall', async () => {
+  test('no order placed if size to small', async () => {
     mockAmountToPrecision.mockReturnValueOnce(0.01)
     mockLimits.mockReturnValueOnce({ amount: { min: 1, max: 100 } })
     await orderEngine.executeBuy()

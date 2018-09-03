@@ -21,8 +21,6 @@ export class OrderEngine {
   private orderPollInterval: number
   private orderSlippageAdjustmentTolerance: number
 
-  private strategy: string
-
   private readonly orderStore = OrderStore.instance
   private readonly walletStore = WalletStore.instance
 
@@ -72,6 +70,7 @@ export class OrderEngine {
     const { exchange, symbol } = this.opts
     const rawPrice = quote ? quote : await this.quoteEngine.getSellPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
+    if (strength > 1) { strength = 1 } // keep strat inside its own wallet
     const amount = this.exchangeProvider.amountToPrecision(this.wallet.asset * strength)
 
     const orderOpts: OrderOpts = { symbol, price, amount, type: orderType, side: 'sell' }

@@ -76,11 +76,14 @@ export class StrategyCore {
     await WalletStore.instance.initWallet(walletOpts, adjustment)
   }
 
-  private onSignal(signal: 'buy' | 'sell', force = false) {
+  private onSignal(signal: Signal, force = false) {
     if (this.state === STRAT_STATE.STOPPED) return
 
     logger.info(`${this.strategy} sent ${signal}-signal (force: ${force})`)
-    if (!signal || (signal === this.lastSignal && !force)) return
+    if (!signal || (signal === this.lastSignal && !force)) {
+      logger.silly(`Signal ${signal} is skipped because its the same as the last-signal and not forced.`)
+      return
+    }
     this.lastSignal = signal
 
     if (signal === 'buy') this.orderEngine.executeBuy()

@@ -112,7 +112,10 @@ export class StrategyCore {
     if (this.state === STRAT_STATE.STOPPED) return
 
     logger.info(`${this.strategy} sent ${signal}-signal (force: ${force})`)
-    if (!signal || (signal === this.lastSignal) && !force) return
+    if (!signal || (signal === this.lastSignal && !force)) {
+      logger.silly(`Signal ${signal} is skipped because its the same as the last-signal and not forced.`)
+      return
+    }
     this.lastSignal = signal
     if (signal === 'buy') {
       this.orderEngine.executeBuy(undefined, this.orderStrength, this.orderType)}

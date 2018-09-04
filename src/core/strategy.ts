@@ -1,7 +1,7 @@
 import { Balances, Balance } from 'ccxt'
 import { EventBusListener } from '@magic8bot/event-bus'
 
-import { StrategyConf, Signal } from '@m8bTypes'
+import { StrategyConf, Signal, Order } from '@m8bTypes'
 import { eventBus, EVENT, StrategyConfig, Adjustment } from '@lib'
 
 import { PeriodStore, WalletStore } from '@store'
@@ -30,7 +30,7 @@ export class StrategyCore {
 
   private state: STRAT_STATE = STRAT_STATE.STOPPED
 
-  private orderType: 'market' | 'limit' = 'limit'
+  private orderType: Order = 'limit'
   private orderStrength = 1
   private isMultiOrder = false
 
@@ -41,7 +41,7 @@ export class StrategyCore {
     this.strategy = strategy
 
     this.signalListener = eventBus.get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(strategy).listen
-    this.signalListener(({ signal }) => this.onSignal(signal))
+    this.signalListener(({ signal }) => this.onSignal(signal,this.isMultiOrder))
 
     this.baseStrategy = new (strategyLoader(strategy))(exchange, symbol, this.strategyConfig)
 
@@ -51,7 +51,7 @@ export class StrategyCore {
     this.orderEngine = new OrderEngine(this.exchangeProvider, strategyConfig)
   }
 
-  public setOrderType(newOrderType: 'market' | 'limit') {
+  public setOrderType(newOrderType: Order) {
     if (newOrderType === 'limit') {
       this.orderType = 'limit' }
     else if (newOrderType === 'market') {
@@ -112,10 +112,11 @@ export class StrategyCore {
     if (this.state === STRAT_STATE.STOPPED) return
 
     logger.info(`${this.strategy} sent ${signal}-signal (force: ${force})`)
-    if ((!signal || (signal === this.lastSignal && !force)) && !this.isMultiOrder) return
+    if (!signal || (signal === this.lastSignal) && !force) return
     this.lastSignal = signal
-
-    if (signal === 'buy') this.orderEngine.executeBuy(undefined, this.orderStrength, this.orderType)
-    else if (signal === 'sell') this.orderEngine.executeSell(undefined, this.orderStrength, this.orderType)
+    if (signal === 'buy') {
+      this.orderEngine.executeBuy(undefined, this.orderStrength, this.orderType)}
+    else if (signal === 'sell'){
+      this.orderEngine.executeSell(undefined, this.orderStrength, this.orderType)}
   }
 }

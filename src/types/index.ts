@@ -198,3 +198,5 @@ export interface StoreOpts {
   symbol: string
   strategy?: string
 }
+
+export type Order = 'limit' | 'market'

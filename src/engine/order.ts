@@ -2,7 +2,7 @@ import { EventBusEmitter } from '@magic8bot/event-bus'
 import { WalletStore, OrderStore, ORDER_STATE } from '@store'
 import { EVENT, eventBus, OrderWithTrades, Adjustment, StrategyConfig } from '@lib'
 import { ExchangeProvider, OrderOpts } from '@exchange'
-import { StoreOpts } from '@m8bTypes'
+import { StoreOpts, Order } from '@m8bTypes'
 import { QuoteEngine } from './quote'
 import { sleep } from '@util'
 import { OrderNotFound, InsufficientFunds } from 'ccxt'
@@ -48,7 +48,7 @@ export class OrderEngine {
     return wallet
   }
 
-  public async executeBuy(quote?: number, strength = 1, orderType: 'limit' | 'market' = 'limit') {
+  public async executeBuy(quote?: number, strength = 1, orderType: Order = 'limit') {
     const { exchange, symbol } = this.opts
     const rawPrice = quote ? quote : await this.quoteEngine.getBuyPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
@@ -66,7 +66,7 @@ export class OrderEngine {
     await this.checkOrder(order.id)
   }
 
-  public async executeSell(quote?: number, strength = 1, orderType: 'limit' | 'market' = 'limit') {
+  public async executeSell(quote?: number, strength = 1, orderType: Order = 'limit') {
     const { exchange, symbol } = this.opts
     const rawPrice = quote ? quote : await this.quoteEngine.getSellPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)

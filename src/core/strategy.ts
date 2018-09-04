@@ -41,7 +41,7 @@ export class StrategyCore {
     this.strategy = strategy
 
     this.signalListener = eventBus.get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(strategy).listen
-    this.signalListener(({ signal }) => this.onSignal(signal,this.isMultiOrder))
+    this.signalListener(({ signal }) => this.onSignal(signal, this.isMultiOrder))
 
     this.baseStrategy = new (strategyLoader(strategy))(exchange, symbol, this.strategyConfig)
 
@@ -116,7 +116,7 @@ export class StrategyCore {
     this.lastSignal = signal
     if (signal === 'buy') {
       this.orderEngine.executeBuy(undefined, this.orderStrength, this.orderType)}
-    else if (signal === 'sell'){
+    else if (signal === 'sell') {
       this.orderEngine.executeSell(undefined, this.orderStrength, this.orderType)}
   }
 }

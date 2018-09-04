@@ -1,7 +1,7 @@
 import { Balances, Balance } from 'ccxt'
 import { EventBusListener } from '@magic8bot/event-bus'
 
-import { StrategyConf, Signal } from '@m8bTypes'
+import { StrategyConf, Signal, Order } from '@m8bTypes'
 import { eventBus, EVENT, StrategyConfig, Adjustment } from '@lib'
 
 import { PeriodStore, WalletStore } from '@store'
@@ -30,6 +30,10 @@ export class StrategyCore {
 
   private state: STRAT_STATE = STRAT_STATE.STOPPED
 
+  private orderType: Order = 'limit'
+  private orderStrength = 1
+  private isMultiOrder = false
+
   constructor(private readonly exchangeProvider: ExchangeProvider, private readonly strategyConfig: StrategyConfig) {
     const { exchange, symbol, strategy, period } = strategyConfig
     this.exchange = exchange
@@ -37,7 +41,7 @@ export class StrategyCore {
     this.strategy = strategy
 
     this.signalListener = eventBus.get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(strategy).listen
-    this.signalListener(({ signal }) => this.onSignal(signal))
+    this.signalListener(({ signal }) => this.onSignal(signal, this.isMultiOrder))
 
     this.baseStrategy = new (strategyLoader(strategy))(exchange, symbol, this.strategyConfig)
 
@@ -45,6 +49,34 @@ export class StrategyCore {
     PeriodStore.instance.addSymbol(storeOpts, { period, lookbackSize: 250 })
 
     this.orderEngine = new OrderEngine(this.exchangeProvider, strategyConfig)
+  }
+
+  public setOrderType(newOrderType: Order) {
+    if (newOrderType === 'limit') {
+      this.orderType = 'limit' }
+    else if (newOrderType === 'market') {
+      this.orderType = 'market' }
+  }
+
+  public setOrderStrength(newOrderStrength: number) {
+    if ((newOrderStrength >= 0) && (newOrderStrength <= 1)) {
+      this.orderStrength = newOrderStrength }
+  }
+
+  public setMultiOrder(isMultiOrder = false) {
+    this.isMultiOrder = isMultiOrder
+  }
+
+  public getMultiOrder() {
+    return this.isMultiOrder
+  }
+
+  public getOrderType() {
+    return this.orderType
+  }
+
+  public getOrderStrength() {
+    return this.orderStrength
   }
 
   public isRunning() {
@@ -85,8 +117,9 @@ export class StrategyCore {
       return
     }
     this.lastSignal = signal
-
-    if (signal === 'buy') this.orderEngine.executeBuy()
-    else if (signal === 'sell') this.orderEngine.executeSell()
+    if (signal === 'buy') {
+      this.orderEngine.executeBuy(undefined, this.orderStrength, this.orderType)}
+    else if (signal === 'sell') {
+      this.orderEngine.executeSell(undefined, this.orderStrength, this.orderType)}
   }
 }

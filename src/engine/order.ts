@@ -2,7 +2,7 @@ import { EventBusEmitter } from '@magic8bot/event-bus'
 import { WalletStore, OrderStore, ORDER_STATE } from '@store'
 import { EVENT, eventBus, OrderWithTrades, Adjustment, StrategyConfig } from '@lib'
 import { ExchangeProvider, OrderOpts } from '@exchange'
-import { StoreOpts } from '@m8bTypes'
+import { StoreOpts, Order } from '@m8bTypes'
 import { QuoteEngine } from './quote'
 import { sleep } from '@util'
 import { OrderNotFound, InsufficientFunds } from 'ccxt'
@@ -20,8 +20,6 @@ export class OrderEngine {
 
   private orderPollInterval: number
   private orderSlippageAdjustmentTolerance: number
-
-  private strategy: string
 
   private readonly orderStore = OrderStore.instance
   private readonly walletStore = WalletStore.instance
@@ -50,16 +48,16 @@ export class OrderEngine {
     return wallet
   }
 
-  public async executeBuy(quote?: number, strength = 1) {
+  public async executeBuy(quote?: number, strength = 1, orderType: Order = 'limit') {
     const { exchange, symbol } = this.opts
     const rawPrice = quote ? quote : await this.quoteEngine.getBuyPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
 
+    if (strength > 1) { strength = 1 } // keep strat inside its own wallet
     const purchasingPower = this.exchangeProvider.priceToPrecision(exchange, symbol, this.wallet.currency * strength)
     const amount = this.exchangeProvider.amountToPrecision((purchasingPower / price) * 0.995)
 
-    // @todo(notVitaliy): Add support for market
-    const orderOpts: OrderOpts = { symbol, price, amount, type: 'limit', side: 'buy' }
+    const orderOpts: OrderOpts = { symbol, price, amount, type: orderType, side: 'buy' }
     const adjustment: Adjustment = { asset: 0, currency: -(amount * price), type: 'newOrder' }
 
     const order = await this.placeOrder(orderOpts, adjustment)
@@ -68,14 +66,14 @@ export class OrderEngine {
     await this.checkOrder(order.id)
   }
 
-  public async executeSell(quote?: number, strength = 1) {
+  public async executeSell(quote?: number, strength = 1, orderType: Order = 'limit') {
     const { exchange, symbol } = this.opts
     const rawPrice = quote ? quote : await this.quoteEngine.getSellPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
+    if (strength > 1) { strength = 1 } // keep strat inside its own wallet
     const amount = this.exchangeProvider.amountToPrecision(this.wallet.asset * strength)
 
-    // @todo(notVitaliy): Add support for market
-    const orderOpts: OrderOpts = { symbol, price, amount, type: 'limit', side: 'sell' }
+    const orderOpts: OrderOpts = { symbol, price, amount, type: orderType, side: 'sell' }
     const adjustment: Adjustment = { asset: -amount, currency: 0, type: 'newOrder' }
 
     const order = await this.placeOrder(orderOpts, adjustment)

@@ -108,7 +108,7 @@ export class StrategyCore {
     await WalletStore.instance.initWallet(walletOpts, adjustment)
   }
 
-  private onSignal(signal: 'buy' | 'sell', force = false) {
+  private onSignal(signal: Signal, force = false) {
     if (this.state === STRAT_STATE.STOPPED) return
 
     logger.info(`${this.strategy} sent ${signal}-signal (force: ${force})`)

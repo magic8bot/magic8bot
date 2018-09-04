@@ -187,7 +187,7 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
       logger.verbose(
         `MACD: ${this.periods[0].macd ? this.periods[0].macd.toPrecision(5) : null}  EMA: ${this.periods[0].emaMacd ? this.periods[0].emaMacd.toPrecision(5) : null}  Signal: ${
           this.periods[0].signal ? this.periods[0].signal.toPrecision(6) : null
-        }`
+        } RSI ${this.periods[0].rsi ? this.periods[0].rsi.toPrecision(4) : null}`
       )
     }
     logger.verbose(`Period finished => Signal: ${signal === null ? 'no signal' : signal}`)

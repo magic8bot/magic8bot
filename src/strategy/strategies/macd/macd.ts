@@ -176,12 +176,12 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
     this.periods[0].avgGain = avgGain
 
     this.periods[0].avgLoss = avgLoss
-    this.overbought = !this.isPreroll && rsi >= this.options.overboughtRsi && !this.overbought
+    this.overbought = rsi >= this.options.overboughtRsi && !this.overbought
   }
 
   public onPeriod() {
     /* istanbul ignore next */
-    const signal = this.isPreroll ? null : this.overboughtSell() ? 'sell' : this.getSignal()
+    const signal = this.overboughtSell() ? 'sell' : this.getSignal()
     /* istanbul ignore next */
     if (this.periods.length) {
       logger.verbose(

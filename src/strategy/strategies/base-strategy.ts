@@ -92,7 +92,7 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
     /* istanbul ignore next */
     periodNewListener(() => {
       const signal = this.onPeriod()
-      if (signal) {
+      if (signal && !this.isPreroll) {
         this.signalEmitter({ signal })
       }
     })

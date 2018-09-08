@@ -1,3 +1,10 @@
+/**
+ * @description Soft Coded Price
+ * @author @tsrnc2
+ *
+ * Limit orders without tying up funds with stop loss calculated on period close
+ * @todo when ordersize can be set allow, for multiple sell points to reduce risk
+ */
 import { PeriodItem } from '@lib'
 import { BaseStrategy, StrategyField } from '../base-strategy'
 import { Signal } from '@m8bTypes'
@@ -74,18 +81,18 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
     const curPrice = periods[0].close // use closing price as current price
     if (this.isHolding) { // we have already bought and are holding
       if ((curPrice >= this.options.sellPrice) || (curPrice <= this.options.stopLimit)) {
-        // we have reached a sell price reset if we are to repeat
-        if (this.options.isRepeat) this.isHolding = false
+        // sell price reached reset if we are to repeat
+        if (this.options.isRepeat) this.reset()
         this.signal = 'sell' }
       else {
-        this.signal = null } // if we arent buying or selling cancel any old orders
-      }
+        this.signal = null } // if we arent buying or selling cancel signal
+    }
     else {  // else we are not already holding
       if (curPrice <= this.options.buyPrice) {
         this.isHolding = true
         this.signal = 'buy' }
       else {
-        this.signal = null } // if we arent buying or selling cancel any old orders
+        this.signal = null } // if we arent buying or selling cancel signal
     }
     const signal = 0
     const rsi = 0
@@ -94,9 +101,11 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
 
   public onPeriod() {
     /* istanbul ignore next */
-    const signal = this.signal
-    /* istanbul ignore next */
-    logger.verbose(`Period finished => Signal: ${signal === null ? 'no signal' : signal}`)
-    return signal
+    logger.verbose(`Period finished => Signal: ${this.signal === null ? 'no signal' : this.signal}`)
+    return this.signal
+  }
+
+  public reset() {
+    this.isHolding = false
   }
 }

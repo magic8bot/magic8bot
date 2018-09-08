@@ -4,7 +4,7 @@ import { SignalEvent, Signal } from '@m8bTypes'
 
 export interface StrategyField {
   name: string
-  type: 'text' | 'number'
+  type: 'text' | 'number' | 'boolean'
   prettyName: string
   description: string
   default: string | number | boolean

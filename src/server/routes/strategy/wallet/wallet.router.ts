@@ -14,9 +14,9 @@ export class WalletRouter extends BaseRouter {
   private constructor() {
     super()
 
-    this.router.get('/', async ({ body }, res) => {
-      const result = await core.getWallet(body)
-      res.send(result)
+    this.router.get('/', async ({ query: { exchange, symbol, strategy } }, res) => {
+      const result = await core.getWallet({ exchange, symbol, strategy })
+      res.send(result ? result : { asset: 0, currency: 0 })
     })
 
     this.router.put('/', async ({ body }, res) => {

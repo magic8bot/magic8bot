@@ -20,6 +20,11 @@ export class StrategyRouter extends BaseRouter {
       res.send(result)
     })
 
+    this.router.get('/list', async (req, res) => {
+      const result = await core.listStrategies()
+      res.send(result)
+    })
+
     this.router.post('/', async ({ body }, res) => {
       const result = await core.addStrategy(body)
       res.send(result)
@@ -32,11 +37,6 @@ export class StrategyRouter extends BaseRouter {
 
     this.router.delete('/', async ({ body }, res) => {
       const result = await core.deleteStrategy(body)
-      res.send(result)
-    })
-
-    this.router.get('/list', async (req, res) => {
-      const result = await core.listStrategies()
       res.send(result)
     })
 

@@ -205,7 +205,7 @@ class Core {
 
     if (hasExchange !== true) return hasExchange
 
-    return WalletStore.instance.getWallet({ exchange, symbol, strategy })
+    return WalletStore.instance.loadWallet({ exchange, symbol, strategy })
   }
 
   public async adjustWallet({ exchange, symbol, strategy, asset, currency }) {

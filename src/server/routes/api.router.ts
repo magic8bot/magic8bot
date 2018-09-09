@@ -1,6 +1,5 @@
 import { BaseRouter } from './base.router'
 
-import { BotRouter } from './bot'
 import { ExchangeRouter } from './exchange'
 import { StrategyRouter } from './strategy'
 
@@ -17,7 +16,6 @@ export class ApiRouter extends BaseRouter {
   private constructor() {
     super()
 
-    this.router.use(BotRouter.path, BotRouter.router)
     this.router.use(ExchangeRouter.path, ExchangeRouter.router)
     this.router.use(StrategyRouter.path, StrategyRouter.router)
   }

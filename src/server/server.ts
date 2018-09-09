@@ -6,7 +6,7 @@ import cors from 'cors'
 
 import { ApiRouter } from './routes'
 
-export class Server {
+class Server {
   private app: express.Application
 
   constructor() {
@@ -15,9 +15,12 @@ export class Server {
     this.routes()
   }
 
-  public listen(port = 8080) {
-    this.app.listen(port, () => {
-      console.log(`Listening on port: ${port}`)
+  public init(port = 8080) {
+    return new Promise((resolve) => {
+      this.app.listen(port, () => {
+        console.log(`Listening on port: ${port}`)
+        resolve()
+      })
     })
   }
 
@@ -41,3 +44,5 @@ export class Server {
     this.app.get('/', (req, res) => res.send({ status: 200 }))
   }
 }
+
+export const server = new Server()

@@ -138,7 +138,6 @@ export class ExchangeProvider {
 
   private error(error: string) {
     logger.error(error)
-    wsServer.broadcast('error', { error })
-    return false
+    return { error }
   }
 }

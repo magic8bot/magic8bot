@@ -144,7 +144,6 @@ export class ExchangeCore {
 
   private error(error: string) {
     logger.error(error)
-    wsServer.broadcast('error', { error: `Exchange Error: ${error}` })
-    return false
+    return { error: `Exchange Error: ${error}` }
   }
 }

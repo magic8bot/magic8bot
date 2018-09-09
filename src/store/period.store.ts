@@ -142,7 +142,10 @@ export class PeriodStore {
 
     const periods = this.periods.get(idStr)
     this.updateEmitters.get(idStr)([...periods])
+
+    // @todo(notVitaliy): Find a better place for this
     wsServer.broadcast('period-update', { ...this.parseIdStr(idStr), period: periods[0] })
+
     /* istanbul ignore else */
     if (this.tradeEventTimeouts.has(idStr)) {
       clearTimeout(this.tradeEventTimeouts.get(idStr))
@@ -193,7 +196,10 @@ export class PeriodStore {
     this.checkPeriodWithoutTrades(idStr)
     // Publish period to event bus
     this.periodEmitters.get(idStr)()
+
+    // @todo(notVitaliy): Find a better place for this
     wsServer.broadcast('period-new', { ...this.parseIdStr(idStr), period: this.periods.get(idStr)[0] })
+
     // prepare new period
     this.newPeriod(idStr, timebucket(this.periodConfigs.get(idStr).period).toMilliseconds())
 

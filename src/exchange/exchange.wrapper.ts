@@ -23,7 +23,11 @@ export class ExchangeWrapper {
     return this.adapter.getTradeCursor(trade)
   }
 
-  public getSymbols() {
+  public async getSymbols() {
+    const symbols = this.exchangeConnection.symbols
+    if (symbols) return symbols
+
+    await this.exchangeConnection.loadMarkets()
     return this.exchangeConnection.symbols
   }
 

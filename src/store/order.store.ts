@@ -46,6 +46,8 @@ export class OrderStore {
 
     const data = { ...order, sessionId, exchange, symbol, strategy }
     await dbDriver.order.insertOne(data)
+
+    // @todo(notVitaliy): Find a better place for this
     wsServer.broadcast('order-new', data)
   }
 
@@ -89,6 +91,8 @@ export class OrderStore {
     const { exchange } = storeOpts
     const { id, ...updatedOrder } = order
     await dbDriver.order.updateOne({ id, exchange }, { $set: { ...updatedOrder } })
+
+    // @todo(notVitaliy): Find a better place for this
     wsServer.broadcast('order-update', { ...order, ...storeOpts })
   }
 

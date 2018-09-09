@@ -1,13 +1,13 @@
-import { SessionStore, ExchangeStore, StrategyStore } from '@store'
+import { SessionStore, ExchangeStore, StrategyStore, WalletStore } from '@store'
 import { ExchangeProvider } from '@exchange'
 import { ExchangeCore } from './exchange'
-import { wsServer, ExchangeConfig, StrategyConfig } from '@lib'
+import { ExchangeConfig, StrategyConfig } from '@lib'
 import { CoreHelpers } from './core.helpers'
 import * as Adapters from '../exchange/adapters'
 import { Strategies } from '../strategy/strategies/strategies'
 import { BaseStrategy } from '@strategy'
 
-export class Core {
+class Core {
   private readonly exchangeProvider: ExchangeProvider
   private readonly exchangeCores: Map<string, ExchangeCore> = new Map()
   private readonly helpers: CoreHelpers
@@ -18,41 +18,23 @@ export class Core {
   }
 
   public async init() {
-    this.registerActions()
     await SessionStore.instance.loadSession()
     const exchanges = await ExchangeStore.instance.loadAllWithAuth()
 
     exchanges.forEach((exchangeConfig) => this.initExchangeCore(exchangeConfig))
   }
 
-  private registerActions() {
-    wsServer.registerAction('get-my-config', this.getMyConfig)
-
-    wsServer.registerAction(`get-exchanges`, this.getExchanges)
-    wsServer.registerAction(`get-symbols`, this.getSymbols)
-    wsServer.registerAction(`get-balance`, this.getBalance)
-    wsServer.registerAction('add-exchange', this.addExchange)
-    wsServer.registerAction('update-exchange', this.updateExchange)
-    wsServer.registerAction('delete-exchange', this.deleteExchange)
-
-    wsServer.registerAction(`start-sync`, this.startSync)
-    wsServer.registerAction(`stop-sync`, this.stopSync)
-    wsServer.registerAction(`start-ticker`, this.startTicker)
-    wsServer.registerAction(`stop-ticker`, this.stopTicker)
-
-    wsServer.registerAction(`get-strategies`, this.getStrategies)
-    wsServer.registerAction(`add-strategy`, this.addStrategy)
-    wsServer.registerAction(`update-strategy`, this.updateStrategy)
-    wsServer.registerAction(`delete-strategy`, this.deleteStrategy)
-    wsServer.registerAction(`adjust-wallet`, this.adjustWallet)
-
-    wsServer.registerAction(`start-strategy`, this.startStrategy)
-    wsServer.registerAction(`stop-strategy`, this.stopStrategy)
+  // Exchange
+  public getExchanges() {
+    return ExchangeStore.instance.loadAll()
   }
 
-  private addExchange = async (exchangeConfig: ExchangeConfig) => {
-    if (!this.helpers.checkAddExchangeParams(exchangeConfig)) return
+  public async addExchange(exchangeConfig: ExchangeConfig) {
+    const hasError = this.helpers.checkAddExchangeParams(exchangeConfig)
+    if (hasError !== false) return hasError
 
+    // @todo(notVitaliy): Untangle this mess
+    // wtf... seriously past Vitaliy
     Object.keys(exchangeConfig)
       .filter((key) => key.includes('auth.'))
       .forEach((key) => {
@@ -64,12 +46,14 @@ export class Core {
       })
 
     await ExchangeStore.instance.save(exchangeConfig)
-    this.initExchangeCore(exchangeConfig)
+    const exchangeAdded = await this.initExchangeCore(exchangeConfig)
     const { auth, ...config } = exchangeConfig
-    wsServer.broadcast('add-exchange', { ...config })
+
+    return exchangeAdded === true ? config : exchangeAdded
   }
 
-  private updateExchange = async (exchangeConfig: Partial<ExchangeConfig>) => {
+  public async updateExchange(exchangeConfig: Partial<ExchangeConfig>) {
+    // @todo(notVitaliy): Do input sanitizing here
     await ExchangeStore.instance.save(exchangeConfig as ExchangeConfig)
 
     const exchange = await this.stopExchange(exchangeConfig.exchange)
@@ -83,14 +67,164 @@ export class Core {
     this.exchangeProvider.replaceExchange(fullConfig)
 
     const { auth, ...config } = fullConfig
-    wsServer.broadcast('update-exchange', { ...config })
+    return config
   }
 
-  private deleteExchange = async ({ exchange }) => {
+  public async deleteExchange({ exchange }) {
     await this.stopExchange(exchange)
     await ExchangeStore.instance.delete(exchange)
     await StrategyStore.instance.deleteAllForExchange(exchange)
-    wsServer.broadcast('delete-exchange', { success: true })
+    return { success: true }
+  }
+
+  public async getSymbols({ exchange }) {
+    return this.exchangeProvider.getSymbols(exchange)
+  }
+
+  public getBalance({ exchange }) {
+    const hasExchange = this.checkForExchange(exchange)
+
+    if (hasExchange !== true) return hasExchange
+
+    return this.exchangeCores.get(exchange).getBalances()
+  }
+
+  public listExchanges() {
+    return Object.entries(Adapters).map(([name, { description, fields }]) => ({ name, description, fields }))
+  }
+
+  public async startSync({ exchange, symbol, days }) {
+    const hasExchange = this.checkForExchange(exchange)
+
+    if (hasExchange !== true) return hasExchange
+
+    this.exchangeCores.get(exchange).syncStart(symbol, days)
+
+    return { success: true }
+  }
+
+  public async stopSync({ exchange, symbol }) {
+    const hasExchange = this.checkForExchange(exchange)
+
+    if (hasExchange !== true) return hasExchange
+
+    this.exchangeCores.get(exchange).syncStop(symbol)
+
+    return { success: true }
+  }
+
+  // Strategy
+  public async getStrategies({ exchange }) {
+    const strategies = await StrategyStore.instance.loadAllForExchange(exchange)
+    return strategies
+  }
+
+  public async addStrategy(strategyConfig: StrategyConfig) {
+    const { exchange } = strategyConfig
+    const hasExchange = this.checkForExchange(exchange)
+
+    if (hasExchange !== true) return hasExchange
+
+    await StrategyStore.instance.save(strategyConfig)
+    this.exchangeCores.get(exchange).addStrategy(strategyConfig)
+    return strategyConfig
+  }
+
+  public async updateStrategy(strategyConfig: StrategyConfig) {
+    const { exchange, symbol, strategy } = strategyConfig
+    const hasExchange = this.checkForExchange(exchange)
+
+    if (hasExchange !== true) return hasExchange
+
+    const exchangeCore = this.exchangeCores.get(exchange)
+    const isRunning = exchangeCore.strategyIsRunning(symbol, strategy)
+
+    // @note(notVitaliy): Hot reloading the strategy will not preload it with trade data
+    // unless the symbol trade sync is restarted, which is not a good idea since another
+    // strategy might be using that same symbol. That will double load the other strategy.
+    if (isRunning) exchangeCore.strategyStop(symbol, strategy)
+    await StrategyStore.instance.save(strategyConfig)
+    exchangeCore.updateStrategy(strategyConfig)
+    if (isRunning) exchangeCore.strategyStart(symbol, strategy)
+
+    return strategyConfig
+  }
+
+  public async deleteStrategy({ exchange, symbol, strategy }: StrategyConfig) {
+    const hasExchange = this.checkForExchange(exchange)
+
+    if (hasExchange !== true) return hasExchange
+
+    const exchangeCore = this.exchangeCores.get(exchange)
+    if (exchangeCore.strategyIsRunning(symbol, strategy)) exchangeCore.strategyStop(symbol, strategy)
+
+    exchangeCore.deleteStrategy(symbol, strategy)
+    await StrategyStore.instance.delete(exchange, symbol, strategy)
+
+    return { success: true }
+  }
+
+  public listStrategies() {
+    const baseFields = BaseStrategy.fields
+    return Object.entries(Strategies).map(([name, { description, fields }]) => ({ name, description, fields: [...baseFields, ...fields] }))
+  }
+
+  public async startStrategy({ exchange, symbol, strategy }) {
+    const hasExchange = this.checkForExchange(exchange)
+
+    if (hasExchange !== true) return hasExchange
+
+    this.exchangeCores.get(exchange).strategyStart(symbol, strategy)
+
+    return { success: true }
+  }
+
+  public async stopStrategy({ exchange, symbol, strategy }) {
+    const hasExchange = this.checkForExchange(exchange)
+
+    if (hasExchange !== true) return hasExchange
+
+    this.exchangeCores.get(exchange).strategyStop(symbol, strategy)
+
+    return { success: true }
+  }
+
+  // Wallet
+  public getWallet({ exchange, symbol, strategy }) {
+    const hasExchange = this.checkForExchange(exchange)
+
+    if (hasExchange !== true) return hasExchange
+
+    return WalletStore.instance.getWallet({ exchange, symbol, strategy })
+  }
+
+  public async adjustWallet({ exchange, symbol, strategy, asset, currency }) {
+    const hasExchange = this.checkForExchange(exchange)
+
+    if (hasExchange !== true) return hasExchange
+
+    this.exchangeCores.get(exchange).adjustWallet(symbol, strategy, asset, currency)
+  }
+
+  // Depracted
+  public getMyConfig() {
+    return this.helpers.getExchanges()
+  }
+
+  // Private
+  private async initExchangeCore(exchangeConfig: ExchangeConfig) {
+    const exchangeAdded = await this.exchangeProvider.addExchange(exchangeConfig)
+    if (exchangeAdded !== true) return exchangeAdded
+
+    const exchangeCore = new ExchangeCore(this.exchangeProvider, exchangeConfig)
+    await exchangeCore.init()
+    this.exchangeCores.set(exchangeConfig.exchange, exchangeCore)
+
+    return true
+  }
+
+  private checkForExchange(exchange: string) {
+    return this.exchangeCores.has(exchange) ? true : this.helpers.error(`exchange ${exchange} not configured`)
   }
 
   private async stopExchange(name: string) {
@@ -106,132 +240,6 @@ export class Core {
 
     return exchange
   }
-
-  private addStrategy = async (strategyConfig: StrategyConfig) => {
-    const { exchange } = strategyConfig
-    if (!this.checkForExchange(exchange)) return
-
-    await StrategyStore.instance.save(strategyConfig)
-    this.exchangeCores.get(exchange).addStrategy(strategyConfig)
-    wsServer.broadcast('add-strategy', { ...strategyConfig })
-  }
-
-  private updateStrategy = async (strategyConfig: StrategyConfig) => {
-    const { exchange, symbol, strategy } = strategyConfig
-    if (!this.checkForExchange(exchange)) return
-
-    const exchangeCore = this.exchangeCores.get(exchange)
-    const isRunning = exchangeCore.strategyIsRunning(symbol, strategy)
-
-    // @note(notVitaliy): Hot reloading the strategy will not preload it with trade data
-    // unless the symbol trade sync is restarted, which is not a good idea since another
-    // strategy might be using that same symbol. That will double load the other strategy.
-    if (isRunning) exchangeCore.strategyStop(symbol, strategy)
-    await StrategyStore.instance.save(strategyConfig)
-    exchangeCore.updateStrategy(strategyConfig)
-    if (isRunning) exchangeCore.strategyStart(symbol, strategy)
-
-    wsServer.broadcast('update-strategy', { ...strategyConfig })
-  }
-
-  private deleteStrategy = async ({ exchange, symbol, strategy }: StrategyConfig) => {
-    if (!this.checkForExchange(exchange)) return
-
-    const exchangeCore = this.exchangeCores.get(exchange)
-    if (exchangeCore.strategyIsRunning(symbol, strategy)) exchangeCore.strategyStop(symbol, strategy)
-
-    exchangeCore.deleteStrategy(symbol, strategy)
-    await StrategyStore.instance.delete(exchange, symbol, strategy)
-
-    wsServer.broadcast('delete-strategy', { exchange, symbol, strategy })
-  }
-
-  private getMyConfig = async () => {
-    const exchanges = await this.helpers.getExchanges()
-
-    wsServer.broadcast('get-my-config', { exchanges })
-  }
-
-  private getSymbols = async ({ exchange }) => {
-    const symbols = this.exchangeProvider.getSymbols(exchange)
-    wsServer.broadcast('get-symbols', { exchange, symbols })
-  }
-
-  private getBalance = async ({ exchange }) => {
-    if (!this.checkForExchange(exchange)) return
-
-    const balance = await this.exchangeCores.get(exchange).getBalances()
-    wsServer.broadcast(`get-balance`, { exchange, balance })
-  }
-
-  private startSync = async ({ exchange, symbol, days }) => {
-    if (!this.checkForExchange(exchange)) return
-
-    this.exchangeCores.get(exchange).syncStart(symbol, days)
-  }
-
-  private stopSync = async ({ exchange, symbol }) => {
-    if (!this.checkForExchange(exchange)) return
-
-    this.exchangeCores.get(exchange).syncStop(symbol)
-  }
-
-  private startStrategy = async ({ exchange, symbol, strategy }) => {
-    if (!this.checkForExchange(exchange)) return
-
-    this.exchangeCores.get(exchange).strategyStart(symbol, strategy)
-  }
-
-  private stopStrategy = async ({ exchange, symbol, strategy }) => {
-    if (!this.checkForExchange(exchange)) return
-
-    this.exchangeCores.get(exchange).strategyStop(symbol, strategy)
-  }
-
-  private adjustWallet = async ({ exchange, symbol, strategy, asset, currency }) => {
-    if (!this.checkForExchange(exchange)) return
-
-    this.exchangeCores.get(exchange).adjustWallet(symbol, strategy, asset, currency)
-  }
-
-  private startTicker = async ({ exchange, symbol }) => {
-    this.exchangeCores.get(exchange).tickerStart(symbol)
-  }
-
-  private stopTicker = async ({ exchange, symbol }) => {
-    this.exchangeCores.get(exchange).tickerStop(symbol)
-  }
-
-  private async initExchangeCore(exchangeConfig: ExchangeConfig) {
-    const exchangeAdded = await this.exchangeProvider.addExchange(exchangeConfig)
-    if (!exchangeAdded) return false
-
-    const exchangeCore = new ExchangeCore(this.exchangeProvider, exchangeConfig)
-    await exchangeCore.init()
-    this.exchangeCores.set(exchangeConfig.exchange, exchangeCore)
-
-    return true
-  }
-
-  private getExchanges() {
-    const exchanges = Object.entries(Adapters).reduce((acc, [name, { description, fields }]) => {
-      acc[name] = { description, fields }
-      return acc
-    }, {})
-    wsServer.broadcast('get-exchanges', { exchanges })
-  }
-
-  private getStrategies() {
-    const baseFields = BaseStrategy.fields
-    const strategies = Object.entries(Strategies).reduce((acc, [name, { description, fields }]) => {
-      acc[name] = { description, fields: [...baseFields, ...fields] }
-      return acc
-    }, {})
-
-    wsServer.broadcast('get-strategies', { strategies })
-  }
-
-  private checkForExchange(exchange: string) {
-    return this.exchangeCores.has(exchange) ? true : this.helpers.error(`exchange ${exchange} not configured`)
-  }
 }
+
+export const core = new Core()

@@ -19,6 +19,5 @@ export class AdjustmentStore {
     const timestamp = new Date().getTime()
     const data = { sessionId: this.sessionId, ...storeOpts, timestamp, ...adjustment }
     await dbDriver.adjustment.save(data)
-    wsServer.broadcast('adjustment', data)
   }
 }

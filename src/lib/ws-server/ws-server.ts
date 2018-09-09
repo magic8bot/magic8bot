@@ -1,9 +1,9 @@
 import WebSocket from 'ws'
 import { logger } from '@util'
 
-type Payload = Record<string, any>
+type Payload = Record<string, any> | any
 
-class WsServer {
+export class WsServer {
   private server: WebSocket.Server
   private actions: Map<string, (payload: Payload) => void> = new Map()
 
@@ -48,5 +48,3 @@ class WsServer {
     return process.env.WS_PORT ? Number(process.env.WS_PORT) : 19807
   }
 }
-
-export const wsServer = new WsServer()

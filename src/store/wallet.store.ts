@@ -27,6 +27,8 @@ export class WalletStore {
   public async initWallet(storeOpts: StoreOpts, adjustment: Adjustment) {
     await this.loadOrNewWallet(storeOpts, adjustment)
     this.subcribeToWalletEvents(storeOpts)
+
+    // @todo(notVitaliy): Find a better place for this
     wsServer.broadcast('wallet', { ...storeOpts, wallet: this.getWallet(storeOpts) })
   }
 
@@ -84,6 +86,8 @@ export class WalletStore {
     const timestamp = new Date().getTime()
     const wallet = this.wallets.get(idStr)
     await this.store.updateOne({ sessionId: this.sessionId, ...storeOpts }, { $set: { timestamp, ...wallet } }, { upsert: true })
+
+    // @todo(notVitaliy): Find a better place for this
     wsServer.broadcast('wallet', { ...storeOpts, wallet: this.getWallet(storeOpts) })
   }
 

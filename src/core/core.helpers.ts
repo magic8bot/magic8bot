@@ -11,16 +11,15 @@ export class CoreHelpers {
   public checkAddExchangeParams(exchangeConfig: ExchangeConfig) {
     if (!exchangeConfig.exchange) return this.error('exchange name is required')
     if (!exchangeConfig.tradePollInterval) return this.error('tradePollInterval is required')
-    if (exchangeConfig.exchange === 'chaos') return true
+    if (exchangeConfig.exchange === 'chaos') return false
     if (!exchangeConfig['auth.apiKey']) return this.error('auth.apiKey is required')
     if (!exchangeConfig['auth.secret']) return this.error('auth.secret is required')
-    return true
+    return false
   }
 
   public error(error: string) {
     logger.error(error)
-    wsServer.broadcast('error', { error: `Core Error: ${error}` })
-    return false
+    return { error: `Core Error: ${error}` }
   }
 
   private async mapStrategiesToExchanges(exchanges: Partial<ExchangeCollection>[]) {

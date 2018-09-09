@@ -1,10 +1,8 @@
-import { dbDriver, wsServer, StrategyConfig } from '@lib'
+import { dbDriver, StrategyConfig } from '@lib'
 import { SessionStore } from './session.store'
 import { StoreOpts } from '@m8bTypes'
 
 const singleton = Symbol()
-
-type StrategyOpts = Record<string, string | number | boolean>
 
 export class StrategyStore {
   public static get instance(): StrategyStore {
@@ -17,17 +15,6 @@ export class StrategyStore {
 
   private get store() {
     return dbDriver.strategy
-  }
-
-  private constructor() {
-    wsServer.registerAction('strategy-save', (strategyConfig: StrategyConfig) => {
-      this.save(strategyConfig)
-    })
-
-    wsServer.registerAction('strategy-load', (storeOpts: StoreOpts) => {
-      const strategyOpts = this.load(storeOpts)
-      wsServer.broadcast('strategy-load', strategyOpts)
-    })
   }
 
   public async save(strategyConfig: StrategyConfig) {

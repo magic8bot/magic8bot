@@ -18,7 +18,7 @@
     "dist": "npm run build",
     "rebuild": "npm run clean && npm run dist",
     "start": "node ./magic8bot.js",
-    "start:dev": "cross-env NODE_ENV=development node ./magic8bot.js",
+    "start:dev": "cross-env NODE_ENV=development nodemon -w ./src -e ts ./magic8bot.js",
     "lint": "tslint -p ./tsconfig.json",
     "lint:fix": "npm run lint -- --fix",
     "test": "jest --detectOpenHandles --runInBand --forceExit"
@@ -59,6 +59,7 @@
     "jest": "^23.4.1",
     "jest-environment-node": "^23.4.0",
     "mongodb-memory-server": "^1.9.0",
+    "nodemon": "^1.18.4",
     "pre-commit": "^1.2.2",
     "pre-push": "^0.1.1",
     "rimraf": "^2.6.2",

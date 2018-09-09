@@ -36,7 +36,9 @@ export class TickerEngine {
     logger.info(`Getting ticker for ${symbol} on ${this.exchange}.`)
     const { exchange } = this
     const ticker = await this.exchangeProvider.fetchTicker(exchange, symbol)
-    wsServer.broadcast('get-ticker', { exchange, symbol, ticker: ticker.close })
+
+    // @todo(notVitaliy): Find a better place for this
+    wsServer.broadcast('ticker', { exchange, symbol, ticker: ticker.close })
 
     await sleep(30000)
     await this.tick(symbol)

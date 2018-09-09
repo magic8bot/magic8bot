@@ -1,6 +1,5 @@
-import { dbDriver, wsServer, ExchangeCollection, ExchangeAuthentication, ExchangeConfig } from '@lib'
+import { dbDriver, ExchangeConfig } from '@lib'
 import { SessionStore } from './session.store'
-import { ExchangeAuth } from '@m8bTypes'
 
 const singleton = Symbol()
 
@@ -15,17 +14,6 @@ export class ExchangeStore {
 
   private get store() {
     return dbDriver.exchange
-  }
-
-  private constructor() {
-    wsServer.registerAction('exchange-save', (exchangeConfig: ExchangeConfig) => {
-      this.save(exchangeConfig)
-    })
-
-    wsServer.registerAction('exchange-load', ({ exchange }) => {
-      const exchangeConfig = this.load(exchange)
-      wsServer.broadcast('exchange-load', { exchangeConfig })
-    })
   }
 
   public async save(exchangeConfig: ExchangeConfig) {

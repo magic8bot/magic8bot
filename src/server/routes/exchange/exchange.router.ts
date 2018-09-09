@@ -20,34 +20,34 @@ export class ExchangeRouter extends BaseRouter {
       res.send(result)
     })
 
-    this.router.post('/', async ({ body }, res) => {
-      const result = await core.addExchange(body)
+    this.router.get('/list', (req, res) => {
+      const exchanges = core.listExchanges()
+      res.send(exchanges)
+    })
+
+    this.router.post('/:exchange', async ({ body, params: { exchange } }, res) => {
+      const result = await core.addExchange({ ...body, exchange })
       res.send(result)
     })
 
-    this.router.put('/', async ({ body }, res) => {
-      const result = await core.updateExchange(body)
+    this.router.put('/:exchange', async ({ body, params: { exchange } }, res) => {
+      const result = await core.updateExchange({ ...body, exchange })
       res.send(result)
     })
 
-    this.router.delete('/', async ({ body: { exchange } }, res) => {
+    this.router.delete('/:exchange', async ({ params: { exchange } }, res) => {
       const result = await core.deleteExchange({ exchange })
       res.send(result)
     })
 
-    this.router.get('/symbols', async ({ query: { exchange } }, res) => {
+    this.router.get('/:exchange/symbols', async ({ params: { exchange } }, res) => {
       const result = await core.getSymbols({ exchange })
       res.send(result)
     })
 
-    this.router.get('/balance', async ({ query: { exchange } }, res) => {
+    this.router.get('/:exchange/balance', async ({ params: { exchange } }, res) => {
       const result = await core.getBalance({ exchange })
       res.send(result)
-    })
-
-    this.router.get('/list', (req, res) => {
-      const exchanges = core.listExchanges()
-      res.send(exchanges)
     })
 
     this.router.use(SyncRouter.path, SyncRouter.router)

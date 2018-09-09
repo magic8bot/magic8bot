@@ -1,6 +1,7 @@
 import { ExchangeProvider } from '@exchange'
 import { TradeStore, MarkerStore } from '@store'
 import { sleep, logger } from '@util'
+import { wsServer } from '@lib'
 
 enum SYNC_STATE {
   STOPPED,
@@ -24,18 +25,24 @@ export class TradeEngine {
   }
 
   public isRunning(symbol: string) {
-    return this.symbols.get(symbol) !== SYNC_STATE.STOPPED
+    return this.symbols.has(symbol) && this.symbols.get(symbol) !== SYNC_STATE.STOPPED
+  }
+
+  public getState(symbol: string) {
+    return this.symbols.has(symbol) ? this.symbols.get(symbol) : 0
   }
 
   public async start(symbol: string, days: number) {
     if (this.symbols.has(symbol) && this.symbols.get(symbol) !== SYNC_STATE.STOPPED) return
 
     logger.info(`Trade sync for ${this.exchange} on ${symbol} started.`)
-    this.symbols.set(symbol, SYNC_STATE.SYNCING)
+    this.setState(symbol, SYNC_STATE.SYNCING)
     this.tradeStore.addSymbol({ exchange: this.exchange, symbol })
 
     await this.scan(symbol, days)
-    this.symbols.set(symbol, SYNC_STATE.READY)
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
+    this.setState(symbol, SYNC_STATE.READY)
     await this.tick(symbol)
   }
 
@@ -43,7 +50,15 @@ export class TradeEngine {
     if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
 
     logger.info(`Trade sync for ${this.exchange} on ${symbol} stopped.`)
-    this.symbols.set(symbol, SYNC_STATE.STOPPED)
+    this.setState(symbol, SYNC_STATE.STOPPED)
+  }
+
+  private setState(symbol: string, state: SYNC_STATE) {
+    this.symbols.set(symbol, state)
+
+    const { exchange } = this
+    const payload = { exchange, symbol, state }
+    wsServer.broadcast('sync-state', payload)
   }
 
   private async scan(symbol: string, days: number) {
@@ -63,6 +78,7 @@ export class TradeEngine {
   }
 
   private async tick(symbol: string) {
+    console.log({ symbol })
     if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
 
     const storeOpts = { exchange: this.exchange, symbol }
@@ -105,6 +121,8 @@ export class TradeEngine {
   }
 
   private async scanForward(symbol: string, start: number, isTick = false) {
+    if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+
     const storeOpts = { exchange: this.exchange, symbol }
     const from = await this.markerStore.getNextForwardMarker(storeOpts, start)
 

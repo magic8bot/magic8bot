@@ -93,7 +93,17 @@ class Core {
     return Object.entries(Adapters).map(([name, { description, fields }]) => ({ name, description, fields }))
   }
 
-  public async startSync({ exchange, symbol, days }) {
+  public async getSync({ exchange, symbol }) {
+    const hasExchange = this.checkForExchange(exchange)
+
+    if (hasExchange !== true) return hasExchange
+
+    const status = this.exchangeCores.get(exchange).syncState(symbol)
+
+    return { status }
+  }
+
+  public async startSync({ exchange, symbol, days = 1 }) {
     const hasExchange = this.checkForExchange(exchange)
 
     if (hasExchange !== true) return hasExchange

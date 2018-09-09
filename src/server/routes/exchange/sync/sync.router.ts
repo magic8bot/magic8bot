@@ -2,7 +2,7 @@ import { BaseRouter } from '../../base.router'
 import { core } from '@core'
 
 export class SyncRouter extends BaseRouter {
-  public static path = '/sync'
+  public static path = '/:exchange/sync/:symbol'
   private static instance: SyncRouter = null
 
   public static get router() {
@@ -14,13 +14,18 @@ export class SyncRouter extends BaseRouter {
   private constructor() {
     super()
 
-    this.router.post('/start', async ({ body }, res) => {
-      const result = await core.startSync(body)
+    this.router.get('/', async ({ params: { exchange, symbol } }, res) => {
+      const result = await core.getSync({ exchange, symbol })
       res.send(result)
     })
 
-    this.router.post('/stop', async ({ body }, res) => {
-      const result = await core.stopSync(body)
+    this.router.post('/start', async ({ params: { exchange, symbol } }, res) => {
+      const result = await core.startSync({ exchange, symbol })
+      res.send(result)
+    })
+
+    this.router.post('/stop', async ({ params: { exchange, symbol } }, res) => {
+      const result = await core.stopSync({ exchange, symbol })
       res.send(result)
     })
   }

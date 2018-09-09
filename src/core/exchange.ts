@@ -67,6 +67,10 @@ export class ExchangeCore {
     this.tradeEngine.stop(symbol)
   }
 
+  public syncState(symbol: string) {
+    return this.tradeEngine.getState(symbol)
+  }
+
   public syncIsRunning(symbol: string) {
     return this.tradeEngine.isRunning(symbol)
   }

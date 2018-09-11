@@ -78,22 +78,11 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
 
   public calculate(periods: PeriodItem[]) {
     if (!periods.length) return
+
     const curPrice = periods[0].close // use closing price as current price
-    if (this.isHolding) { // we have already bought and are holding
-      if ((curPrice >= this.options.sellPrice) || (curPrice <= this.options.stopLimit)) {
-        // sell price reached reset if we are to repeat
-        if (this.options.isRepeat) this.reset()
-        this.signal = 'sell' }
-      else {
-        this.signal = null } // if we arent buying or selling cancel signal
-    }
-    else {  // else we are not already holding
-      if (curPrice <= this.options.buyPrice) {
-        this.isHolding = true
-        this.signal = 'buy' }
-      else {
-        this.signal = null } // if we arent buying or selling cancel signal
-    }
+
+    this.signal = this.shouldSell(curPrice) ? 'sell' : this.shouldBuy(curPrice) ? 'buy' : null
+
     const signal = 0
     const rsi = 0
     return { rsi, signal }
@@ -105,7 +94,25 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
     return this.signal
   }
 
-  public reset() {
-    this.isHolding = false
+  private shouldSell(curPrice: number): boolean {
+    if (!this.isHolding) return false // havnt bought yet
+    const isSelling = ((curPrice >= this.options.sellPrice) || (curPrice <= this.options.stopLimit))
+    if (isSelling) this.sold() // set isHolding flag
+    return isSelling
+  }
+
+  private shouldBuy(curPrice: number): boolean {
+    if (this.isHolding) return false // already bought
+    const isBuying = (curPrice <= this.options.buyPrice)
+    if (isBuying) this.bought() // set isHolding flag
+    return isBuying
+  }
+
+  private sold() {
+    this.isHolding = !this.options.isRepeat // reset if repeat flag is set
+  }
+
+  private bought() {
+    this.isHolding = true
   }
 }

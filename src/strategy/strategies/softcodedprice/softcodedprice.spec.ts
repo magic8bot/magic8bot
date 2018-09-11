@@ -34,14 +34,6 @@ describe('SoftCodedPrice', () => {
     expect(signal).toEqual('sell')
   })
 
-  it('should sell when price is high enough', () => {
-    softCodedPrice.calculate(candles.slice(1, 2)) // should buy first
-    softCodedPrice.calculate(candles.slice(3, 4)) // then sell for profit
-    const signal = softCodedPrice.onPeriod()
-      // @ts-ignore
-    expect(signal).toEqual('sell')
-  })
-
   it('should sell when price is low after buy', () => {
     softCodedPrice.calculate(candles.slice(1, 2)) // Buy first
     softCodedPrice.calculate(candles.slice(7, 8)) // then panic sell
@@ -80,7 +72,7 @@ describe('SoftCodedPrice repeating', () => {
     softCodedPrice = new SoftCodedPrice('test', 'test',  {buyPrice: 18.00, sellPrice: 18.25, stopLimit: 17.25, isRepeat: true })
   })
 
-  it('should only buy once', () => {
+  it('should buy again with repeat flag set', () => {
     softCodedPrice.calculate(candles.slice(1, 2)) // First buy
     softCodedPrice.calculate(candles.slice(3, 4)) // Then sell
     softCodedPrice.calculate(candles.slice(1, 2)) // another buy

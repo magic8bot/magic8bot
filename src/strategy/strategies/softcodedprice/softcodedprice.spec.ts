@@ -9,7 +9,7 @@ describe('SoftCodedPrice', () => {
   let softCodedPrice: SoftCodedPrice
 
   beforeEach(() => {
-    softCodedPrice = new SoftCodedPrice('test', 'test',  {buyPrice: 18.00, sellPrice: 18.25, stopLimit: 17.25 })
+    softCodedPrice = new SoftCodedPrice('test', 'test',  {buyPrice: 18.00, sellPrice: 18.25, stopLoss: 17.25 })
   })
 
   it('should not return signal without a full period', () => {
@@ -69,7 +69,7 @@ describe('SoftCodedPrice repeating', () => {
   let softCodedPrice: SoftCodedPrice
 
   beforeEach(() => {
-    softCodedPrice = new SoftCodedPrice('test', 'test',  {buyPrice: 18.00, sellPrice: 18.25, stopLimit: 17.25, isRepeat: true })
+    softCodedPrice = new SoftCodedPrice('test', 'test',  {buyPrice: 18.00, sellPrice: 18.25, stopLoss: 17.25, isRepeat: true })
   })
 
   it('should buy again with repeat flag set', () => {

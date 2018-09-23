@@ -13,10 +13,10 @@ import { logger } from '../../../util/logger'
 export interface SoftCodedPriceOptions {
   period: string
   buyPrice: number
-  stopLimit: number
+  stopLoss: number
   sellPrice: number
   isRepeat: boolean
-  }
+}
 
 export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
   public static description =
@@ -34,21 +34,21 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
       name: 'buyPrice',
       type: 'number',
       prettyName: 'Buy Price',
-      description: 'If the price is at or bellow this price buy.',
+      description: 'When price is below this point buy once.',
       default: 0,
     },
     {
-      name: 'stopLimit',
+      name: 'stopLoss',
       type: 'number',
-      prettyName: 'Stop Limit',
-      description: 'If after a buy the price gets to this point sell.',
+      prettyName: 'Stop Loss',
+      description: 'If the price drops down below this point sell.',
       default: 0,
     },
     {
       name: 'sellPrice',
       type: 'number',
       prettyName: 'Sell Price',
-      description: 'If after a buy the price reaches this point sell',
+      description: 'If the price increases up above this point sell.',
       default: 0,
     },
     {
@@ -63,7 +63,7 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
   public options: SoftCodedPriceOptions = {
     period: '1m',
     buyPrice: 0,
-    stopLimit: 0,
+    stopLoss: 0,
     sellPrice: 0,
     isRepeat: false,
   }
@@ -82,10 +82,7 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
     const curPrice = periods[0].close // use closing price as current price
 
     this.signal = this.shouldSell(curPrice) ? 'sell' : this.shouldBuy(curPrice) ? 'buy' : null
-
-    const signal = 0
-    const rsi = 0
-    return { rsi, signal }
+    return
   }
 
   public onPeriod() {
@@ -96,13 +93,15 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
 
   private shouldSell(curPrice: number): boolean {
     if (!this.isHolding) return false // havnt bought yet
-    const isSelling = ((curPrice >= this.options.sellPrice) || (curPrice <= this.options.stopLimit))
+
+    const isSelling = ((curPrice >= this.options.sellPrice) || (curPrice <= this.options.stopLoss))
     if (isSelling) this.sold() // set isHolding flag
     return isSelling
   }
 
   private shouldBuy(curPrice: number): boolean {
     if (this.isHolding) return false // already bought
+
     const isBuying = (curPrice <= this.options.buyPrice)
     if (isBuying) this.bought() // set isHolding flag
     return isBuying

@@ -1,3 +1,4 @@
 import { strategy as macd } from './macd'
+import { strategy as softcodedprice } from './softcodedprice'
 
-export const Strategies = { macd }
+export const Strategies = { macd, softcodedprice }

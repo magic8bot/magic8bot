@@ -1,6 +1,7 @@
 import { ExchangeStore, StrategyStore, WalletStore } from '@store'
 import { ExchangeCollection, StrategyCollection, wsServer, ExchangeConfig } from '@lib'
 import { logger } from '@util'
+import get from 'lodash.get'
 
 export class CoreHelpers {
   public async getExchanges() {
@@ -12,8 +13,8 @@ export class CoreHelpers {
     if (!exchangeConfig.exchange) return this.error('exchange name is required')
     if (!exchangeConfig.tradePollInterval) return this.error('tradePollInterval is required')
     if (exchangeConfig.exchange === 'chaos') return false
-    if (!exchangeConfig['auth.apiKey']) return this.error('auth.apiKey is required')
-    if (!exchangeConfig['auth.secret']) return this.error('auth.secret is required')
+    if (!get(exchangeConfig, 'auth.apiKey')) return this.error('auth.apiKey is required')
+    if (!get(exchangeConfig, 'auth.secret')) return this.error('auth.secret is required')
     return false
   }
 

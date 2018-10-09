@@ -1,11 +1,11 @@
 import { Exchange, Trade, Order } from 'ccxt'
-import { gdax, binance, chaos } from './adapters'
+import { gdax, binance, chaos, bitmex } from './adapters'
 import { ExchangeAdapter } from './adapters/base'
 import { OrderWithTrades } from '@lib'
 import Bottleneck from 'bottleneck'
 import { logger } from '@util'
 
-const adapters: Record<string, ExchangeAdapter> = { binance, gdax, chaos }
+const adapters: Record<string, ExchangeAdapter> = { binance, gdax, chaos, bitmex }
 
 export class ExchangeWrapper {
   public scan: 'back' | 'forward'

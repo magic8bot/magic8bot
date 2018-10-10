@@ -5,6 +5,7 @@ import { ExchangeConfig, StrategyConfig } from '@lib'
 import { CoreHelpers } from './core.helpers'
 import * as Adapters from '../exchange/adapters'
 import { Strategies } from '../strategy/strategies/strategies'
+import { logger } from '@util'
 import { BaseStrategy } from '@strategy'
 
 class Core {
@@ -20,7 +21,7 @@ class Core {
   public async init() {
     await SessionStore.instance.loadSession()
     const exchanges = await ExchangeStore.instance.loadAllWithAuth()
-
+    if (exchanges.length === 0) return logger.warn('No exchanges loaded')
     exchanges.forEach((exchangeConfig) => this.initExchangeCore(exchangeConfig))
   }
 

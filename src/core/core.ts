@@ -130,9 +130,11 @@ class Core {
   }
 
   public async addStrategy(strategyConfig: StrategyConfig) {
+    const hasError = this.helpers.checkAddStrategyParams(strategyConfig)
+    if (hasError !== false) return hasError
+
     const { exchange } = strategyConfig
     const hasExchange = this.checkForExchange(exchange)
-
     if (hasExchange !== true) return hasExchange
 
     await StrategyStore.instance.save(strategyConfig)
@@ -141,6 +143,8 @@ class Core {
   }
 
   public async updateStrategy(strategyConfig: StrategyConfig) {
+    const hasError = this.helpers.checkAddStrategyParams(strategyConfig)
+    if (hasError !== false) return hasError
     const { exchange, symbol, strategy } = strategyConfig
     const hasExchange = this.checkForExchange(exchange)
 

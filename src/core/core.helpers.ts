@@ -10,11 +10,11 @@ export class CoreHelpers {
   }
 
   public checkAddExchangeParams(exchangeConfig: ExchangeConfig) {
-    if (!exchangeConfig.exchange) return this.error('exchange name is required')
-    if (!exchangeConfig.tradePollInterval) return this.error('tradePollInterval is required')
+    if (!exchangeConfig.exchange) return this.error('field \'exchange\' is required')
+    if (!exchangeConfig.tradePollInterval) return this.error('field \'tradePollInterval\' is required')
     if (exchangeConfig.exchange === 'chaos') return false
-    if (!get(exchangeConfig, 'auth.apiKey')) return this.error('auth.apiKey is required')
-    if (!get(exchangeConfig, 'auth.secret')) return this.error('auth.secret is required')
+    if (!get(exchangeConfig, 'auth.apiKey')) return this.error('field \'auth.apiKey\' is required')
+    if (!get(exchangeConfig, 'auth.secret')) return this.error('field \'auth.secret\' is required')
     return false
   }
 

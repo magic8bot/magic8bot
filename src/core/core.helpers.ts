@@ -1,5 +1,5 @@
 import { ExchangeStore, StrategyStore, WalletStore } from '@store'
-import { ExchangeCollection, StrategyCollection, wsServer, ExchangeConfig } from '@lib'
+import { ExchangeCollection, StrategyCollection, wsServer, ExchangeConfig, StrategyConfig } from '@lib'
 import { logger } from '@util'
 import get from 'lodash.get'
 
@@ -7,6 +7,19 @@ export class CoreHelpers {
   public async getExchanges() {
     const exchanges = await ExchangeStore.instance.loadAll()
     return this.mapStrategiesToExchanges(exchanges)
+  }
+
+  public checkAddStrategyParams(strategyConfig: StrategyConfig) {
+    if (!strategyConfig.exchange) return this.error('field \'exchange\' is required')
+    if (!strategyConfig.strategy) return this.error('field \'strategy\' is required')
+    if (!strategyConfig.symbol) return this.error('field \'symbol\' is required')
+    if (!strategyConfig.days) return this.error('field \'days\' is required')
+    if (!strategyConfig.period) return this.error('field \'period\' is required')
+    if (!strategyConfig.markDn) return this.error('field \'markDn\' is required')
+    if (!strategyConfig.markUp) return this.error('field \'markUp\' is required')
+    if (!strategyConfig.orderPollInterval) return this.error('field \'orderPollInterval\' is required')
+    if (!strategyConfig.orderSlippageAdjustmentTolerance) return this.error('field \'orderSlippageAdjustmentTolerance\' is required')
+    return false
   }
 
   public checkAddExchangeParams(exchangeConfig: ExchangeConfig) {

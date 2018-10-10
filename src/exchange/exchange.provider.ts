@@ -30,7 +30,10 @@ export class ExchangeProvider {
       return true
     }
 
-    if (ccxt.exchanges.indexOf(exchange) === -1) return this.error(`Invalid exchange: ${exchange}`)
+    if (ccxt.exchanges.indexOf(exchange) === -1) {
+      logger.error(`invalid exchange ${exchange}, list: ${ccxt.exchanges}`)
+      return this.error(`Invalid exchange: ${exchange}`)
+    }
 
     // no clean way to do this, afaik
     const reqKeys = this.getReqCreds((new ccxt[exchange]() as ccxt.Exchange).describe().requiredCredentials)

@@ -41,6 +41,9 @@ export class ExchangeProvider {
     if (!this.hasAllReqCreds(auth, reqKeys)) return this.error(`${exchange} missing required credentials. Requires: ${reqKeys.join(', ')}`)
 
     const exchangeConnection = new ccxt[exchange]({ ...auth, verbose })
+    // tslint:disable-next-line:no-string-literal
+    exchangeConnection.urls['api'] = exchangeConnection.urls['test']
+    logger.info(exchangeConnection.urls.api)
     this.exchanges.set(exchange, new ExchangeWrapper(exchange, exchangeConnection))
     return true
   }

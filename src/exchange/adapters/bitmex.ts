@@ -6,8 +6,8 @@ export const bitmex: ExchangeAdapter = {
   fields: [...baseFields],
   description: 'Bitmex',
 
-  scan: 'forward',
-  ratelimit: 500,
+  scan: 'back',
+  ratelimit: 5000,
 
   mapTradeParams: (startTime: number) => {
     if (startTime === null) return null

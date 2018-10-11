@@ -20,7 +20,8 @@ export class ExchangeProvider {
   private exchanges: Map<string, ExchangeWrapper> = new Map()
   private errorHandler = new ExchangeErrorHandler()
 
-  public async addExchange({ auth, exchange }: ExchangeConfig) {
+  public async addExchange(exchangeConfig: ExchangeConfig) {
+    const { auth, exchange } = exchangeConfig
     if (this.exchanges.has(exchange)) return this.error(`Exchange already added: ${exchange}`)
 
     if (exchange === 'chaos') {
@@ -41,9 +42,10 @@ export class ExchangeProvider {
     if (!this.hasAllReqCreds(auth, reqKeys)) return this.error(`${exchange} missing required credentials. Requires: ${reqKeys.join(', ')}`)
 
     const exchangeConnection = new ccxt[exchange]({ ...auth, verbose })
-    // tslint:disable-next-line:no-string-literal
-    exchangeConnection.urls['api'] = exchangeConnection.urls['test']
-    logger.info(exchangeConnection.urls.api)
+    if (exchangeConfig.useTestEnvironment) {
+      logger.debug(`enabling test environment for exchange ${exchangeConfig.exchange}`)
+      exchangeConnection.urls.api = exchangeConnection.urls.test
+    }
     this.exchanges.set(exchange, new ExchangeWrapper(exchange, exchangeConnection))
     return true
   }

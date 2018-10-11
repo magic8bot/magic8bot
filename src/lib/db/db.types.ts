@@ -136,6 +136,7 @@ export interface ExchangeAuthentication {
 }
 
 export interface ExchangeConfig {
+  useTestEnvironment?: boolean
   exchange: string
   tradePollInterval: number
   auth: ExchangeAuthentication

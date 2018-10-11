@@ -14,11 +14,11 @@ export class CoreHelpers {
     if (!strategyConfig.strategy) return this.error('field \'strategy\' is required')
     if (!strategyConfig.symbol) return this.error('field \'symbol\' is required')
     if (!strategyConfig.days) return this.error('field \'days\' is required')
-    if (!strategyConfig.period) return this.error('field \'period\' is required')
-    if (!strategyConfig.markDn) return this.error('field \'markDn\' is required')
-    if (!strategyConfig.markUp) return this.error('field \'markUp\' is required')
-    if (!strategyConfig.orderPollInterval) return this.error('field \'orderPollInterval\' is required')
-    if (!strategyConfig.orderSlippageAdjustmentTolerance) return this.error('field \'orderSlippageAdjustmentTolerance\' is required')
+    if (!strategyConfig.hasOwnProperty('period')) return this.error('field \'period\' is required')
+    if (!strategyConfig.hasOwnProperty('markDn')) return this.error('field \'markDn\' is required')
+    if (!strategyConfig.hasOwnProperty('markUp')) return this.error('field \'markUp\' is required')
+    if (!strategyConfig.hasOwnProperty('orderPollInterval')) return this.error('field \'orderPollInterval\' is required')
+    if (!strategyConfig.hasOwnProperty('orderSlippageAdjustmentTolerance')) return this.error('field \'orderSlippageAdjustmentTolerance\' is required')
     return false
   }
 

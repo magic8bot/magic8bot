@@ -56,7 +56,9 @@ export class ExchangeProvider {
   }
 
   public getSymbols(exchange: string) {
-    return this.exchanges.get(exchange).getSymbols()
+    const exchangeInstance = this.exchanges.get(exchange)
+    if (!exchangeInstance) return this.error(`Exchange ${exchange} has not been instanced`)
+    return exchangeInstance.getSymbols()
   }
 
   public getTrades(exchange: string, symbol: string, since: number) {

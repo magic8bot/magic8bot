@@ -72,8 +72,8 @@ export class ExchangeWrapper {
     return res
   }
 
-  public async checkOrder(orderId: string): Promise<OrderWithTrades> {
-    const fn = () => this.exchangeConnection.fetchOrder(orderId)
+  public async checkOrder(orderId: string, symbol: string): Promise<OrderWithTrades> {
+    const fn = () => this.exchangeConnection.fetchOrder(orderId, symbol)
     const res: any = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'checkOrder', req: { orderId }, res }
@@ -82,8 +82,8 @@ export class ExchangeWrapper {
     return res
   }
 
-  public async cancelOrder(orderId: string) {
-    const fn = () => this.exchangeConnection.cancelOrder(orderId)
+  public async cancelOrder(orderId: string, symbol: string) {
+    const fn = () => this.exchangeConnection.cancelOrder(orderId, symbol)
     const res = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'cancelOrder', req: { orderId }, res }

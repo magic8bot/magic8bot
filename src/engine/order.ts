@@ -52,12 +52,13 @@ export class OrderEngine {
 
   public async executeBuy(quote?: number, strength = 1) {
     const { exchange, symbol } = this.opts
+    logger.verbose(`Executing buy order on exchange ${exchange}, symbol ${symbol}`)
+
     const rawPrice = quote ? quote : await this.quoteEngine.getBuyPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
 
     const purchasingPower = this.exchangeProvider.priceToPrecision(exchange, symbol, this.wallet.currency * strength)
     const amount = this.exchangeProvider.amountToPrecision((purchasingPower / price) * 0.995)
-
     // @todo(notVitaliy): Add support for market
     const orderOpts: OrderOpts = { symbol, price, amount, type: 'limit', side: 'buy' }
     const adjustment: Adjustment = { asset: 0, currency: -(amount * price), type: 'newOrder' }
@@ -70,10 +71,11 @@ export class OrderEngine {
 
   public async executeSell(quote?: number, strength = 1) {
     const { exchange, symbol } = this.opts
+    logger.verbose(`Executing sell order on exchange ${exchange}, symbol ${symbol}`)
+
     const rawPrice = quote ? quote : await this.quoteEngine.getSellPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
     const amount = this.exchangeProvider.amountToPrecision(this.wallet.asset * strength)
-
     // @todo(notVitaliy): Add support for market
     const orderOpts: OrderOpts = { symbol, price, amount, type: 'limit', side: 'sell' }
     const adjustment: Adjustment = { asset: -amount, currency: 0, type: 'newOrder' }
@@ -121,7 +123,7 @@ export class OrderEngine {
 
     const { exchange, symbol } = this.opts
     logger.verbose(`Checking order ${id} on ${exchange}`)
-    const order = await this.exchangeProvider.checkOrder(exchange, id)
+    const order = await this.exchangeProvider.checkOrder(exchange, id, symbol)
 
     await this.updateOrder(order)
     switch (order.status) {
@@ -170,19 +172,19 @@ export class OrderEngine {
     // Order slipped
     if (shouldAdjust) {
       logger.verbose(`Adjusting order ${id} on ${symbol} from ${quote} to ${adjustedQuote}`)
-      if (await this.cancelOrder(id)) return side === 'buy' ? this.executeBuy(quote) : this.executeSell(quote)
+      if (await this.cancelOrder(id, symbol)) return side === 'buy' ? this.executeBuy(quote) : this.executeSell(quote)
       return false
     }
 
     return this.checkOrder(id)
   }
 
-  private async cancelOrder(id: string) {
+  private async cancelOrder(id: string, symbol: string) {
     const { price, side, remaining } = this.orderStore.getOpenOrder(this.storeOpts, id)
     const { exchange } = this.opts
     try {
       this.orderStore.updateOrderState(this.storeOpts, id, ORDER_STATE.PENDING_CANCEL)
-      await this.exchangeProvider.cancelOrder(exchange, id)
+      await this.exchangeProvider.cancelOrder(exchange, id, symbol)
       this.orderStore.updateOrderState(this.storeOpts, id, ORDER_STATE.CANCELED)
 
       // Refund the wallet

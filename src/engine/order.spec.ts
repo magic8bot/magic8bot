@@ -416,7 +416,7 @@ describe('OrderEngine', () => {
 
     expect(executeBuy).toHaveBeenCalledTimes(2)
     expect(cancelOrder).toHaveBeenCalledTimes(1)
-    expect(cancelOrder).toHaveBeenCalledWith(mockId)
+    expect(cancelOrder).toHaveBeenCalledWith(mockId, mockId)
     expect(checkOrder).toHaveBeenCalledTimes(1)
   })
 
@@ -447,7 +447,7 @@ describe('OrderEngine', () => {
 
     expect(executeBuy).toHaveBeenCalledTimes(2)
     expect(cancelOrder).toHaveBeenCalledTimes(1)
-    expect(cancelOrder).toHaveBeenCalledWith(mockId)
+    expect(cancelOrder).toHaveBeenCalledWith(mockId, mockId)
     expect(checkOrder).toHaveBeenCalledTimes(1)
   })
 
@@ -501,7 +501,7 @@ describe('OrderEngine', () => {
 
     expect(executeSell).toHaveBeenCalledTimes(2)
     expect(cancelOrder).toHaveBeenCalledTimes(1)
-    expect(cancelOrder).toHaveBeenCalledWith(mockId)
+    expect(cancelOrder).toHaveBeenCalledWith(mockId, mockId)
     expect(checkOrder).toHaveBeenCalledTimes(1)
   })
 
@@ -528,7 +528,7 @@ describe('OrderEngine', () => {
 
     expect(executeSell).toHaveBeenCalledTimes(2)
     expect(cancelOrder).toHaveBeenCalledTimes(1)
-    expect(cancelOrder).toHaveBeenCalledWith(mockId)
+    expect(cancelOrder).toHaveBeenCalledWith(mockId, mockId)
     expect(checkOrder).toHaveBeenCalledTimes(1)
   })
 

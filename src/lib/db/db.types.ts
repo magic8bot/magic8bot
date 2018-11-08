@@ -140,6 +140,7 @@ export interface ExchangeConfig {
   exchange: string
   tradePollInterval: number
   auth: ExchangeAuthentication
+  leverage?: number
 }
 
 export type ExchangeCollection = ExchangeConfig & {

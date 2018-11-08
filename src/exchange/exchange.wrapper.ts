@@ -5,14 +5,14 @@ import { OrderWithTrades } from '@lib'
 import Bottleneck from 'bottleneck'
 import { logger } from '@util'
 
-const adapters: Record<string, ExchangeAdapter> = { binance, gdax, chaos, bitmex }
+// const adapters: Record<string, ExchangeAdapter> = { binance, gdax, chaos, bitmex }
 
-export class ExchangeWrapper {
+export abstract class ExchangeWrapper {
   public scan: 'back' | 'forward'
+  protected bottleneck: Bottleneck
   private adapter: ExchangeAdapter
-  private bottleneck: Bottleneck
 
-  constructor(exchange: string, private readonly exchangeConnection: Exchange) {
+  constructor(exchange: string, protected readonly exchangeConnection: Exchange, adapters: Record<string, ExchangeAdapter>) {
     if (!(exchange in adapters)) throw new Error(`No adapter for ${exchange}.`)
     this.adapter = adapters[exchange]
     this.scan = this.adapter.scan
@@ -62,15 +62,7 @@ export class ExchangeWrapper {
     return res
   }
 
-  public async createOrder(symbol: string, type: string, side: string, amount: number, price: number): Promise<Order> {
-    const fn = () => this.exchangeConnection.createOrder(symbol, type, side, amount, price)
-    const res = await this.bottleneck.schedule(fn)
-
-    const debug = { name: 'createOrder', req: { symbol, type, side, amount, price }, res }
-    logger.debug(JSON.stringify(debug))
-
-    return res
-  }
+  public abstract async createOrder(symbol: string, type: string, side: string, amount: number, price: number): Promise<Order>
 
   public async checkOrder(orderId: string, symbol: string): Promise<OrderWithTrades> {
     const fn = () => this.exchangeConnection.fetchOrder(orderId, symbol)

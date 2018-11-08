@@ -5,6 +5,8 @@ import { ExchangeErrorHandler } from './exchange.error'
 import { wsServer, ExchangeConfig } from '@lib'
 import { sleep, logger } from '@util'
 import { ChaosXcg } from '../seed/chaos.exchange'
+import { CurrencyExchange } from './exchangeTypes/currencyExchange'
+import { LeverageExchange } from './exchangeTypes/leverageExchange'
 
 const verbose = false
 
@@ -27,7 +29,7 @@ export class ExchangeProvider {
     if (exchange === 'chaos') {
       const chaos: any = new ChaosXcg()
       await chaos.connect({})
-      this.exchanges.set(exchange, new ExchangeWrapper(exchange, chaos))
+      this.exchanges.set(exchange, new CurrencyExchange(exchange, chaos))
       return true
     }
 
@@ -41,12 +43,17 @@ export class ExchangeProvider {
 
     if (!this.hasAllReqCreds(auth, reqKeys)) return this.error(`${exchange} missing required credentials. Requires: ${reqKeys.join(', ')}`)
 
-    const exchangeConnection = new ccxt[exchange]({ ...auth, verbose })
+    const exchangeConnection = new ccxt[exchange]({ ...auth, verbose, enableRateLimit: true })
     if (exchangeConfig.useTestEnvironment) {
       logger.debug(`enabling test environment for exchange ${exchangeConfig.exchange}`)
       exchangeConnection.urls.api = exchangeConnection.urls.test
     }
-    this.exchanges.set(exchange, new ExchangeWrapper(exchange, exchangeConnection))
+
+    if (exchangeConfig.hasOwnProperty('leverage')) {
+      this.exchanges.set(exchange, new LeverageExchange(exchange, exchangeConnection))
+    } else {
+      this.exchanges.set(exchange, new CurrencyExchange(exchange, exchangeConnection))
+    }
     return true
   }
 

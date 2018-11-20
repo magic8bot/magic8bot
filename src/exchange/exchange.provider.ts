@@ -111,8 +111,8 @@ export class ExchangeProvider {
     return this.exchanges.get(exchange).getTradeCursor(trade)
   }
 
-  public amountToPrecision(amount: number) {
-    return Math.floor(amount * 100000000) / 100000000
+  public amountToPrecision(exchange: string, amount: number, currentPrice: number) {
+    return this.exchanges.get(exchange).amountToPrecision(amount, currentPrice)
   }
 
   public priceToPrecision(exchange: string, symbol: string, price: number) {

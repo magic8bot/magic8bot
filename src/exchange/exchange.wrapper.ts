@@ -101,4 +101,6 @@ export abstract class ExchangeWrapper {
   public getLimits(symbol: string) {
     return this.exchangeConnection.market(symbol).limits
   }
+
+  public abstract amountToPrecision(amount: number, currentPrice: number)
 }

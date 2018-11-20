@@ -28,7 +28,7 @@
     "@magic8bot/timebucket": "^1.1.0",
     "body-parser": "^1.18.3",
     "bottleneck": "^2.6.0",
-    "ccxt": "^1.17.399",
+    "ccxt": "^1.17.488",
     "codecov": "^3.0.4",
     "compression": "^1.7.3",
     "cors": "^2.8.4",

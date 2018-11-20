@@ -13,6 +13,10 @@ export class CurrencyExchange extends ExchangeWrapper {
         super(exchange, exchangeConnection, adapters)
     }
 
+    public amountToPrecision(amount: number) {
+        return Math.floor(amount * 100000000) / 100000000
+    }
+
     public async createOrder(symbol: string, type: string, side: string, amount: number, price: number): Promise<Order> {
         const fn = () => this.exchangeConnection.createOrder(symbol, type, side, amount, price)
         return this.bottleneck.schedule(fn)

@@ -3,6 +3,7 @@ import { dbDriver, Wallet, eventBus, EVENT, Adjustment, wsServer } from '@lib'
 import { SessionStore } from './session.store'
 import { AdjustmentStore } from './adjustment.store'
 import { StoreOpts } from '@m8bTypes'
+import { logger } from '../util'
 
 const singleton = Symbol()
 
@@ -24,9 +25,11 @@ export class WalletStore {
 
   private constructor() {}
 
-  public async initWallet(storeOpts: StoreOpts, adjustment: Adjustment) {
+  public async initWallet(storeOpts: StoreOpts, adjustment: Adjustment = null) {
     await this.loadOrNewWallet(storeOpts, adjustment)
     this.subcribeToWalletEvents(storeOpts)
+
+    logger.debug(`Wallet ${this.makeIdStr(storeOpts)} loaded.`)
 
     // @todo(notVitaliy): Find a better place for this
     wsServer.broadcast('wallet', { ...storeOpts, wallet: this.getWallet(storeOpts) })

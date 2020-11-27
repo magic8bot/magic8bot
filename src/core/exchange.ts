@@ -126,7 +126,7 @@ export class ExchangeCore {
     if (currency > currencyFree) return this.error(`currency ${c} does not have enough free funds (${currencyFree})`)
 
     // prettier-ignore
-    await this.strategyCores.get(symbol).get(strategy).adjustWallet({ asset, currency, type: 'user' })
+    await this.strategyCores.get(symbol).get(strategy).adjustStrategyWallet({ asset, currency, type: 'user' })
   }
 
   private getFreeFunds(wallets, a: string, c: string, assetBalance: number, currencyBalance: number): { assetFree: any; currencyFree: any } {

@@ -45,6 +45,7 @@ export class StrategyCore {
     PeriodStore.instance.addSymbol(storeOpts, { period, lookbackSize: 250 })
 
     this.orderEngine = new OrderEngine(this.exchangeProvider, strategyConfig)
+    this.initStrategyWallet()
   }
 
   public isRunning() {
@@ -71,7 +72,11 @@ export class StrategyCore {
     logger.info(`Stopping Strategy ${strategy}`)
   }
 
-  public async adjustWallet(adjustment: Adjustment) {
+  public async initStrategyWallet() {
+    await this.adjustStrategyWallet(null)
+  }
+
+  public async adjustStrategyWallet(adjustment: Adjustment) {
     const walletOpts = { exchange: this.exchange, symbol: this.symbol, strategy: this.strategy }
     await WalletStore.instance.initWallet(walletOpts, adjustment)
   }

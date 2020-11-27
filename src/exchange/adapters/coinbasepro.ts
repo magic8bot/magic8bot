@@ -11,13 +11,13 @@ const secretField: Field = {
 // Making typescript happy
 const authTypes = typeof authField.type !== 'string' ? [...authField.type] : null
 
-const gdaxAuthFields: Field = {
+const coinbaseproAuthFields: Field = {
   name: authField.name,
   type: [...authTypes, secretField],
 }
 
-export const gdax: ExchangeAdapter = {
-  fields: [tradePollIntervalField, gdaxAuthFields],
+export const coinbasepro: ExchangeAdapter = {
+  fields: [tradePollIntervalField, coinbaseproAuthFields],
   description: 'US based digital asset exchange with trading UI, FIX API and REST API.',
 
   scan: 'back',

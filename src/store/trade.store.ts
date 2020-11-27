@@ -2,6 +2,7 @@ import { Trade } from 'ccxt'
 import { EventBusEmitter } from '@magic8bot/event-bus'
 import { dbDriver, eventBus, EVENT } from '@lib'
 import { StoreOpts } from '@m8bTypes'
+import { logger } from '../util'
 
 const singleton = Symbol()
 
@@ -21,6 +22,8 @@ export class TradeStore {
     const idStr = this.makeIdStr({ exchange, symbol })
     /* istanbul ignore next */
     if (this.tradesMap.has(idStr)) return
+
+    logger.debug(`Adding ${idStr} to trade store.`)
 
     this.tradesMap.set(idStr, 0)
     this.emitters.set(idStr, eventBus.get(EVENT.XCH_TRADE)(exchange)(symbol).emit)
@@ -43,7 +46,10 @@ export class TradeStore {
 
   public async insertTrades({ exchange, symbol }: StoreOpts, newTrades: Trade[]) {
     try {
-      await dbDriver.trade.insertMany(newTrades.map((trade) => ({ ...trade, exchange, symbol })), { ordered: false })
+      await dbDriver.trade.insertMany(
+        newTrades.map((trade) => ({ ...trade, exchange, symbol })),
+        { ordered: false }
+      )
     } catch {
       // ヽ(。_°)ノ
     }

@@ -132,8 +132,10 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
     // prettier-ignore
     const { periods: [{ signal, rsi }] } = this
 
-    /* istanbul ignore next */
-    logger.debug(`calculated: ${JSON.stringify({ rsi: rsi !== null ? rsi.toPrecision(4) : null, signal: signal !== null ? signal.toPrecision(6) : null })}`)
+    if (!this.isPreroll) {
+      /* istanbul ignore next */
+      logger.debug(`calculated: ${JSON.stringify({ rsi: rsi !== null ? rsi.toPrecision(4) : null, signal: signal !== null ? signal.toPrecision(6) : null })}`)
+    }
 
     return { rsi, signal }
   }
@@ -172,8 +174,6 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
 
     const { rsi, avgGain, avgLoss } = RSI.calculate(preAvgGain, preAvgLoss, periods, this.options.overboughtRsiPeriods)
 
-    logger.debug(JSON.stringify({ rsi, avgGain, avgLoss, preAvgGain, preAvgLoss }))
-
     this.periods[0].rsi = rsi
     this.periods[0].avgGain = avgGain
 
@@ -182,21 +182,22 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
   }
 
   public onPeriod() {
-    logger.debug(`Periods: ${this.periods.length}`)
-
     /* istanbul ignore next */
     const signal = this.overboughtSell() ? 'sell' : this.getSignal()
     /* istanbul ignore next */
-    if (this.periods.length) {
-      logger.debug(
-        `
+    if (!this.isPreroll) {
+      if (this.periods.length) {
+        logger.debug(
+          `
         MACD: ${this.periods[0].macd ? this.periods[0].macd.toPrecision(5) : null}
         EMA: ${this.periods[0].emaMacd ? this.periods[0].emaMacd.toPrecision(5) : null}
         Signal: ${this.periods[0].signal ? this.periods[0].signal.toPrecision(6) : null}
         RSI ${this.periods[0].rsi ? this.periods[0].rsi.toPrecision(4) : null}`
-      )
+        )
+      }
+
+      logger.verbose(`Period finished => Signal: ${signal === null ? 'no signal' : signal}`)
     }
-    logger.verbose(`Period finished => Signal: ${signal === null ? 'no signal' : signal}`)
     this.newPeriod()
     return signal
   }

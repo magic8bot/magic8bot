@@ -8,9 +8,6 @@ const mongod = new MongodbMemoryServer({
   instance: {
     dbName: 'jest',
   },
-  binary: {
-    version: '3.2.18',
-  },
 })
 
 module.exports = async () => {

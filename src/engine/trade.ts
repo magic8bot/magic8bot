@@ -78,7 +78,6 @@ export class TradeEngine {
   }
 
   private async tick(symbol: string) {
-    console.log({ symbol })
     if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
 
     const storeOpts = { exchange: this.exchange, symbol }

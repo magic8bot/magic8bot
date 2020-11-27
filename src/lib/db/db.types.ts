@@ -37,11 +37,11 @@ interface Fee {
   rate: number
 }
 
-export type TradeWithFee = Trade & { fee: Fee }
+export type TradeWithFee = Trade & { fee: number }
 
 export type OrderWithTrades = Filter<Order, 'fee'> & {
   trades?: TradeWithFee[]
-  fee: Fee
+  fee: number
 }
 
 export type OrderCollection = OrderWithTrades & {
@@ -116,8 +116,8 @@ export type AdjustmentCollection = Adjustment & {
   sessionId: string
   exchange: string
   symbol: string
-  strategy: string
-  time: number
+  strategy?: string
+  timestamp: number
 }
 
 export interface ExchangeAuthentication {

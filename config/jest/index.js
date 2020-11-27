@@ -4,7 +4,7 @@ module.exports = {
   globalSetup: '<rootDir>/config/jest/globalSetup.js',
   globalTeardown: '<rootDir>/config/jest/globalTeardown.js',
   testEnvironment: '<rootDir>/config/jest/testEnvironment.js',
-  setupTestFrameworkScriptFile: '<rootDir>/config/jest/setupTests.js',
+  setupFilesAfterEnv: ['<rootDir>/config/jest/setupTests.js'],
   transform: {
     '^.+\\.tsx?$': 'ts-jest',
   },

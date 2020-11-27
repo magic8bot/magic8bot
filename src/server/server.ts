@@ -16,7 +16,7 @@ class Server {
   }
 
   public init(port = 8080) {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       this.app.listen(port, () => {
         console.log(`Listening on port: ${port}`)
         resolve()

@@ -4,28 +4,21 @@ const fs = require('fs')
 
 const globalConfigPath = path.join(__dirname, 'globalConfig.json')
 
-module.exports = class MongoEnvironment extends NodeEnvironment {
+module.exports = class MongoEnvironment extends (
+  NodeEnvironment
+) {
   constructor(config) {
     super(config)
   }
 
-  setup() {
+  async setup() {
     const globalConfig = JSON.parse(fs.readFileSync(globalConfigPath, 'utf-8'))
     const { MongoClient } = require('mongodb')
 
-    return MongoClient.connect(
-      globalConfig.mongoUri,
-      { useNewUrlParser: true }
-    )
-      .then((connection) => {
-        return connection.db(globalConfig.mongoDBName)
-      })
-      .then((db) => {
-        this.global.db = db
-      })
-      .then(() => {
-        super.setup()
-      })
+    const connection = await MongoClient.connect(globalConfig.mongoUri, { useNewUrlParser: true })
+    const db = connection.db(globalConfig.mongoDBName)
+    this.global.db = db
+    super.setup()
   }
 
   async teardown() {

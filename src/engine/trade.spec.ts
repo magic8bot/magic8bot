@@ -50,7 +50,7 @@ import { TradeEngine } from './trade'
 
 describe('TradeEngine', () => {
   let tradeEngine: TradeEngine
-  let getNow: jest.Mock<any>
+  let getNow: jest.SpyInstance<any, any>
 
   beforeEach(() => {
     tradeEngine = new TradeEngine(mockExchangeProvider, mockId, 0)

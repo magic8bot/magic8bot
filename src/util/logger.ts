@@ -1,13 +1,14 @@
 import winston from 'winston'
-import { magic8bot } from '../conf'
 import * as Transport from 'winston-transport'
 import DailyRotateFile from 'winston-daily-rotate-file'
+
+const { LOGGER_FILE, LOGGER_LEVEL } = process.env
 
 function* getWinstonTransports(): IterableIterator<Transport> {
   const fileLogger = isFileLoggerAvailable()
   if (fileLogger) {
     yield new DailyRotateFile({
-      filename: magic8bot.loggerFile,
+      filename: LOGGER_FILE,
       datePattern: 'YYYY-MM-DD-HH',
       maxSize: '20m',
       maxFiles: '7d',
@@ -34,11 +35,11 @@ const formatter = winston.format.combine(
 )
 
 const isFileLoggerAvailable = () => {
-  return magic8bot.loggerFile && magic8bot.loggerFile.length > 0
+  return LOGGER_FILE && LOGGER_FILE.length > 0
 }
 
 export const logger = winston.createLogger({
-  level: magic8bot.loggerLevel,
+  level: LOGGER_LEVEL,
   format: formatter,
   transports: Array.from(getWinstonTransports()),
 })

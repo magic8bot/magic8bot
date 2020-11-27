@@ -15,7 +15,14 @@ const order: OrderWithTrades = {
   cost: 25,
   filled: 0,
   remaining: 5,
-  fee: 0,
+  clientOrderId: '',
+  lastTradeTimestamp: 0,
+  trades: [],
+  fee: {
+    cost: 0,
+    currency: 'btc',
+    rate: 0,
+  },
 }
 
 describe('OrderStore', () => {

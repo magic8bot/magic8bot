@@ -62,7 +62,7 @@ export class PeriodStore {
 
   public stop(storeOpts: StoreOpts) {
     const idStr = this.makeIdStr(storeOpts)
-    this.periodStates.set(idStr, PERIOD_STATE.RUNNING)
+    this.periodStates.set(idStr, PERIOD_STATE.STOPPED)
   }
 
   public addTrade(idStr: string, trade: Trade) {

@@ -90,7 +90,7 @@ export class TradeEngine {
     await this.recursiveTick(symbol)
   }
 
-  private async recursiveTick(symbol) {
+  private async recursiveTick(symbol: string) {
     await this.tick(symbol)
   }
 

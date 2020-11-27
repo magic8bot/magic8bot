@@ -62,7 +62,7 @@ export class ExchangeWrapper {
     return res
   }
 
-  public async createOrder(symbol: string, type: string, side: string, amount: number, price: number): Promise<Order> {
+  public async createOrder(symbol: string, type: string, side: 'buy' | 'sell', amount: number, price: number): Promise<Order> {
     const fn = () => this.exchangeConnection.createOrder(symbol, type, side, amount, price)
     const res = await this.bottleneck.schedule(fn)
 
@@ -73,7 +73,7 @@ export class ExchangeWrapper {
   }
 
   public async checkOrder(orderId: string): Promise<OrderWithTrades> {
-    const fn = () => this.exchangeConnection.fetchOrder(orderId)
+    const fn = () => this.exchangeConnection.fetchOrder(orderId, null)
     const res: any = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'checkOrder', req: { orderId }, res }

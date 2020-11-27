@@ -37,7 +37,7 @@ export class ExchangeWrapper {
     const res = await this.bottleneck.schedule(fn)
 
     // const debug = { name: 'fetchTrades', req: { symbol, params }, res: res.length }
-    // logger.debug(JSON.stringify(debug))
+    // logger.silly(JSON.stringify(debug))
 
     return res
   }
@@ -47,7 +47,7 @@ export class ExchangeWrapper {
     const res = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'fetchBalance', req: {}, res }
-    logger.debug(JSON.stringify(debug))
+    logger.silly(JSON.stringify(debug))
 
     return res
   }
@@ -57,7 +57,7 @@ export class ExchangeWrapper {
     const res = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'fetchOrderBook', req: { symbol }, res }
-    logger.debug(JSON.stringify(debug))
+    logger.silly(JSON.stringify(debug))
 
     return res
   }
@@ -67,7 +67,7 @@ export class ExchangeWrapper {
     const res = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'createOrder', req: { symbol, type, side, amount, price }, res }
-    logger.debug(JSON.stringify(debug))
+    logger.silly(JSON.stringify(debug))
 
     return res
   }
@@ -77,7 +77,7 @@ export class ExchangeWrapper {
     const res: any = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'checkOrder', req: { orderId }, res }
-    logger.debug(JSON.stringify(debug))
+    logger.silly(JSON.stringify(debug))
 
     return res
   }
@@ -87,7 +87,7 @@ export class ExchangeWrapper {
     const res = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'cancelOrder', req: { orderId }, res }
-    logger.debug(JSON.stringify(debug))
+    logger.silly(JSON.stringify(debug))
 
     return res
   }
@@ -97,7 +97,7 @@ export class ExchangeWrapper {
     const res = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'fetchTicker', req: { symbol }, res }
-    logger.debug(JSON.stringify(debug))
+    logger.silly(JSON.stringify(debug))
 
     return res
   }

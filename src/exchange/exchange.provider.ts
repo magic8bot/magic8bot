@@ -2,7 +2,7 @@ import { ExchangeAuth } from '@m8bTypes'
 import ccxt, { Trade } from 'ccxt'
 import { ExchangeWrapper } from './exchange.wrapper'
 import { ExchangeErrorHandler } from './exchange.error'
-import { wsServer, ExchangeConfig } from '@lib'
+import { ExchangeConfig } from '@lib'
 import { sleep, logger } from '@util'
 import { ChaosXcg } from '../seed/chaos.exchange'
 

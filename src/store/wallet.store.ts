@@ -60,6 +60,8 @@ export class WalletStore {
     }
 
     this.wallets.set(idStr, { asset: 0, currency: 0 })
+    if (!adjustment) return
+
     await this.adjustWallet(storeOpts, adjustment)
   }
 

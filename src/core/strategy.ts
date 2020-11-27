@@ -1,7 +1,6 @@
-import { Balances, Balance } from 'ccxt'
 import { EventBusListener } from '@magic8bot/event-bus'
 
-import { StrategyConf, Signal } from '@m8bTypes'
+import { Signal } from '@m8bTypes'
 import { eventBus, EVENT, StrategyConfig, Adjustment } from '@lib'
 
 import { PeriodStore, WalletStore } from '@store'

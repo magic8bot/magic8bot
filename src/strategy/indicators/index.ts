@@ -1,3 +1,5 @@
+export * from './aroon-down'
+export * from './aroon-up'
 export * from './average'
 export * from './cci'
 export * from './cmf'

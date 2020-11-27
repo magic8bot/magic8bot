@@ -21,7 +21,8 @@
     "start:dev": "cross-env NODE_ENV=development nodemon -w ./src -e ts ./magic8bot.js",
     "lint": "tslint -p ./tsconfig.json",
     "lint:fix": "npm run lint -- --fix",
-    "test": "jest --detectOpenHandles --runInBand --forceExit"
+    "test": "jest --detectOpenHandles --runInBand --forceExit",
+    "test:watch": "jest --detectOpenHandles --runInBand --forceExit --watch"
   },
   "dependencies": {
     "@magic8bot/event-bus": "^1.1.1",

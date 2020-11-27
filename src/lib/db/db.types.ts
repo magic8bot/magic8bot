@@ -109,7 +109,7 @@ export type WalletCollection = Wallet & {
 }
 
 export type Adjustment = Wallet & {
-  type: 'user' | 'newOrder' | 'cancelOrder' | 'fillOrder'
+  type: 'user' | 'newOrder' | 'cancelOrder' | 'fillOrder' | 'fee'
 }
 
 export type AdjustmentCollection = Adjustment & {

@@ -58,7 +58,7 @@ export class OrderEngine {
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
 
     const purchasingPower = this.exchangeProvider.priceToPrecision(exchange, symbol, this.wallet.currency * strength)
-    const amount = this.exchangeProvider.amountToPrecision((purchasingPower / price) * 0.995)
+    const amount = this.exchangeProvider.amountToPrecision(purchasingPower / price)
 
     // @todo(notVitaliy): Add support for market
     const orderOpts: OrderOpts = { symbol, price, amount, type: 'limit', side: 'buy' }
@@ -129,6 +129,7 @@ export class OrderEngine {
     const order = await this.exchangeProvider.checkOrder(exchange, id)
 
     await this.updateOrder(order)
+
     switch (order.status) {
       case 'open':
         return this.adjustOrder(id)
@@ -139,10 +140,12 @@ export class OrderEngine {
         logger.info(`Order ${id} for ${symbol} on ${exchange} was canceled.`)
         break
     }
+
     return this.orderStore.closeOpenOrder(this.storeOpts, id)
   }
 
   private async updateOrder(order: OrderWithTrades) {
+    logger.verbose(`update order`)
     this.adjustWallet(order)
 
     this.orderStore.updateOrder(this.storeOpts, order)
@@ -150,17 +153,17 @@ export class OrderEngine {
   }
 
   private adjustWallet(order: OrderWithTrades) {
-    // @todo(notVitaliy): Adjust for fees
-    const openOrder = this.orderStore.getOpenOrder(this.storeOpts, order.id)
+    logger.verbose(`adjust wallet`)
+
+    const savedOrder = this.orderStore.getOpenOrder(this.storeOpts, order.id)
     const adjustment = { asset: 0, currency: 0 }
 
-    if (order.side === 'buy') {
-      adjustment.asset = order.filled - openOrder.filled
-    } else {
-      adjustment.currency = order.cost - openOrder.cost
-    }
-
+    if (order.side === 'buy') adjustment.asset = order.filled - savedOrder.filled
+    else adjustment.currency = order.cost - savedOrder.cost
     if (adjustment.asset || adjustment.currency) this.emitWalletAdjustment({ ...adjustment, type: 'fillOrder' })
+
+    const savedFee = savedOrder.fee ? savedOrder.fee.cost : 0
+    if (order.fee && order.fee.cost) this.emitWalletAdjustment({ asset: 0, currency: 0 - (order.fee.cost - savedFee), type: 'fee' })
   }
 
   private async adjustOrder(id: string) {

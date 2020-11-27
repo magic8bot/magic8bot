@@ -6,6 +6,7 @@ import { CoreHelpers } from './core.helpers'
 import * as Adapters from '../exchange/adapters'
 import { Strategies } from '../strategy/strategies/strategies'
 import { BaseStrategy } from '@strategy'
+import { logger } from '../util'
 
 class Core {
   private readonly exchangeProvider: ExchangeProvider
@@ -228,6 +229,7 @@ class Core {
 
     const exchangeCore = new ExchangeCore(this.exchangeProvider, exchangeConfig)
     await exchangeCore.init()
+    logger.debug(`Exchange core ${exchangeConfig.exchange} init.`)
     this.exchangeCores.set(exchangeConfig.exchange, exchangeCore)
 
     return true

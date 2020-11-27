@@ -53,6 +53,8 @@ export class OrderEngine {
   public async executeBuy(quote?: number, strength = 1) {
     const { exchange, symbol } = this.opts
     const rawPrice = quote ? quote : await this.quoteEngine.getBuyPrice()
+    logger.debug(`Executing buy order on ${exchange}.${symbol} with: ${quote}, ${rawPrice}`)
+
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
 
     const purchasingPower = this.exchangeProvider.priceToPrecision(exchange, symbol, this.wallet.currency * strength)
@@ -71,6 +73,9 @@ export class OrderEngine {
   public async executeSell(quote?: number, strength = 1) {
     const { exchange, symbol } = this.opts
     const rawPrice = quote ? quote : await this.quoteEngine.getSellPrice()
+
+    logger.debug(`Executing sell order on ${exchange}.${symbol} with: ${quote}, ${rawPrice}`)
+
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, rawPrice)
     const amount = this.exchangeProvider.amountToPrecision(this.wallet.asset * strength)
 

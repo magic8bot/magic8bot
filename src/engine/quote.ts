@@ -1,12 +1,13 @@
 import { ExchangeProvider } from '@exchange'
+import { logger } from '../util'
 
 export class QuoteEngine {
   constructor(
     private readonly exchangeProvider: ExchangeProvider,
     private readonly exchange: string,
     private readonly symbol: string,
-    private readonly markUp: number,
-    private readonly markDn: number
+    private readonly markUp: number = 0,
+    private readonly markDn: number = 0
   ) {}
 
   public async getBuyPrice() {

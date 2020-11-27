@@ -132,11 +132,6 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
     // prettier-ignore
     const { periods: [{ signal, rsi }] } = this
 
-    if (!this.isPreroll) {
-      /* istanbul ignore next */
-      logger.debug(`calculated: ${JSON.stringify({ rsi: rsi !== null ? rsi.toPrecision(4) : null, signal: signal !== null ? signal.toPrecision(6) : null })}`)
-    }
-
     return { rsi, signal }
   }
 
@@ -198,7 +193,9 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
 
       logger.verbose(`Period finished => Signal: ${signal === null ? 'no signal' : signal}`)
     }
+
     this.newPeriod()
+
     return signal
   }
 

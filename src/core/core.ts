@@ -154,9 +154,6 @@ class Core {
     const exchangeCore = this.exchangeCores.get(exchange)
     const isRunning = exchangeCore.strategyIsRunning(symbol, strategy)
 
-    // @note(notVitaliy): Hot reloading the strategy will not preload it with trade data
-    // unless the symbol trade sync is restarted, which is not a good idea since another
-    // strategy might be using that same symbol. That will double load the other strategy.
     if (isRunning) exchangeCore.strategyStop(symbol, strategy)
     await StrategyStore.instance.save(strategyConfig)
     exchangeCore.updateStrategy(strategyConfig)
@@ -171,7 +168,7 @@ class Core {
     if (hasExchange !== true) return hasExchange
 
     const exchangeCore = this.exchangeCores.get(exchange)
-    if (exchangeCore.strategyIsRunning(symbol, strategy)) exchangeCore.strategyStop(symbol, strategy)
+    if (exchangeCore.strategyIsRunning(symbol, strategy)) exchangeCore.strategyKill(symbol, strategy)
 
     exchangeCore.deleteStrategy(symbol, strategy)
     await StrategyStore.instance.delete(exchange, symbol, strategy)
@@ -251,7 +248,7 @@ class Core {
     strategies.forEach(({ symbol, strategy }) => {
       if (exchangeCore.syncIsRunning(symbol)) exchangeCore.syncStop(symbol)
       if (exchangeCore.tickerIsRunning(symbol)) exchangeCore.tickerStop(symbol)
-      if (exchangeCore.strategyIsRunning(symbol, strategy)) exchangeCore.strategyStop(symbol, strategy)
+      if (exchangeCore.strategyIsRunning(symbol, strategy)) exchangeCore.strategyKill(symbol, strategy)
     })
 
     return exchange

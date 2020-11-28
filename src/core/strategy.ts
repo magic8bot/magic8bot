@@ -1,5 +1,3 @@
-import { EventBusListener } from '@magic8bot/event-bus'
-
 import { Signal } from '@m8bTypes'
 import { eventBus, EVENT, StrategyConfig, Adjustment } from '@lib'
 
@@ -25,7 +23,7 @@ export class StrategyCore {
   private orderEngine: OrderEngine
   private lastSignal: Signal = null
 
-  private signalListener: EventBusListener<{ signal: Signal }>
+  private signalListener: () => void
 
   private state: STRAT_STATE = STRAT_STATE.STOPPED
 
@@ -35,8 +33,10 @@ export class StrategyCore {
     this.symbol = symbol
     this.strategy = strategy
 
-    this.signalListener = eventBus.get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(strategy).listen
-    this.signalListener(({ signal }) => this.onSignal(signal))
+    // @ts-ignore
+    this.signalListener = eventBus
+      .get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(strategy)
+      .listen(({ signal }) => this.onSignal(signal))
 
     this.baseStrategy = new (strategyLoader(strategy))(exchange, symbol, this.strategyConfig)
 
@@ -69,6 +69,19 @@ export class StrategyCore {
     const { exchange, symbol, strategy } = this
     PeriodStore.instance.stop({ exchange, symbol, strategy })
     logger.info(`Stopping Strategy ${strategy}`)
+  }
+
+  public update(strategyConfig: StrategyConfig) {
+    this.baseStrategy.update(strategyConfig)
+  }
+
+  public kill() {
+    const { exchange, symbol, strategy } = this
+    const storeOpts = { exchange, symbol, strategy }
+
+    logger.debug(`Killing ${JSON.stringify(storeOpts)}`)
+    this.stop()
+    this.signalListener()
   }
 
   public async initStrategyWallet() {

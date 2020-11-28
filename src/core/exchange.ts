@@ -39,8 +39,7 @@ export class ExchangeCore {
     const { symbol, strategy } = strategyConfig
     if (!this.strategyCores.has(symbol)) this.strategyCores.set(symbol, new Map())
 
-    const strategyCore = new StrategyCore(this.exchangeProvider, strategyConfig)
-    this.strategyCores.get(symbol).set(strategy, strategyCore)
+    this.strategyCores.get(symbol).get(strategy).update(strategyConfig)
   }
 
   public deleteStrategy(symbol: string, strategy: string) {
@@ -100,6 +99,13 @@ export class ExchangeCore {
 
     // prettier-ignore
     this.strategyCores.get(symbol).get(strategy).stop()
+  }
+
+  public strategyKill(symbol: string, strategy: string) {
+    if (!this.checkForStrategy(symbol, strategy)) return
+
+    // prettier-ignore
+    this.strategyCores.get(symbol).get(strategy).kill()
   }
 
   public strategyIsRunning(symbol: string, strategy: string) {

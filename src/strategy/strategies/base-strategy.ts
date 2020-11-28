@@ -1,4 +1,4 @@
-import { PeriodItem, EVENT, eventBus } from '@lib'
+import { PeriodItem, EVENT, eventBus, StrategyConfig } from '@lib'
 import { EventBusListener, EventBusEmitter } from '@magic8bot/event-bus'
 import { SignalEvent, Signal } from '@m8bTypes'
 
@@ -99,6 +99,10 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
 
     this.signalEmitter = eventBus.get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(this.name).emit
     this.calcEmitter = eventBus.get(EVENT.STRAT_CALC)(exchange)(symbol)(this.name).emit
+  }
+
+  public update(strategyConfig: StrategyConfig) {
+    this.options = { ...this.options, strategyConfig }
   }
 
   /**

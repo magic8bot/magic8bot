@@ -21,8 +21,6 @@ export class OrderEngine {
   private orderPollInterval: number
   private orderSlippageAdjustmentTolerance: number
 
-  private strategy: string
-
   private readonly orderStore = OrderStore.instance
   private readonly walletStore = WalletStore.instance
 
@@ -160,10 +158,13 @@ export class OrderEngine {
 
     if (order.side === 'buy') adjustment.asset = order.filled - savedOrder.filled
     else adjustment.currency = order.cost - savedOrder.cost
+
+    logger.debug(JSON.stringify(adjustment))
+
     if (adjustment.asset || adjustment.currency) this.emitWalletAdjustment({ ...adjustment, type: 'fillOrder' })
 
     const savedFee = savedOrder.fee ? savedOrder.fee.cost : 0
-    if (order.fee && order.fee.cost) this.emitWalletAdjustment({ asset: 0, currency: 0 - (order.fee.cost - savedFee), type: 'fee' })
+    if (order.fee && order.fee.cost && order.fee.cost - savedFee > 0) this.emitWalletAdjustment({ asset: 0, currency: 0 - (order.fee.cost - savedFee), type: 'fee' })
   }
 
   private async adjustOrder(id: string) {

@@ -23,6 +23,8 @@ export class WalletStore {
     return dbDriver.wallet
   }
 
+  private subscriptions: Set<string> = new Set()
+
   private constructor() {}
 
   public async initWallet(storeOpts: StoreOpts, adjustment: Adjustment = null) {
@@ -54,10 +56,7 @@ export class WalletStore {
     const idStr = this.makeIdStr(storeOpts)
 
     const wallet = await this.loadWallet(storeOpts)
-    if (wallet) {
-      this.wallets.set(idStr, wallet)
-      return wallet
-    }
+    if (wallet) return this.wallets.set(idStr, wallet)
 
     this.wallets.set(idStr, { asset: 0, currency: 0 })
     if (!adjustment) return
@@ -66,6 +65,10 @@ export class WalletStore {
   }
 
   private subcribeToWalletEvents(storeOpts: StoreOpts) {
+    const idStr = this.makeIdStr(storeOpts)
+    if (this.subscriptions.has(idStr)) return
+    this.subscriptions.add(idStr)
+
     const { exchange, symbol, strategy } = storeOpts
     const walletListener: EventBusListener<Adjustment> = eventBus.get(EVENT.WALLET_ADJUST)(exchange)(symbol)(strategy).listen
 

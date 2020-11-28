@@ -127,7 +127,11 @@ class Core {
   // Strategy
   public async getStrategies({ exchange }) {
     const strategies = await StrategyStore.instance.loadAllForExchange(exchange)
-    return strategies
+
+    return strategies.map((strtgy) => {
+      const status = this.exchangeCores.get(exchange).strategyIsRunning(strtgy.symbol, strtgy.strategy)
+      return { ...strtgy, status }
+    })
   }
 
   public async addStrategy(strategyConfig: StrategyConfig) {
@@ -187,7 +191,7 @@ class Core {
 
     this.exchangeCores.get(exchange).strategyStart(symbol, strategy)
 
-    return { success: true }
+    return { status: this.exchangeCores.get(exchange).strategyIsRunning(symbol, strategy) }
   }
 
   public async stopStrategy({ exchange, symbol, strategy }) {
@@ -197,7 +201,7 @@ class Core {
 
     this.exchangeCores.get(exchange).strategyStop(symbol, strategy)
 
-    return { success: true }
+    return { status: this.exchangeCores.get(exchange).strategyIsRunning(symbol, strategy) }
   }
 
   // Wallet

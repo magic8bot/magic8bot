@@ -104,6 +104,8 @@ export class ExchangeCore {
 
   public strategyIsRunning(symbol: string, strategy: string) {
     // prettier-ignore
+    if (!this.strategyCores.has(symbol) || !this.strategyCores.get(symbol).has(strategy)) return false
+
     return this.strategyCores.get(symbol).get(strategy).isRunning()
   }
 

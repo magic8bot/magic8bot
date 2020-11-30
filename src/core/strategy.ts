@@ -41,7 +41,10 @@ export class StrategyCore {
     this.baseStrategy = new (strategyLoader(strategy))(exchange, symbol, this.strategyConfig)
 
     const storeOpts = { exchange, symbol, strategy }
-    PeriodStore.instance.addSymbol(storeOpts, { period, lookbackSize: 250 })
+
+    const periods = strategyConfig.periods ? strategyConfig.periods.split(',') : [period]
+
+    PeriodStore.instance.addSymbol(storeOpts, { periods, lookbackSize: 250 })
 
     this.orderEngine = new OrderEngine(this.exchangeProvider, strategyConfig)
     this.initStrategyWallet()

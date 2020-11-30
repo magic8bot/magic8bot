@@ -78,7 +78,7 @@ export class Aroon extends BaseStrategy<AroonOptions, void> {
     this.options = { ...this.options, ...options }
   }
 
-  public calculate(periods: PeriodItem[]) {
+  public calculate(period: string, periods: PeriodItem[]) {
     if (!periods.length) return
 
     const up = AroonUp.calculate(periods, this.options.periods)
@@ -87,7 +87,7 @@ export class Aroon extends BaseStrategy<AroonOptions, void> {
     this.periods[0] = { up, down }
   }
 
-  public onPeriod() {
+  public onPeriod(period: string) {
     const signal = this.getSignal()
     const [{ up, down }] = this.periods
 

@@ -153,6 +153,7 @@ export interface StrategyConfig {
 
   days: number
   period: string
+  periods: string
   markDn: number
   markUp: number
   orderPollInterval: number

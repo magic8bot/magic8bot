@@ -120,7 +120,7 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
     this.options = { ...this.options, ...options }
   }
 
-  public calculate(periods: PeriodItem[]) {
+  public calculate(period: string, periods: PeriodItem[]) {
     if (!periods.length) return
 
     this.checkOverbought(periods)
@@ -176,7 +176,7 @@ export class Macd extends BaseStrategy<MacdOptions, { rsi: number; signal: numbe
     this.overbought = rsi >= this.options.overboughtRsi && !this.overbought
   }
 
-  public onPeriod() {
+  public onPeriod(period: string) {
     /* istanbul ignore next */
     const signal = this.overboughtSell() ? 'sell' : this.getSignal()
     /* istanbul ignore next */

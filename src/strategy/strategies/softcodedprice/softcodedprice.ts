@@ -19,8 +19,7 @@ export interface SoftCodedPriceOptions {
 }
 
 export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
-  public static description =
-  'Buy in and sell a at specific price with a stop limit. Optionaly repeatable'
+  public static description = 'Buy in and sell a at specific price with a stop limit. Optionaly repeatable'
 
   public static fields: StrategyField[] = [
     {
@@ -76,7 +75,7 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
     this.options = { ...this.options, ...options }
   }
 
-  public calculate(periods: PeriodItem[]) {
+  public calculate(period: string, periods: PeriodItem[]) {
     if (!periods.length) return
 
     const curPrice = periods[0].close // use closing price as current price
@@ -85,7 +84,7 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
     return
   }
 
-  public onPeriod() {
+  public onPeriod(period: string) {
     /* istanbul ignore next */
     logger.verbose(`Period finished => Signal: ${this.signal === null ? 'no signal' : this.signal}`)
     return this.signal
@@ -94,7 +93,7 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
   private shouldSell(curPrice: number): boolean {
     if (!this.isHolding) return false // havnt bought yet
 
-    const isSelling = ((curPrice >= this.options.sellPrice) || (curPrice <= this.options.stopLoss))
+    const isSelling = curPrice >= this.options.sellPrice || curPrice <= this.options.stopLoss
     if (isSelling) this.sold() // set isHolding flag
     return isSelling
   }
@@ -102,7 +101,7 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
   private shouldBuy(curPrice: number): boolean {
     if (this.isHolding) return false // already bought
 
-    const isBuying = (curPrice <= this.options.buyPrice)
+    const isBuying = curPrice <= this.options.buyPrice
     if (isBuying) this.bought() // set isHolding flag
     return isBuying
   }

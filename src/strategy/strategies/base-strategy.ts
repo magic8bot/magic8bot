@@ -78,23 +78,19 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
   protected calcEmitter: EventBusEmitter<TCalcResult>
 
   constructor(protected readonly name: string, protected exchange: string, protected symbol: string) {
-    const periodUpdateListener: EventBusListener<PeriodItem[]> = eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol)(this.name).listen
-    const periodNewListener: EventBusListener<void> = eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol)(this.name).listen
+    const periodUpdateListener: EventBusListener<{ period: string; periods: PeriodItem[] }> = eventBus.get(EVENT.PERIOD_UPDATE)(exchange)(symbol)(this.name).listen
+    const periodNewListener: EventBusListener<string> = eventBus.get(EVENT.PERIOD_NEW)(exchange)(symbol)(this.name).listen
 
     /* istanbul ignore next */
-    periodUpdateListener((periods) => {
-      const result = this.calculate(periods)
-      if (result && Object.keys(result).length !== 0) {
-        this.calcEmitter(result)
-      }
+    periodUpdateListener(({ period, periods }) => {
+      const result = this.calculate(period, periods)
+      if (result && Object.keys(result).length !== 0) this.calcEmitter(result)
     })
 
     /* istanbul ignore next */
-    periodNewListener(() => {
-      const signal = this.onPeriod()
-      if (signal && !this.isPreroll) {
-        this.signalEmitter({ signal })
-      }
+    periodNewListener((period) => {
+      const signal = this.onPeriod(period)
+      if (signal && !this.isPreroll) this.signalEmitter({ signal })
     })
 
     this.signalEmitter = eventBus.get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(this.name).emit
@@ -113,14 +109,14 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
    * the returned value is emitted to the event-bus `EVENT.STRAT_CALC`
    * @param periods OHLC candles to calculate the strategy
    */
-  public abstract calculate(periods: PeriodItem[]): TCalcResult
+  public abstract calculate(period: string, periods: PeriodItem[]): TCalcResult
 
   /**
    * This method should implement the action, to do on evaluation of a "completed" period.
    * On construction this method is subscribed to the event-bus `EVENT.PERIOD_NEW`.
    * the returned signal is emitted to the event-bus `EVENT.STRAT_SIGNAL`.
    */
-  public abstract onPeriod(): Signal
+  public abstract onPeriod(period: string): Signal
 
   /**
    * This method is called by the StrategyEngine, if preroll has been finished.

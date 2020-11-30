@@ -10,24 +10,24 @@ describe('PeriodStore', () => {
 
   beforeAll(() => {
     periodStore = PeriodStore.instance
-    periodStore.addSymbol(storeOpts, { period: '1m', lookbackSize: 2 })
+    periodStore.addSymbol(storeOpts, { periods: ['1m'], lookbackSize: 2 })
     periodStore.start(storeOpts)
   })
 
   afterEach(() => {
-    periodStore.clearPeriods('test.test.test')
+    periodStore.clearPeriods('test.test.test', '1m')
   })
 
   it('should add trades', () => {
     periodStore.addTrade('test.test.test', makeNewOrder(now) as Trade)
-    expect(periodStore.periods.get('test.test.test').length).toEqual(1)
+    expect(periodStore.periods.get('test.test.test').get('1m').length).toEqual(1)
   })
 
   it('should set new periods', async (done) => {
     const trades = [...Array(9).fill(0)].map((v, i) => makeNewOrder(time(now).sub.s(i * 10))).reverse()
     trades.forEach((trade) => periodStore.addTrade('test.test.test', trade as Trade))
 
-    expect(periodStore.periods.get('test.test.test').length).toEqual(2)
+    expect(periodStore.periods.get('test.test.test').get('1m').length).toEqual(2)
 
     done()
   })
@@ -38,8 +38,8 @@ describe('PeriodStore', () => {
     trades.forEach((trade, index) => {
       periodStore.addTrade('test.test.test', trade as Trade)
       // periodStore should keep 2 lookbacks and the third period (first inserted) should be dropped
-      if (index < 2) expect(periodStore.periods.get('test.test.test').length).toEqual(index + 1)
-      else expect(periodStore.periods.get('test.test.test').length).toEqual(2)
+      if (index < 2) expect(periodStore.periods.get('test.test.test').get('1m').length).toEqual(index + 1)
+      else expect(periodStore.periods.get('test.test.test').get('1m').length).toEqual(2)
     })
     done()
   })
@@ -47,26 +47,22 @@ describe('PeriodStore', () => {
   it('check for order of periods', async (done) => {
     const trades = [...Array(4).fill(0)].map((v, i) => makeNewOrder(time(now).sub.m(i + 1))).reverse()
 
-    const buckets = trades.map((trade) =>
-      timebucket(trade.timestamp)
-        .resize('1m')
-        .toMilliseconds()
-    )
+    const buckets = trades.map((trade) => timebucket(trade.timestamp).resize('1m').toMilliseconds())
 
     periodStore.addTrade('test.test.test', trades[0] as Trade)
-    expect(periodStore.periods.get('test.test.test')[0].time).toEqual(buckets[0])
+    expect(periodStore.periods.get('test.test.test').get('1m')[0].time).toEqual(buckets[0])
 
     periodStore.addTrade('test.test.test', trades[1] as Trade)
-    expect(periodStore.periods.get('test.test.test')[0].time).toEqual(buckets[1])
-    expect(periodStore.periods.get('test.test.test')[1].time).toEqual(buckets[1] - 60000)
+    expect(periodStore.periods.get('test.test.test').get('1m')[0].time).toEqual(buckets[1])
+    expect(periodStore.periods.get('test.test.test').get('1m')[1].time).toEqual(buckets[1] - 60000)
 
     periodStore.addTrade('test.test.test', trades[2] as Trade)
-    expect(periodStore.periods.get('test.test.test')[0].time).toEqual(buckets[2])
-    expect(periodStore.periods.get('test.test.test')[1].time).toEqual(buckets[2] - 60000)
+    expect(periodStore.periods.get('test.test.test').get('1m')[0].time).toEqual(buckets[2])
+    expect(periodStore.periods.get('test.test.test').get('1m')[1].time).toEqual(buckets[2] - 60000)
 
     periodStore.addTrade('test.test.test', trades[3] as Trade)
-    expect(periodStore.periods.get('test.test.test')[0].time).toEqual(buckets[3])
-    expect(periodStore.periods.get('test.test.test')[1].time).toEqual(buckets[3] - 60000)
+    expect(periodStore.periods.get('test.test.test').get('1m')[0].time).toEqual(buckets[3])
+    expect(periodStore.periods.get('test.test.test').get('1m')[1].time).toEqual(buckets[3] - 60000)
 
     done()
   })

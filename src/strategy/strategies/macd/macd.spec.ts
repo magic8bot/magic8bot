@@ -72,10 +72,7 @@ describe('Macd', () => {
       macd.newPeriod()
     })
 
-    mockEmaCalculate
-      .mockReturnValueOnce(10)
-      .mockReturnValueOnce(20)
-      .mockReturnValueOnce(30)
+    mockEmaCalculate.mockReturnValueOnce(10).mockReturnValueOnce(20).mockReturnValueOnce(30)
 
     it('short', () => {
       macd.getEmaShort([])
@@ -123,7 +120,7 @@ describe('Macd', () => {
     macd.getEmaLong = jest.fn()
     macd.calculateMacd = jest.fn()
 
-    macd.calculate(candles.slice(0, 1))
+    macd.calculate('1m', candles.slice(0, 1))
 
     expect(macd.checkOverbought).toHaveBeenCalledTimes(1)
     expect(macd.getEmaShort).toHaveBeenCalledTimes(1)
@@ -139,7 +136,7 @@ describe('Macd', () => {
       macd.rsi = 80
       // @ts-ignore
       macd.overbought = true
-      const signal = macd.onPeriod()
+      const signal = macd.onPeriod('1m')
 
       expect(signal).toEqual('sell')
     })
@@ -148,7 +145,7 @@ describe('Macd', () => {
       // "mock" periods into current macd instance
       Object.defineProperty(macd, 'periods', { get: () => [{ signal: -1 }, { signal: 1 }] })
 
-      const signal = macd.onPeriod()
+      const signal = macd.onPeriod('1m')
 
       expect(signal).toEqual('sell')
     })
@@ -156,7 +153,7 @@ describe('Macd', () => {
     it('macd signal buy', () => {
       // "mock" periods into current macd instance
       Object.defineProperty(macd, 'periods', { get: () => [{ signal: 1 }, { signal: -1 }] })
-      const signal = macd.onPeriod()
+      const signal = macd.onPeriod('1m')
 
       expect(signal).toEqual('buy')
     })
@@ -164,19 +161,19 @@ describe('Macd', () => {
     it('macd signal null', () => {
       // "mock" periods into current macd instance
       Object.defineProperty(macd, 'periods', { get: () => [{ signal: 1 }, { signal: 2 }] })
-      const signal = macd.onPeriod()
+      const signal = macd.onPeriod('1m')
 
       expect(signal).toBeNull()
     })
 
     it('macd w/o periods', () => {
-      expect(macd.calculate([])).toBeUndefined()
+      expect(macd.calculate('1m', [])).toBeUndefined()
     })
 
     it('test', () => {
       const baseRsiMockReturn = { avgGain: null, avgLoss: null }
       mockRsiCalculate.mockReturnValueOnce({ rsi: 80, ...baseRsiMockReturn })
-      expect(macd.calculate(candles.slice(0, 1))).toEqual({ rsi: 80, signal: null })
+      expect(macd.calculate('1m', candles.slice(0, 1))).toEqual({ rsi: 80, signal: null })
     })
   })
 })

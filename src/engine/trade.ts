@@ -4,9 +4,9 @@ import { sleep, logger } from '@util'
 import { wsServer } from '@lib'
 
 enum SYNC_STATE {
-  STOPPED,
-  SYNCING,
-  READY,
+  STOPPED = 'STOPPED',
+  SYNCING = 'SYNCING',
+  READY = 'READY',
 }
 
 export class TradeEngine {
@@ -52,6 +52,12 @@ export class TradeEngine {
 
     logger.info(`Trade sync for ${this.exchange} on ${symbol} stopped.`)
     this.setState(symbol, SYNC_STATE.STOPPED)
+  }
+
+  public async strategyStart(symbol: string) {
+    this.tradeStore.addSymbol({ exchange: this.exchange, symbol })
+    await this.tradeStore.loadTrades({ exchange: this.exchange, symbol })
+    this.setState(symbol, SYNC_STATE.READY)
   }
 
   private setState(symbol: string, state: SYNC_STATE) {

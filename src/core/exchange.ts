@@ -31,6 +31,8 @@ export class ExchangeCore {
     if (!this.strategyCores.has(symbol)) this.strategyCores.set(symbol, new Map())
     if (this.strategyCores.get(symbol).has(strategy)) return
 
+    if (process.env.MODE === 'service') return this.syncStart(symbol)
+
     const strategyCore = new StrategyCore(this.exchangeProvider, strategyConfig)
     this.strategyCores.get(symbol).set(strategy, strategyCore)
   }
@@ -58,7 +60,7 @@ export class ExchangeCore {
     return this.exchangeProvider.getBalances(this.exchange)
   }
 
-  public syncStart(symbol: string, days: number) {
+  public syncStart(symbol: string, days = 1) {
     this.tradeEngine.start(symbol, days)
   }
 
@@ -86,9 +88,9 @@ export class ExchangeCore {
     return this.tickerEngine.isRunning(symbol)
   }
 
-  public strategyStart(symbol: string, strategy: string) {
+  public async strategyStart(symbol: string, strategy: string, days = 1) {
     if (!this.checkForStrategy(symbol, strategy)) return
-    if (!this.tradeEngine.isReady(symbol)) return this.error(`symbol ${symbol} is not ready yet.`)
+    await this.tradeEngine.strategyStart(symbol)
 
     // prettier-ignore
     this.strategyCores.get(symbol).get(strategy).start()

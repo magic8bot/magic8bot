@@ -2,8 +2,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import semver from 'semver'
-import { dbDriver, wsServer } from '@lib'
-import { server } from './server'
+import { dbDriver } from '@lib'
 import { core } from '@core'
 import { logger } from '@util'
 
@@ -14,12 +13,10 @@ if (semver.gt('10.0.0', process.versions.node)) {
 
 const run = async () => {
   try {
-    logger.info('Starting magic8bot server...')
+    logger.info('Starting magic8bot...')
 
     await dbDriver.connect('mongo')
 
-    wsServer.init()
-    await server.init()
     await core.init()
   } catch (e) {
     console.error(e)

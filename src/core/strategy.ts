@@ -1,5 +1,5 @@
 import { SIGNAL } from '@m8bTypes'
-import { eventBus, EVENT, StrategyConfig, Adjustment } from '@lib'
+import { eventBus, EVENT, StrategyConfig, Adjustment, dbDriver, TradeCollection } from '@lib'
 
 import { PeriodStore, WalletStore } from '@store'
 import { BaseStrategy, strategyLoader } from '@strategy'
@@ -59,6 +59,8 @@ export class StrategyCore {
 
     const { exchange, symbol, strategy } = this
     PeriodStore.instance.start({ exchange, symbol, strategy })
+    dbDriver.trade.watch().on('change', this.onTrades as any)
+
     logger.info(`Starting Strategy ${strategy}`)
   }
 
@@ -91,6 +93,12 @@ export class StrategyCore {
   public async adjustStrategyWallet(adjustment: Adjustment) {
     const walletOpts = { exchange: this.exchange, symbol: this.symbol, strategy: this.strategy }
     await WalletStore.instance.initWallet(walletOpts, adjustment)
+  }
+
+  private onTrades = (trade: { fullDocument: TradeCollection }) => {
+    if (trade.fullDocument.exchange !== this.exchange || trade.fullDocument.symbol !== this.symbol) return
+
+    eventBus.get(EVENT.XCH_TRADE)(this.exchange)(this.symbol).emit(trade.fullDocument)
   }
 
   private onSignal(signal: SIGNAL, data: Record<string, any>) {

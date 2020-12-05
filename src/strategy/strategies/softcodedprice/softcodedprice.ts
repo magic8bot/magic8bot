@@ -7,7 +7,7 @@
  */
 import { PeriodItem } from '@lib'
 import { BaseStrategy, StrategyField } from '../base-strategy'
-import { Signal } from '@m8bTypes'
+import { SIGNAL } from '@m8bTypes'
 import { logger } from '../../../util/logger'
 
 export interface SoftCodedPriceOptions {
@@ -67,7 +67,7 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
     isRepeat: false,
   }
 
-  private signal: Signal = null
+  private signal: SIGNAL = null
   private isHolding = false // have we bought in yet
 
   constructor(exchange: string, symbol: string, options?: Partial<SoftCodedPriceOptions>) {
@@ -80,17 +80,17 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
 
     const curPrice = periods[0].close // use closing price as current price
 
-    this.signal = this.shouldSell(curPrice) ? 'sell' : this.shouldBuy(curPrice) ? 'buy' : null
+    this.signal = this.shouldShort(curPrice) ? SIGNAL.OPEN_SHORT : this.shouldLong(curPrice) ? SIGNAL.OPEN_LONG : null
     return
   }
 
   public onPeriod(period: string) {
     /* istanbul ignore next */
     logger.verbose(`Period finished => Signal: ${this.signal === null ? 'no signal' : this.signal}`)
-    return this.signal
+    return { signal: this.signal }
   }
 
-  private shouldSell(curPrice: number): boolean {
+  private shouldShort(curPrice: number): boolean {
     if (!this.isHolding) return false // havnt bought yet
 
     const isSelling = curPrice >= this.options.sellPrice || curPrice <= this.options.stopLoss
@@ -98,7 +98,7 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
     return isSelling
   }
 
-  private shouldBuy(curPrice: number): boolean {
+  private shouldLong(curPrice: number): boolean {
     if (this.isHolding) return false // already bought
 
     const isBuying = curPrice <= this.options.buyPrice

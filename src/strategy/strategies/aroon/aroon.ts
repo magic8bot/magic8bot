@@ -1,5 +1,5 @@
 import { PeriodItem } from '@lib'
-import { Signal } from '@m8bTypes'
+import { SIGNAL } from '@m8bTypes'
 import { AroonDown, AroonUp } from '../../indicators'
 import { BaseStrategy, StrategyField } from '../base-strategy'
 import { logger } from '../../../util'
@@ -93,23 +93,23 @@ export class Aroon extends BaseStrategy<AroonOptions, void> {
 
     if (!this.isPreroll) logger.debug(`Aroon: up(${up}) down(${down})`)
 
-    return signal
+    return { signal }
   }
 
-  private getSignal(): Signal {
-    if (this.shouldBuy()) return 'buy'
-    if (this.shouldSell()) return 'sell'
+  private getSignal(): SIGNAL {
+    if (this.shouldLong()) return SIGNAL.OPEN_LONG
+    if (this.shouldShort()) return SIGNAL.OPEN_SHORT
 
     return null
   }
 
-  private shouldBuy() {
+  private shouldLong() {
     const [{ up, down }] = this.periods
 
     return up > this.options.buyUpThreshold && down < this.options.buyDownThreshold
   }
 
-  private shouldSell() {
+  private shouldShort() {
     const [{ up, down }] = this.periods
 
     return up < this.options.sellUpThreshold && down > this.options.sellDownThreshold

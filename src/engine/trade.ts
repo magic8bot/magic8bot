@@ -43,6 +43,7 @@ export class TradeEngine {
     if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
 
     this.setState(symbol, SYNC_STATE.READY)
+    logger.info(`${this.exchange}.${symbol} is ready.`)
     await this.tick(symbol)
   }
 

@@ -15,10 +15,7 @@ export class MongoLib {
   private strategyCollection: Collection<StrategyCollection>
 
   public async connect() {
-    const mongo = await MongoClient.connect(
-      this.makeConnectionString(),
-      { useNewUrlParser: true }
-    )
+    const mongo = await MongoClient.connect(this.makeConnectionString(), { useNewUrlParser: true })
 
     this.connection = mongo.db(process.env.MONGO_DB)
   }

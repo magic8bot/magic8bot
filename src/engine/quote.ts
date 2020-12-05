@@ -1,20 +1,20 @@
 import { ExchangeProvider } from '@exchange'
-import { logger } from '../util'
+
+interface QuoteEngineOpts {
+  exchange: string
+  symbol: string
+  markUp: number
+  markDn: number
+}
 
 export class QuoteEngine {
-  constructor(
-    private readonly exchangeProvider: ExchangeProvider,
-    private readonly exchange: string,
-    private readonly symbol: string,
-    private readonly markUp: number = 0,
-    private readonly markDn: number = 0
-  ) {}
+  constructor(private readonly exchangeProvider: ExchangeProvider, private readonly opts: QuoteEngineOpts) {}
 
   public async getBuyPrice() {
     // prettier-ignore
     const { bids: [[quote]] } = await this.orderBook()
 
-    const markDn = quote * this.markDn
+    const markDn = quote * this.opts.markDn
     return quote - markDn
   }
 
@@ -22,11 +22,11 @@ export class QuoteEngine {
     // prettier-ignore
     const { asks: [[quote]] } = await this.orderBook()
 
-    const markUp = quote * this.markUp
+    const markUp = quote * this.opts.markUp
     return quote + markUp
   }
 
   private async orderBook() {
-    return this.exchangeProvider.getOrderbook(this.exchange, this.symbol)
+    return this.exchangeProvider.getOrderbook(this.opts.exchange, this.opts.symbol)
   }
 }

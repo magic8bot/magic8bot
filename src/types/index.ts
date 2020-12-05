@@ -184,10 +184,16 @@ export interface Product {
   label: string
 }
 
-export type Signal = 'buy' | 'sell'
+export enum SIGNAL {
+  OPEN_LONG = 'OPEN_LONG',
+  CLOSE_LONG = 'CLOSE_LONG',
+  OPEN_SHORT = 'OPEN_SHORT',
+  CLOSE_SHORT = 'CLOSE_SHORT',
+}
 
 export interface SignalEvent {
-  signal: Signal
+  signal: SIGNAL
+  data?: Record<string, any>
 }
 
 export type FilterKeys<T, K extends keyof T> = { [P in keyof T]: P extends K ? never : P }[keyof T]

@@ -1,6 +1,6 @@
 import { PeriodItem, EVENT, eventBus, StrategyConfig } from '@lib'
 import { EventBusListener, EventBusEmitter } from '@magic8bot/event-bus'
-import { SignalEvent, Signal } from '@m8bTypes'
+import { SignalEvent, SIGNAL } from '@m8bTypes'
 
 export interface StrategyField {
   name: string
@@ -89,8 +89,8 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
 
     /* istanbul ignore next */
     periodNewListener((period) => {
-      const signal = this.onPeriod(period)
-      if (signal && !this.isPreroll) this.signalEmitter({ signal })
+      const { signal, data } = this.onPeriod(period)
+      if (signal && !this.isPreroll) this.signalEmitter({ signal, data })
     })
 
     this.signalEmitter = eventBus.get(EVENT.STRAT_SIGNAL)(exchange)(symbol)(this.name).emit
@@ -116,7 +116,7 @@ export abstract class BaseStrategy<TOptions = any, TCalcResult = any> {
    * On construction this method is subscribed to the event-bus `EVENT.PERIOD_NEW`.
    * the returned signal is emitted to the event-bus `EVENT.STRAT_SIGNAL`.
    */
-  public abstract onPeriod(period: string): Signal
+  public abstract onPeriod(period: string): { signal: SIGNAL; data?: Record<string, any> }
 
   /**
    * This method is called by the StrategyEngine, if preroll has been finished.

@@ -4,7 +4,7 @@ import { ExchangeProvider } from '@exchange'
 import { StrategyCore } from '@core'
 import { TradeEngine } from '@engine'
 import { logger } from '@util'
-import { wsServer, ExchangeConfig, StrategyConfig } from '@lib'
+import { ExchangeConfig, StrategyConfig } from '@lib'
 
 import { TickerEngine } from '../engine/ticker'
 

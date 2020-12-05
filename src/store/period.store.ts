@@ -121,7 +121,7 @@ export class PeriodStore {
 
       // should only happen if timer did something wrong or on Preroll
       this.checkPeriodWithoutTrades(idStr, period)
-      this.emitTradeImmediate(idStr, period)
+      this.emitTradeImmediate(idStr, period, true)
       this.periodEmitters.get(idStr).get(period)()
     })
   }
@@ -166,14 +166,16 @@ export class PeriodStore {
    * Could be used if a period was finished and there is a calculation needed
    * @param idStr period identifier
    */
-  private emitTradeImmediate(idStr: string, period: string) {
+  private emitTradeImmediate(idStr: string, period: string, isPreroll = false) {
     if (this.periodStates.get(idStr) === PERIOD_STATE.STOPPED) return
 
     const periods = this.periods.get(idStr).get(period)
     this.updateEmitters.get(idStr).get(period)([...periods])
 
     // @todo(notVitaliy): Find a better place for this
-    wsServer.broadcast('period-update', { ...this.parseIdStr(idStr), period: periods[0] })
+    if (!isPreroll) {
+      // wsServer.broadcast('period-update', { ...this.parseIdStr(idStr), period: periods[0] })
+    }
 
     /* istanbul ignore else */
     if (this.tradeEventTimeouts.get(idStr).has(period)) {

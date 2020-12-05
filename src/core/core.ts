@@ -157,7 +157,7 @@ class Core {
     if (isRunning) exchangeCore.strategyStop(symbol, strategy)
     await StrategyStore.instance.save(strategyConfig)
     exchangeCore.updateStrategy(strategyConfig)
-    if (isRunning) exchangeCore.strategyStart(symbol, strategy)
+    if (isRunning) await exchangeCore.strategyStart(symbol, strategy)
 
     return strategyConfig
   }
@@ -186,7 +186,7 @@ class Core {
 
     if (hasExchange !== true) return hasExchange
 
-    this.exchangeCores.get(exchange).strategyStart(symbol, strategy)
+    await this.exchangeCores.get(exchange).strategyStart(symbol, strategy)
 
     return { status: this.exchangeCores.get(exchange).strategyIsRunning(symbol, strategy) }
   }

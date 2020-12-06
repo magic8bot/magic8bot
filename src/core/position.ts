@@ -68,12 +68,12 @@ export class Position {
   }
 
   processSignal(signal: SIGNAL, data?: Record<string, any>) {
-    const { atr } = data
+    const { limitOrderPriceOffset } = data
 
     switch (signal) {
       case SIGNAL.OPEN_LONG:
         if (this.state !== POSITION_STATE.NEW) break
-        this.openLong(atr)
+        this.openLong(limitOrderPriceOffset)
         break
       case SIGNAL.OPEN_SHORT:
         if (this.state !== POSITION_STATE.NEW) break
@@ -98,14 +98,14 @@ export class Position {
     }
   }
 
-  private async openLong(atr: number) {
+  private async openLong(limitOrderPriceOffset: number) {
     const { exchange, symbol, strategy } = this.strategyConfig
     logger.info(`${exchange}.${symbol}.${strategy} opening new long position`)
 
     const quote = await this.quoteEngine.getBuyPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, quote)
 
-    if (atr) this.setExitPrices(quote, atr)
+    if (limitOrderPriceOffset) this.setExitPrices(quote, limitOrderPriceOffset)
 
     const amount = this.getPurchasePower(price)
 
@@ -227,9 +227,9 @@ export class Position {
     return this.exchangeProvider.amountToPrecision(currency / price)
   }
 
-  private setExitPrices(quote: number, atr: number) {
-    this.slPrice = quote - atr
-    this.tpPrice = quote + atr * 1.5
+  private setExitPrices(quote: number, limitOrderPriceOffset: number) {
+    this.slPrice = quote - limitOrderPriceOffset
+    this.tpPrice = quote + limitOrderPriceOffset * 1.5
   }
 
   private async checkPrice() {

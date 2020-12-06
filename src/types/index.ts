@@ -189,6 +189,7 @@ export enum SIGNAL {
   CLOSE_LONG = 'CLOSE_LONG',
   OPEN_SHORT = 'OPEN_SHORT',
   CLOSE_SHORT = 'CLOSE_SHORT',
+  TREND_BREAK = 'TREND_BREAK',
 }
 
 export interface SignalEvent {

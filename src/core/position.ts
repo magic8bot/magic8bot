@@ -50,6 +50,10 @@ export class Position {
     cancel: null,
   }
 
+  private takeProfitFactor = 1.5
+  private limitOrderPriceOffset: number = null
+  private lastSignal: SIGNAL = null
+  private lastQuote: number = null
   private slPrice: number = null
   private tpPrice: number = null
 
@@ -68,12 +72,14 @@ export class Position {
   }
 
   processSignal(signal: SIGNAL, data?: Record<string, any>) {
+    this.lastSignal = signal
     const { limitOrderPriceOffset } = data
+    this.limitOrderPriceOffset = limitOrderPriceOffset
 
     switch (signal) {
       case SIGNAL.OPEN_LONG:
         if (this.state !== POSITION_STATE.NEW) break
-        this.openLong(limitOrderPriceOffset)
+        this.openLong()
         break
       case SIGNAL.OPEN_SHORT:
         if (this.state !== POSITION_STATE.NEW) break
@@ -98,14 +104,14 @@ export class Position {
     }
   }
 
-  private async openLong(limitOrderPriceOffset: number) {
+  private async openLong() {
     const { exchange, symbol, strategy } = this.strategyConfig
     logger.info(`${exchange}.${symbol}.${strategy} opening new long position`)
 
     const quote = await this.quoteEngine.getBuyPrice()
     const price = this.exchangeProvider.priceToPrecision(exchange, symbol, quote)
 
-    if (limitOrderPriceOffset) this.setExitPrices(quote, limitOrderPriceOffset)
+    if (this.limitOrderPriceOffset) this.setEntryExitPrices(quote)
 
     const amount = this.getPurchasePower(price)
 
@@ -114,11 +120,12 @@ export class Position {
 
     if (!order) return this.handleOnClose && this.handleOnClose()
 
+    this.newOrderAdjustment(order)
     this.state = POSITION_STATE.OPEN
 
     logger.info(`${exchange}.${symbol}.${strategy}.${order.id} opened`)
 
-    this.emitWalletAdjustment({ asset: 0, currency: -(amount * price), type: 'newOrder' })
+    this.emitWalletAdjustment({ asset: 0, currency: -(amount * price), type: 'openLong' })
     this.watchOrder(order)
   }
 
@@ -140,9 +147,10 @@ export class Position {
       return this.closeLong()
     }
 
+    this.newOrderAdjustment(order)
     this.state = POSITION_STATE.CLOSED
 
-    this.emitWalletAdjustment({ asset: this.wallet.asset, currency: 0, type: 'newOrder' })
+    this.emitWalletAdjustment({ asset: -this.wallet.asset, currency: 0, type: 'closeLong' })
     this.watchOrder(order)
   }
 
@@ -163,16 +171,24 @@ export class Position {
     this.orderEngine.checkOrder(order.id)
   }
 
+  private newOrderAdjustment(order: Order) {
+    const adjustment = { asset: 0, currency: 0 }
+    const type = order.side === 'buy' ? 'openLongFill' : 'closeLongFill'
+
+    if (order.side === 'buy') adjustment.asset = order.filled
+    else adjustment.currency = order.cost
+
+    if (adjustment.asset || adjustment.currency) this.emitWalletAdjustment({ ...adjustment, type })
+  }
+
   private onParial = ({ savedOrder, update }: OnEventType) => {
     const adjustment = { asset: 0, currency: 0 }
+    const type = update.side === 'buy' ? 'openLongFill' : 'closeLongFill'
 
     if (update.side === 'buy') adjustment.asset = update.filled - savedOrder.filled
     else adjustment.currency = update.cost - savedOrder.cost
 
-    if (adjustment.asset || adjustment.currency) this.emitWalletAdjustment({ ...adjustment, type: 'fillOrder' })
-
-    const savedFee = savedOrder.fee ? savedOrder.fee.cost : 0
-    if (update.fee && update.fee.cost && update.fee.cost - savedFee > 0) this.emitWalletAdjustment({ asset: 0, currency: 0 - (update.fee.cost - savedFee), type: 'fee' })
+    if (adjustment.asset || adjustment.currency) this.emitWalletAdjustment({ ...adjustment, type })
   }
 
   private onComplete = async ({ savedOrder, update }: OnEventType) => {
@@ -227,17 +243,22 @@ export class Position {
     return this.exchangeProvider.amountToPrecision(currency / price)
   }
 
-  private setExitPrices(quote: number, limitOrderPriceOffset: number) {
-    this.slPrice = quote - limitOrderPriceOffset
-    this.tpPrice = quote + limitOrderPriceOffset * 1.5
+  private setEntryExitPrices(quote: number) {
+    this.lastQuote = quote
+    this.slPrice = quote - this.limitOrderPriceOffset
+    this.tpPrice = quote + this.limitOrderPriceOffset * this.takeProfitFactor
+
+    console.log(this.tpPrice, this.slPrice)
   }
 
   private async checkPrice() {
     const quote = await this.quoteEngine.getSellPrice()
 
-    console.log(quote, this.tpPrice, this.slPrice)
-
     if (quote >= this.tpPrice || quote <= this.slPrice) return this.closeLong(quote)
+
+    // trailing stop-loss?
+    if (quote > this.lastQuote && this.lastSignal !== SIGNAL.OPEN_LONG && this.takeProfitFactor > 1) this.takeProfitFactor -= 0.01
+    if (quote > this.lastQuote && this.lastSignal === SIGNAL.OPEN_LONG) this.setEntryExitPrices(quote)
 
     await sleep(5000)
 

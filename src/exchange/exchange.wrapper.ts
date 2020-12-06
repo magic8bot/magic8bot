@@ -49,7 +49,7 @@ export class ExchangeWrapper {
     const res = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'fetchMyTrades', req: {}, res }
-    logger.silly(JSON.stringify(debug))
+    logger.debug(JSON.stringify(debug))
 
     return res
   }

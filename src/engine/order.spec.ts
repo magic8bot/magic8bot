@@ -127,7 +127,7 @@ describe.skip('OrderEngine', () => {
     await orderEngine.executeBuy(mockPrice)
 
     const currency = -(amount * mockPrice)
-    const expectedAdjustment = { asset: 0, currency, type: 'newOrder' }
+    const expectedAdjustment = { asset: 0, currency, type: 'openLong' }
     const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount, type: 'limit', side: 'buy' }
 
     expect(mockPriceToPrecision).toHaveBeenCalledTimes(2)
@@ -146,7 +146,7 @@ describe.skip('OrderEngine', () => {
 
     await orderEngine.executeSell(mockPrice)
 
-    const expectedAdjustment = { asset: -mockAsset, currency: 0, type: 'newOrder' }
+    const expectedAdjustment = { asset: -mockAsset, currency: 0, type: 'openLong' }
     const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount: mockAsset, type: 'limit', side: 'sell' }
 
     expect(mockPriceToPrecision).toHaveBeenCalledTimes(1)
@@ -200,7 +200,7 @@ describe.skip('OrderEngine', () => {
 
     const currency = -(amount * mockPrice)
     const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount, type: 'limit', side: 'buy' }
-    const expectedAdjustment = { asset: 0, currency, type: 'newOrder' }
+    const expectedAdjustment = { asset: 0, currency, type: 'openLong' }
 
     expect(mockPlaceOrder).toHaveBeenCalledTimes(1)
     expect(mockPlaceOrder).toHaveBeenCalledWith(mockId, expectedOrderOpts)
@@ -225,7 +225,7 @@ describe.skip('OrderEngine', () => {
 
     const currency = -(amount * mockPrice)
     const expectedOrderOpts = { symbol: mockId, price: mockPrice, amount, type: 'limit', side: 'buy' }
-    const expectedAdjustment = { asset: 0, currency, type: 'newOrder' }
+    const expectedAdjustment = { asset: 0, currency, type: 'openLong' }
 
     expect(mockPlaceOrder).toHaveBeenCalledTimes(1)
     expect(mockPlaceOrder).toHaveBeenCalledWith(mockId, expectedOrderOpts)

@@ -2,49 +2,55 @@ import deepClone from 'deep-clone'
 
 import { PeriodItem } from '@lib'
 import { EMA } from './ema'
-import { logger } from '../../util'
 
 interface MacdPeriodItem {
   macd: number
-  signalLine: number
+  history: number
   emaShort: number
   emaLong: number
-  emaMacd: number
+  signal: number
 }
 
 export class MACD {
   public static calculate(periods: PeriodItem[], macdPeriodItems: MacdPeriodItem[], emaShortPeriod: number, emaLongPeriod: number, signalPeriod: number) {
     const macdPeriodItemsClone = deepClone(macdPeriodItems)
 
-    const emaShort = MACD.getEmaShort(periods, macdPeriodItemsClone[0], emaShortPeriod)
-    const emaLong = MACD.getEmaLong(periods, macdPeriodItemsClone[0], emaLongPeriod)
+    const emaShort = MACD.getEmaShort(periods, macdPeriodItemsClone[1], emaShortPeriod)
+    const emaLong = MACD.getEmaLong(periods, macdPeriodItemsClone[1], emaLongPeriod)
 
-    const macd = emaShort - emaLong
+    const macd = emaLong ? emaShort - emaLong : null
+
+    // @ts-ignore
     macdPeriodItemsClone[0].macd = macd
 
-    const emaMacd = MACD.hasPreviousMacd(macdPeriodItemsClone) ? MACD.getEmaMacd(macdPeriodItemsClone, signalPeriod) : 0
-    const signalLine = macd - emaMacd
+    const signal = MACD.getEmaMacd(macdPeriodItemsClone, signalPeriod)
+    const history = signal ? macd - signal : null
 
-    return { emaShort, emaLong, macd, emaMacd, signalLine }
-  }
-
-  private static hasPreviousMacd(macdPeriodItemsClone: MacdPeriodItem[]) {
-    return macdPeriodItemsClone[1] && typeof macdPeriodItemsClone[1].emaMacd !== 'undefined'
+    return { emaShort, emaLong, macd, signal, history }
   }
 
   private static getEmaShort(periods: PeriodItem[], prevMacdPeriod: MacdPeriodItem, emaShortPeriod: number) {
-    const prevEma = prevMacdPeriod ? prevMacdPeriod.emaShort : 0
+    const prevEma = prevMacdPeriod ? prevMacdPeriod.emaShort : null
 
     return EMA.calculate(prevEma, periods as any, emaShortPeriod)
   }
 
   private static getEmaLong(periods: PeriodItem[], prevMacdPeriod: MacdPeriodItem, emaLongPeriod: number) {
-    const prevEma = prevMacdPeriod ? prevMacdPeriod.emaLong : 0
+    const prevEma = prevMacdPeriod ? prevMacdPeriod.emaLong : null
 
     return EMA.calculate(prevEma, periods as any, emaLongPeriod)
   }
 
   private static getEmaMacd(prevMacdPeriods: MacdPeriodItem[], signalPeriod: number) {
-    return EMA.calculate(prevMacdPeriods[1].emaMacd, prevMacdPeriods as any, signalPeriod, 'macd')
+    const prevSignal = prevMacdPeriods[1] ? prevMacdPeriods[1].signal : null
+
+    const last9 = deepClone(prevMacdPeriods)
+    last9.length = 9
+
+    const every = last9.map((period) => period.macd).every(Boolean)
+    if (!every) return null
+
+    const signal = EMA.calculate(prevSignal, prevMacdPeriods as any, signalPeriod, 'macd')
+    return signal ? signal : null
   }
 }

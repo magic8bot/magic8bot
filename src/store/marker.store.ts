@@ -35,18 +35,14 @@ export class MarkerStore {
   public async saveMarker(storeOpts: StoreOpts, to: number, from: number, trades: Trade[]) {
     const marker = this.makeMarker(storeOpts, to, from, trades)
     this.setMarker(storeOpts, marker)
-    await dbDriver.marker.save(marker)
+    await dbDriver.marker.insertOne(marker)
 
     return marker
   }
 
   /* istanbul ignore next */
   public async findLatestTradeMarker({ exchange, symbol }: StoreOpts) {
-    const marker = await dbDriver.marker
-      .find({ exchange, symbol })
-      .sort({ oldestTime: -1 })
-      .limit(1)
-      .toArray()
+    const marker = await dbDriver.marker.find({ exchange, symbol }).sort({ oldestTime: -1 }).limit(1).toArray()
 
     return marker.pop()
   }

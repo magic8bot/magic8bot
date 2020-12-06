@@ -80,7 +80,7 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
 
     const curPrice = periods[0].close // use closing price as current price
 
-    this.signal = this.shouldShort(curPrice) ? SIGNAL.OPEN_SHORT : this.shouldLong(curPrice) ? SIGNAL.OPEN_LONG : null
+    this.signal = this.closeLong(curPrice) ? SIGNAL.CLOSE_LONG : this.openLong(curPrice) ? SIGNAL.OPEN_LONG : null
     return
   }
 
@@ -90,7 +90,7 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
     return { signal: this.signal }
   }
 
-  private shouldShort(curPrice: number): boolean {
+  private closeLong(curPrice: number): boolean {
     if (!this.isHolding) return false // havnt bought yet
 
     const isSelling = curPrice >= this.options.sellPrice || curPrice <= this.options.stopLoss
@@ -98,7 +98,7 @@ export class SoftCodedPrice extends BaseStrategy<SoftCodedPriceOptions> {
     return isSelling
   }
 
-  private shouldLong(curPrice: number): boolean {
+  private openLong(curPrice: number): boolean {
     if (this.isHolding) return false // already bought
 
     const isBuying = curPrice <= this.options.buyPrice

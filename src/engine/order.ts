@@ -121,9 +121,8 @@ export class OrderEngine {
     await sleep(this.orderPollInterval)
 
     const { exchange, symbol, strategy } = this.opts
-    logger.verbose(`Checking order ${id} on ${exchange}`)
     const savedOrder = cloneDeep(this.orderStore.getOpenOrder(this.storeOpts, id))
-    const [err, update] = await asyncWrap(this.exchangeProvider.checkOrder(exchange, id))
+    const [err, update] = await asyncWrap(this.exchangeProvider.checkOrder(exchange, id, symbol))
 
     if (err && err instanceof OrderNotFound) return eventBus.get(EVENT.ORDER_CANCEL)(exchange)(symbol)(strategy)(id).emit({ savedOrder })
 

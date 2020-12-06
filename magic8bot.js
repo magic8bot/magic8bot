@@ -1,6 +1,6 @@
 const { NODE_ENV } = process.env
 
-const isDev = NODE_ENV === 'development'
+const isDev = NODE_ENV !== 'production'
 
 if (isDev) {
   require('tsconfig-paths/register')
@@ -10,3 +10,4 @@ if (isDev) {
   require('module-alias/register')
   require('./dist')
 }
+5

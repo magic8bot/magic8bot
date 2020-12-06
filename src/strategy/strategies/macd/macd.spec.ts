@@ -92,7 +92,7 @@ describe('Macd', () => {
 
     it('macd signal sell', () => {
       // "mock" periods into current macd instance
-      Object.defineProperty(macd, 'periods', { get: () => [{ signalLine: -1 }, { signalLine: 1 }] })
+      Object.defineProperty(macd, 'periods', { get: () => [{ history: -1 }, { history: 1 }] })
 
       const signal = macd.onPeriod('1m')
 
@@ -101,7 +101,7 @@ describe('Macd', () => {
 
     it('macd signal buy', () => {
       // "mock" periods into current macd instance
-      Object.defineProperty(macd, 'periods', { get: () => [{ signalLine: 1 }, { signalLine: -1 }] })
+      Object.defineProperty(macd, 'periods', { get: () => [{ history: 1 }, { history: -1 }] })
       const signal = macd.onPeriod('1m')
 
       expect(signal).toEqual({ signal: SIGNAL.OPEN_LONG })
@@ -109,7 +109,7 @@ describe('Macd', () => {
 
     it('macd signal null', () => {
       // "mock" periods into current macd instance
-      Object.defineProperty(macd, 'periods', { get: () => [{ signalLine: 1 }, { signalLine: 2 }] })
+      Object.defineProperty(macd, 'periods', { get: () => [{ history: 1 }, { history: 2 }] })
       const signal = macd.onPeriod('1m')
 
       expect(signal).toEqual({ signal: null })

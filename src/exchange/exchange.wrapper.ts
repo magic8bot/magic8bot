@@ -10,11 +10,13 @@ const adapters: Record<string, ExchangeAdapter> = { binance, coinbasepro, chaos 
 export class ExchangeWrapper {
   public scan: 'back' | 'forward'
   private adapter: ExchangeAdapter
+  private exchangeConnection: Exchange
   private bottleneck: Bottleneck
 
-  constructor(exchange: string, private readonly exchangeConnection: Exchange) {
+  constructor(exchange: string, exchangeConnectionFn: (opts: Record<string, any>) => Exchange) {
     if (!(exchange in adapters)) throw new Error(`No adapter for ${exchange}.`)
     this.adapter = adapters[exchange]
+    this.exchangeConnection = exchangeConnectionFn(this.adapter.options || {})
     this.scan = this.adapter.scan
     this.bottleneck = new Bottleneck({ minTime: this.adapter.ratelimit })
   }
@@ -42,6 +44,16 @@ export class ExchangeWrapper {
     return res
   }
 
+  public async fetchMyTrades(symbol: string) {
+    const fn = () => this.exchangeConnection.fetchMyTrades(symbol)
+    const res = await this.bottleneck.schedule(fn)
+
+    const debug = { name: 'fetchMyTrades', req: {}, res }
+    logger.silly(JSON.stringify(debug))
+
+    return res
+  }
+
   public async fetchBalance() {
     const fn = () => this.exchangeConnection.fetchBalance()
     const res = await this.bottleneck.schedule(fn)
@@ -63,7 +75,8 @@ export class ExchangeWrapper {
   }
 
   public async createOrder(symbol: string, type: string, side: 'buy' | 'sell', amount: number, price: number): Promise<Order> {
-    const fn = () => this.exchangeConnection.createOrder(symbol, type, side, amount, price)
+    const params = { newOrderRespType: 'FULL' }
+    const fn = () => this.exchangeConnection.createOrder(symbol, type, side, amount, price, params)
     const res = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'createOrder', req: { symbol, type, side, amount, price }, res }
@@ -72,8 +85,8 @@ export class ExchangeWrapper {
     return res
   }
 
-  public async checkOrder(orderId: string): Promise<OrderWithTrades> {
-    const fn = () => this.exchangeConnection.fetchOrder(orderId, null)
+  public async checkOrder(orderId: string, symbol: string): Promise<OrderWithTrades> {
+    const fn = () => this.exchangeConnection.fetchOrder(orderId, symbol)
     const res: any = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'checkOrder', req: { orderId }, res }

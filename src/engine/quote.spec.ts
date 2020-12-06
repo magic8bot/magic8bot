@@ -1,4 +1,5 @@
-const mockId = 'test'
+const mockExchange = 'mockExchange'
+const mockSymbol = 'mockSymbol'
 const mockBuy = 999
 const mockSell = 1000
 const mockMarkUp = 50
@@ -17,7 +18,8 @@ import { QuoteEngine } from './quote'
 
 describe('QuoteEngine', () => {
   test('get a buy price', async () => {
-    const quoteEngine = new QuoteEngine(mockExchangeProvider, mockId, mockId, 0, 0)
+    const opts = { exchange: mockExchange, symbol: mockSymbol, markDn: 0, markUp: 0 }
+    const quoteEngine = new QuoteEngine(mockExchangeProvider, opts)
 
     const result = await quoteEngine.getBuyPrice()
 
@@ -25,7 +27,8 @@ describe('QuoteEngine', () => {
   })
 
   test('get a sell price', async () => {
-    const quoteEngine = new QuoteEngine(mockExchangeProvider, mockId, mockId, 0, 0)
+    const opts = { exchange: mockExchange, symbol: mockSymbol, markDn: 0, markUp: 0 }
+    const quoteEngine = new QuoteEngine(mockExchangeProvider, opts)
 
     const result = await quoteEngine.getSellPrice()
 
@@ -33,7 +36,8 @@ describe('QuoteEngine', () => {
   })
 
   test('get an adjusted buy price', async () => {
-    const quoteEngine = new QuoteEngine(mockExchangeProvider, mockId, mockId, mockMarkUp, mockMarkDn)
+    const opts = { exchange: mockExchange, symbol: mockSymbol, markDn: mockMarkDn, markUp: mockMarkUp }
+    const quoteEngine = new QuoteEngine(mockExchangeProvider, opts)
 
     const result = await quoteEngine.getBuyPrice()
     const expected = mockBuy - mockBuy * mockMarkDn
@@ -42,7 +46,8 @@ describe('QuoteEngine', () => {
   })
 
   test('get an adjusted sell price', async () => {
-    const quoteEngine = new QuoteEngine(mockExchangeProvider, mockId, mockId, mockMarkUp, mockMarkDn)
+    const opts = { exchange: mockExchange, symbol: mockSymbol, markDn: mockMarkDn, markUp: mockMarkUp }
+    const quoteEngine = new QuoteEngine(mockExchangeProvider, opts)
 
     const result = await quoteEngine.getSellPrice()
     const expected = mockSell + mockSell * mockMarkUp

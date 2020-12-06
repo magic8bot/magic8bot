@@ -8,7 +8,7 @@ class MockStrategy extends BaseStrategy {
     super(mockId, mockId, mockId)
   }
 
-  public calculate(periods: PeriodItem[]) {
+  public calculate(period: string, periods: PeriodItem[]) {
     //
   }
 

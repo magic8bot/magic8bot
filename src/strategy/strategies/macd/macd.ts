@@ -17,10 +17,10 @@ export interface MacdOptions {
 
 interface MacdPeriod {
   macd: number
-  signalLine: number
+  history: number
   emaShort: number
   emaLong: number
-  emaMacd: number
+  signal: number
   rsi: number
   avgGain: number
   avgLoss: number
@@ -103,10 +103,10 @@ export class Macd extends BaseStrategy<MacdOptions, void> {
   private periods: MacdPeriod[] = [
     {
       macd: null,
-      signalLine: null,
+      history: null,
       emaShort: null,
       emaLong: null,
-      emaMacd: null,
+      signal: null,
       rsi: null,
       avgGain: null,
       avgLoss: null,
@@ -124,11 +124,11 @@ export class Macd extends BaseStrategy<MacdOptions, void> {
     if (!periods.length) return
 
     const { emaShortPeriod, emaLongPeriod, signalPeriod } = this.options
-    const { emaShort, emaLong, macd, emaMacd, signalLine } = MACD.calculate(periods, this.periods, emaShortPeriod, emaLongPeriod, signalPeriod)
+    const { emaShort, emaLong, macd, signal, history } = MACD.calculate(periods, this.periods, emaShortPeriod, emaLongPeriod, signalPeriod)
 
     this.checkOverbought(periods)
 
-    this.periods[0] = { ...this.periods[0], emaShort, emaLong, macd, emaMacd, signalLine }
+    this.periods[0] = { ...this.periods[0], emaShort, emaLong, macd, signal, history }
   }
 
   public checkOverbought(periods: PeriodItem[]) {
@@ -151,13 +151,11 @@ export class Macd extends BaseStrategy<MacdOptions, void> {
     /* istanbul ignore next */
     if (!this.isPreroll) {
       if (this.periods.length) {
-        logger.debug(
-          `
+        logger.debug(`
         MACD: ${this.periods[0].macd ? this.periods[0].macd.toPrecision(5) : null}
-        EMA: ${this.periods[0].emaMacd ? this.periods[0].emaMacd.toPrecision(5) : null}
-        Signal: ${this.periods[0].signalLine ? this.periods[0].signalLine.toPrecision(6) : null}
-        RSI ${this.periods[0].rsi ? this.periods[0].rsi.toPrecision(4) : null}`
-        )
+        Signal: ${this.periods[0].signal ? this.periods[0].signal.toPrecision(5) : null}
+        History: ${this.periods[0].history ? this.periods[0].history.toPrecision(6) : null}
+        RSI ${this.periods[0].rsi ? this.periods[0].rsi.toPrecision(4) : null}`)
       }
 
       logger.verbose(`Period finished => Signal: ${signal === null ? 'no signal' : signal}`)
@@ -170,21 +168,21 @@ export class Macd extends BaseStrategy<MacdOptions, void> {
 
   public getSignal() {
     /* istanbul ignore next */
-    return this.periods.length <= 1 ? null : this.getMacdSignal(this.periods[0].signalLine, this.periods[1].signalLine)
+    return this.periods.length <= 1 ? null : this.getMacdSignal(this.periods[0].history, this.periods[1].history)
   }
 
-  public getMacdSignal(signal: number, lastSignal: number): SIGNAL {
-    return this.isLongOpen(signal, lastSignal) ? SIGNAL.OPEN_LONG : this.isLongClose(signal, lastSignal) ? SIGNAL.CLOSE_LONG : null
+  public getMacdSignal(history: number, lastHistory: number): SIGNAL {
+    return this.isLongOpen(history, lastHistory) ? SIGNAL.OPEN_LONG : this.isLongClose(history, lastHistory) ? SIGNAL.CLOSE_LONG : null
   }
 
-  public isLongClose(signal: number, lastSignal: number) {
+  public isLongClose(history: number, lastHistory: number) {
     const { downTrendThreshold } = this.options
-    return signal + downTrendThreshold < 0 && lastSignal + downTrendThreshold >= 0
+    return history + downTrendThreshold < 0 && lastHistory + downTrendThreshold >= 0
   }
 
-  public isLongOpen(signal: number, lastSignal: number) {
+  public isLongOpen(history: number, lastHistory: number) {
     const { upTrendThreshold } = this.options
-    return signal - upTrendThreshold > 0 && lastSignal - upTrendThreshold <= 0
+    return history - upTrendThreshold > 0 && lastHistory - upTrendThreshold <= 0
   }
 
   public overboughtSell() {
@@ -196,10 +194,10 @@ export class Macd extends BaseStrategy<MacdOptions, void> {
   public newPeriod() {
     this.periods.unshift({
       macd: null,
-      signalLine: null,
+      history: null,
       emaShort: null,
       emaLong: null,
-      emaMacd: null,
+      signal: null,
       rsi: null,
       avgGain: null,
       avgLoss: null,

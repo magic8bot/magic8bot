@@ -12,4 +12,5 @@ export enum EVENT {
   XCH_BALANCE = 'xch_balance,',
   XCH_BOOK = 'xch_book',
   XCH_TRADE = 'xch_trade',
+  XCH_TRADE_PREROLL = 'xch_trade_preroll',
 }

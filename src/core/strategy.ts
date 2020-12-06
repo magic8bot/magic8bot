@@ -98,11 +98,11 @@ export class StrategyCore {
 
     logger.info(`${this.strategy} sent ${signal}-signal`)
 
-    // Don't open a new position if one is already open
-    if (this.position) return
+    if (!this.position) {
+      this.position = new Position(this.exchangeProvider, this.strategyConfig)
+      this.position.onClose(() => (this.position = null))
+    }
 
-    this.position = new Position(this.exchangeProvider, this.strategyConfig)
-    this.position.open(signal)
-    this.position.onClose(() => (this.position = null))
+    this.position.processSignal(signal, data)
   }
 }

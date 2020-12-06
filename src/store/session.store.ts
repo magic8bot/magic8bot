@@ -29,15 +29,11 @@ export class SessionStore {
       lastTime: now,
     }
 
-    await dbDriver.session.save(session)
+    await dbDriver.session.insertOne(session)
   }
 
   public async loadSession() {
-    const sessions = await dbDriver.session
-      .find({})
-      .sort({ lastTime: -1 })
-      .limit(1)
-      .toArray()
+    const sessions = await dbDriver.session.find({}).sort({ lastTime: -1 }).limit(1).toArray()
 
     if (!sessions || !sessions.length) return this.newSession()
 

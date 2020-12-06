@@ -29,7 +29,7 @@ export class TradeStore {
     this.emitters.set(idStr, eventBus.get(EVENT.XCH_TRADE)(exchange)(symbol).emit)
   }
 
-  public async loadTrades({ exchange, symbol }: StoreOpts) {
+  public async loadTrades({ exchange, symbol }: StoreOpts, isPreroll = false) {
     const idStr = this.makeIdStr({ exchange, symbol })
     const timestamp = this.tradesMap.get(idStr)
     const trades = await dbDriver.trade
@@ -40,6 +40,8 @@ export class TradeStore {
     if (!trades.length) return
 
     this.tradesMap.set(idStr, trades[trades.length - 1].timestamp)
+    if (isPreroll) return eventBus.get(EVENT.XCH_TRADE_PREROLL)(exchange)(symbol).emit(trades)
+
     const emitter = this.emitters.get(idStr)
     trades.forEach((trade) => emitter(trade))
   }

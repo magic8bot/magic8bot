@@ -1,5 +1,5 @@
 import { ExchangeStore, StrategyStore, WalletStore } from '@store'
-import { ExchangeCollection, StrategyCollection, wsServer, ExchangeConfig } from '@lib'
+import { ExchangeCollection, StrategyCollection, ExchangeConfig } from '@lib'
 import { logger } from '@util'
 
 export class CoreHelpers {

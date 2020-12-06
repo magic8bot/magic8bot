@@ -43,6 +43,7 @@ export class TradeEngine {
     if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
 
     this.setState(symbol, SYNC_STATE.READY)
+    logger.info(`${this.exchange}.${symbol} is ready.`)
     await this.tick(symbol)
   }
 
@@ -74,7 +75,7 @@ export class TradeEngine {
 
     logger.info(`Trade sync for ${this.exchange} on ${symbol} completed backfill.`)
 
-    await this.tradeStore.loadTrades(storeOpts)
+    await this.tradeStore.loadTrades(storeOpts, true)
   }
 
   private async tick(symbol: string) {
@@ -121,6 +122,7 @@ export class TradeEngine {
 
   private async scanForward(symbol: string, start: number, isTick = false) {
     if (this.symbols.get(symbol) === SYNC_STATE.STOPPED) return
+    const now = this.getNow()
 
     const storeOpts = { exchange: this.exchange, symbol }
     const from = await this.markerStore.getNextForwardMarker(storeOpts, start)
@@ -128,6 +130,8 @@ export class TradeEngine {
     const trades = await this.exchangeProvider.getTrades(this.exchange, symbol, from)
 
     if (!trades.length) return
+
+    if (!isTick) logger.debug(`Inserting ${trades.length}`)
 
     await this.tradeStore.insertTrades(storeOpts, trades)
 
@@ -137,7 +141,7 @@ export class TradeEngine {
     if (!isTick) logger.debug(`${this.exchange}.${symbol} scanForward ${JSON.stringify({ now: new Date(newestTime), end: new Date() })}`)
 
     // Always get current time so backfill can catch up to "now"
-    if (newestTime < this.getNow()) {
+    if (newestTime < now) {
       await this.scanForward(symbol, to, isTick)
     }
   }

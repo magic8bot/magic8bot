@@ -18,6 +18,6 @@ export class AdjustmentStore {
   public async adjustWallet(storeOpts: StoreOpts, adjustment: Adjustment) {
     const timestamp = new Date().getTime()
     const data = { sessionId: this.sessionId, ...storeOpts, timestamp, ...adjustment }
-    await dbDriver.adjustment.save(data)
+    await dbDriver.adjustment.insertOne(data)
   }
 }

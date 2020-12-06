@@ -86,7 +86,7 @@ export class WalletStore {
 
     await this.adjustmentStore.adjustWallet(storeOpts, adjustment)
 
-    this.saveWallet(storeOpts)
+    await this.saveWallet(storeOpts)
   }
 
   private async saveWallet(storeOpts: StoreOpts) {

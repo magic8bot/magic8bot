@@ -1,7 +1,7 @@
 import { Trade } from 'ccxt'
 import { timebucket } from '@magic8bot/timebucket'
 import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
-import { PeriodItem, eventBus, EVENT, wsServer } from '@lib'
+import { PeriodItem, eventBus, EVENT, wsServer, TradeCollection } from '@lib'
 import { StoreOpts } from '@m8bTypes'
 import { logger } from '../util/logger'
 
@@ -53,6 +53,10 @@ export class PeriodStore {
     /* istanbul ignore next */
     tradeListener((trade: Trade) => this.addTrade(idStr, trade))
 
+    eventBus
+      .get(EVENT.XCH_TRADE_PREROLL)(exchange)(symbol)
+      .listen((trades: TradeCollection[]) => trades.forEach((trade) => this.addTrade(idStr, trade, true)))
+
     this.updateEmitters.set(idStr, new Map())
     this.periodEmitters.set(idStr, new Map())
     this.periods.set(idStr, new Map())
@@ -94,7 +98,7 @@ export class PeriodStore {
     })
   }
 
-  public addTrade(idStr: string, trade: Trade) {
+  public addTrade(idStr: string, trade: Trade, isPreroll = false) {
     const periodState = this.periodStates.get(idStr)
 
     if (periodState === PERIOD_STATE.STOPPED) return
@@ -105,24 +109,26 @@ export class PeriodStore {
       const { amount, price, timestamp } = trade
       const bucket = timebucket(timestamp).resize(period).toMilliseconds()
 
-      // aka prerolled data
-      const tradeBasedPeriodChange = !periods.length || periods[0].time < bucket
+      if (!periods.length) this.newPeriod(idStr, period, bucket)
 
-      if (tradeBasedPeriodChange) this.newPeriod(idStr, period, bucket)
+      const tradeBasedPeriodChange = isPreroll && periods.length && periods[0].time < bucket
+
+      if (tradeBasedPeriodChange) {
+        this.checkPeriodWithoutTrades(idStr, period)
+        this.emitTradeImmediate(idStr, period)
+        this.periodEmitters.get(idStr).get(period)()
+        this.newPeriod(idStr, period, bucket)
+      }
 
       // special handling if the trade is the first within the period
       if (!periods[0].open) periods[0].open = price
+
+      periods[0].trades++
       periods[0].low = !periods[0].low ? price : Math.min(price, periods[0].low)
       periods[0].high = Math.max(price, periods[0].high)
       periods[0].close = price
       periods[0].volume += amount
-      this.emitTrades(idStr, period)
-      if (!tradeBasedPeriodChange) return
-
-      // should only happen if timer did something wrong or on Preroll
-      this.checkPeriodWithoutTrades(idStr, period)
-      this.emitTradeImmediate(idStr, period)
-      this.periodEmitters.get(idStr).get(period)()
+      if (!isPreroll) this.emitTrades(idStr, period)
     })
   }
 
@@ -138,6 +144,7 @@ export class PeriodStore {
       open: null,
       time: bucket,
       volume: null,
+      trades: 0,
       bucket,
     })
 
@@ -166,14 +173,16 @@ export class PeriodStore {
    * Could be used if a period was finished and there is a calculation needed
    * @param idStr period identifier
    */
-  private emitTradeImmediate(idStr: string, period: string) {
+  private emitTradeImmediate(idStr: string, period: string, isPreroll = false) {
     if (this.periodStates.get(idStr) === PERIOD_STATE.STOPPED) return
 
     const periods = this.periods.get(idStr).get(period)
     this.updateEmitters.get(idStr).get(period)([...periods])
 
     // @todo(notVitaliy): Find a better place for this
-    wsServer.broadcast('period-update', { ...this.parseIdStr(idStr), period: periods[0] })
+    if (!isPreroll) {
+      // wsServer.broadcast('period-update', { ...this.parseIdStr(idStr), period: periods[0] })
+    }
 
     /* istanbul ignore else */
     if (this.tradeEventTimeouts.get(idStr).has(period)) {

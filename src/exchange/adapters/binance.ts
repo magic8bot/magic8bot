@@ -6,6 +6,12 @@ export const binance: ExchangeAdapter = {
   fields: [...baseFields],
   description: 'Binance Exchange is one of the fastest growing and most popular cryptocurrency exchanges in the world.',
 
+  options: {
+    options: {
+      newOrderRespType: 'FULL',
+    },
+  },
+
   scan: 'forward',
   ratelimit: 500,
 

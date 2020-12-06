@@ -37,8 +37,8 @@ export class ExchangeProvider {
 
     if (!this.hasAllReqCreds(auth, reqKeys)) return this.error(`${exchange} missing required credentials. Requires: ${reqKeys.join(', ')}`)
 
-    const exchangeConnection = new ccxt[exchange]({ ...auth, verbose })
-    this.exchanges.set(exchange, new ExchangeWrapper(exchange, exchangeConnection))
+    const exchangeConnectionFn = (opts: Record<string, any>) => new ccxt[exchange]({ ...auth, verbose, ...opts })
+    this.exchanges.set(exchange, new ExchangeWrapper(exchange, exchangeConnectionFn))
     return true
   }
 
@@ -53,6 +53,11 @@ export class ExchangeProvider {
 
   public getTrades(exchange: string, symbol: string, since: number) {
     const fn = () => this.exchanges.get(exchange).fetchTrades(symbol, since)
+    return this.retry(fn)
+  }
+
+  public getMyTrades(exchange: string, symbol: string) {
+    const fn = () => this.exchanges.get(exchange).fetchMyTrades(symbol)
     return this.retry(fn)
   }
 
@@ -71,8 +76,8 @@ export class ExchangeProvider {
     return this.retry(fn)
   }
 
-  public checkOrder(exchange: string, orderId: string) {
-    const fn = () => this.exchanges.get(exchange).checkOrder(orderId)
+  public checkOrder(exchange: string, orderId: string, symbol: string) {
+    const fn = () => this.exchanges.get(exchange).checkOrder(orderId, symbol)
     return this.retry(fn)
   }
 

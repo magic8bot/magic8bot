@@ -37,6 +37,8 @@ export interface ExchangeAdapter {
   fields: Field[]
   description: string
 
+  options?: Record<string, any>
+
   scan: 'back' | 'forward'
   ratelimit: number
   getTradeCursor: (trade: Trade) => number

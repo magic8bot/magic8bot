@@ -1,0 +1,62 @@
+//@version=4
+
+study(title="Beep Boop", shorttitle="Beep Boop", resolution="")
+
+src = input(title="Source", type=input.source, defval=close)
+
+fast_length = input(title="Fast Length", type=input.integer, defval=12)
+slow_length = input(title="Slow Length", type=input.integer, defval=26)
+EMATrend = input(title="EMA Trend", type=input.integer, defval=50)
+signal_length = input(title="Signal Smoothing", type=input.integer, minval = 1, maxval = 50, defval = 9)
+
+sma_source = input(title="Simple MA(Oscillator)", type=input.bool, defval=false)
+sma_signal = input(title="Simple MA(Signal Line)", type=input.bool, defval=false)
+
+fast_ma = sma_source
+  ? sma(src, fast_length)
+  : ema(src, fast_length)
+
+slow_ma = sma_source
+  ? sma(src, slow_length)
+  : ema(src, slow_length)
+
+macd = fast_ma - slow_ma
+
+signal = sma_signal
+  ? sma(macd, signal_length)
+  : ema(macd, signal_length)
+
+hist = macd - signal
+
+if (hist > 0)
+    hist := 0.1
+    
+if (hist < 0)
+    hist := 0.09
+  
+fastMA = ema(close, EMATrend)
+
+plot(
+  hist,
+  title="Histogram",
+  style=plot.style_columns,
+  color=(
+    hist == 0.1
+    ? (
+      (hist == 0.1)
+      and (close > fastMA)
+      and (open > fastMA)
+      and (low > fastMA)
+        ? col_grow_above
+        : col_fall_above
+    )
+    : (
+      (hist == 0.09)
+      and (close < fastMA)
+      and (open < fastMA)
+      and (high < fastMA)
+        ? col_grow_below
+        : col_fall_below
+    )
+  ), transp=0 
+)

@@ -1,6 +1,7 @@
 import { Trade } from 'ccxt'
 import { dbDriver, Marker } from '@lib'
 import { StoreOpts } from '@m8bTypes'
+import { chunkedMax, chunkedMin } from '../util/math'
 
 const singleton = Symbol()
 
@@ -62,8 +63,8 @@ export class MarkerStore {
   }
 
   private makeMarker({ exchange, symbol }: StoreOpts, to: number, from: number, trades: Trade[]) {
-    const newestTime = Math.max(...trades.map(({ timestamp }) => timestamp))
-    const oldestTime = Math.min(...trades.map(({ timestamp }) => timestamp))
+    const newestTime = chunkedMax(trades.map(({ timestamp }) => timestamp))
+    const oldestTime = chunkedMin(trades.map(({ timestamp }) => timestamp))
     return { exchange, symbol, to, from, oldestTime, newestTime }
   }
 

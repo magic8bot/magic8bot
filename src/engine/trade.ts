@@ -1,7 +1,8 @@
 import { ExchangeProvider } from '@exchange'
 import { TradeStore, MarkerStore } from '@store'
-import { sleep, logger } from '@util'
+import { sleep, logger, asyncNextTick } from '@util'
 import { wsServer } from '@lib'
+import { chunkedMax, chunkedMin } from '../util/math'
 
 enum SYNC_STATE {
   STOPPED,
@@ -110,7 +111,7 @@ export class TradeEngine {
 
     await this.tradeStore.insertTrades(storeOpts, trades)
 
-    const from = Math.min(...trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
+    const from = chunkedMin(trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
     const { oldestTime } = await this.markerStore.saveMarker(storeOpts, to, from, trades)
 
     logger.debug(`${this.exchange}.${symbol} scanBack ${JSON.stringify({ now: new Date(oldestTime), end: new Date(end) })}`)
@@ -135,15 +136,13 @@ export class TradeEngine {
 
     await this.tradeStore.insertTrades(storeOpts, trades)
 
-    const to = Math.max(...trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
+    const to = chunkedMax(trades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
     const { newestTime } = await this.markerStore.saveMarker(storeOpts, to, from, trades)
 
     if (!isTick) logger.debug(`${this.exchange}.${symbol} scanForward ${JSON.stringify({ now: new Date(newestTime), end: new Date() })}`)
 
     // Always get current time so backfill can catch up to "now"
-    if (newestTime < now) {
-      await this.scanForward(symbol, to, isTick)
-    }
+    if (newestTime < now) await asyncNextTick(this.scanForward(symbol, to, isTick))
   }
 
   private async tickBack(symbol: string, target: number, lastFrom: number = null) {
@@ -160,8 +159,8 @@ export class TradeEngine {
 
     await this.tradeStore.insertTrades(storeOpts, filteredTrades)
 
-    const from = Math.min(...filteredTrades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
-    const to = Math.max(...filteredTrades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
+    const from = chunkedMin(filteredTrades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
+    const to = chunkedMax(filteredTrades.map((trade) => this.exchangeProvider.getTradeCursor(this.exchange, trade)))
     await this.markerStore.saveMarker(storeOpts, to, from, filteredTrades)
 
     if (filteredTrades.length === trades.length) await this.tickBack(symbol, target, from)

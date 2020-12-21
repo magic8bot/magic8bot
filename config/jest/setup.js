@@ -73,6 +73,7 @@ jest.mock('../../src/util/logger', () => {
 jest.mock('../../src/util/async', () => {
   const asyncTimeout = jest.fn().mockResolvedValue()
   const sleep = jest.fn().mockResolvedValue()
+  const asyncNextTick = jest.fn().mockResolvedValue()
 
-  return { asyncTimeout, sleep }
+  return { asyncTimeout, sleep, asyncNextTick }
 })

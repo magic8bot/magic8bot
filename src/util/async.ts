@@ -14,3 +14,5 @@ export const asyncWrap = async <T>(promise: Promise<T>): Promise<[Error, T]> => 
     return [e, null]
   }
 }
+
+export const asyncNextTick = <T>(promise: Promise<T>) => new Promise<T>((resolve) => process.nextTick(async () => resolve(await promise)))

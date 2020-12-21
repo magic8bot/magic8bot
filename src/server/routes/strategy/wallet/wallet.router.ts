@@ -21,7 +21,7 @@ export class WalletRouter extends BaseRouter {
 
     this.router.put('/', async ({ body }, res) => {
       const result = await core.adjustWallet(body)
-      res.send(result)
+      res.send(result || { success: true })
     })
   }
 }

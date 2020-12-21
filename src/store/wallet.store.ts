@@ -81,8 +81,8 @@ export class WalletStore {
 
     const wallet = this.wallets.get(idStr)
 
-    wallet.asset += adjustment.asset
-    wallet.currency += adjustment.currency
+    wallet.asset = Number(wallet.asset) + Number(adjustment.asset)
+    wallet.currency = Number(wallet.currency) + Number(adjustment.currency)
 
     await this.adjustmentStore.adjustWallet(storeOpts, adjustment)
 

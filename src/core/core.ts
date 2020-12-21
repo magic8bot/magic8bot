@@ -215,7 +215,7 @@ class Core {
 
     if (hasExchange !== true) return hasExchange
 
-    this.exchangeCores.get(exchange).adjustWallet(symbol, strategy, asset, currency)
+    return this.exchangeCores.get(exchange).adjustWallet(symbol, strategy, asset, currency)
   }
 
   // Depracted

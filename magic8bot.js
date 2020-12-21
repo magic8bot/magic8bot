@@ -10,4 +10,3 @@ if (isDev) {
   require('module-alias/register')
   require('./dist')
 }
-5

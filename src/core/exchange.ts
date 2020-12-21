@@ -4,7 +4,7 @@ import { ExchangeProvider } from '@exchange'
 import { StrategyCore } from '@core'
 import { TradeEngine } from '@engine'
 import { logger } from '@util'
-import { ExchangeConfig, StrategyConfig } from '@lib'
+import { EVENT, eventBus, ExchangeConfig, StrategyConfig } from '@lib'
 
 import { TickerEngine } from '../engine/ticker'
 
@@ -134,7 +134,7 @@ export class ExchangeCore {
     if (currency > currencyFree) return this.error(`currency ${c} does not have enough free funds (${currencyFree})`)
 
     // prettier-ignore
-    await this.strategyCores.get(symbol).get(strategy).adjustStrategyWallet({ asset, currency, type: 'user' })
+    eventBus.get(EVENT.WALLET_ADJUST)(this.exchange)(symbol)(strategy).emit({ asset, currency, type: 'user' })
   }
 
   private getFreeFunds(wallets, a: string, c: string, assetBalance: number, currencyBalance: number): { assetFree: any; currencyFree: any } {
@@ -145,6 +145,9 @@ export class ExchangeCore {
     const [wA, wC] = wallet.symbol.split('/')
     if (a === wA) acc.assetFree -= wallet.asset
     if (c === wC) acc.currencyFree -= wallet.currency
+
+    if (acc.assetFree < 0) acc.assetFree = 0
+    if (acc.currencyFree < 0) acc.currencyFree = 0
     return acc
   }
 

@@ -81,8 +81,8 @@ export class ExchangeProvider {
     return this.retry(fn)
   }
 
-  public cancelOrder(exchange: string, orderId: string) {
-    const fn = () => this.exchanges.get(exchange).cancelOrder(orderId)
+  public cancelOrder(exchange: string, orderId: string, symbol: string) {
+    const fn = () => this.exchanges.get(exchange).cancelOrder(orderId, symbol)
     return this.retry(fn)
   }
 

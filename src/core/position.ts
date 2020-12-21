@@ -16,7 +16,9 @@ interface OnEventType {
 
 enum POSITION_STATE {
   NEW = 'NEW',
+  OPENING = 'OPENING',
   OPEN = 'OPEN',
+  CLOSING = 'CLOSING',
   CLOSED = 'CLOSED',
 }
 
@@ -50,6 +52,7 @@ export class Position {
     cancel: null,
   }
 
+  private order: string = null
   private takeProfitFactor = 1.5
   private limitOrderPriceOffset: number = null
   private lastSignal: SIGNAL = null
@@ -74,10 +77,11 @@ export class Position {
   processSignal(signal: SIGNAL, data?: Record<string, any>) {
     this.lastSignal = signal
     const { limitOrderPriceOffset } = data
-    this.limitOrderPriceOffset = limitOrderPriceOffset
+    if (this.limitOrderPriceOffset === null) this.limitOrderPriceOffset = limitOrderPriceOffset
 
     switch (signal) {
       case SIGNAL.OPEN_LONG:
+        if (this.state === POSITION_STATE.OPENING) return this.adjustOrder()
         if (this.state !== POSITION_STATE.NEW) break
         this.openLong()
         break
@@ -86,6 +90,7 @@ export class Position {
         this.openShort()
         break
       case SIGNAL.CLOSE_LONG:
+        if (this.state === POSITION_STATE.CLOSING) return this.adjustOrder()
         if (this.state !== POSITION_STATE.OPEN) break
         this.closeLong()
         break
@@ -98,6 +103,8 @@ export class Position {
 
   onClose(fn: () => void) {
     this.handleOnClose = () => {
+      this.order = null
+      this.state = POSITION_STATE.CLOSED
       this.stopListen()
       this.handleOnClose = null
       fn()
@@ -120,8 +127,9 @@ export class Position {
 
     if (!order) return this.handleOnClose && this.handleOnClose()
 
-    this.newOrderAdjustment(order)
-    this.state = POSITION_STATE.OPEN
+    this.newOrderWalletAdjustment(order)
+    this.state = POSITION_STATE.OPENING
+    this.order = order.id
 
     logger.info(`${exchange}.${symbol}.${strategy}.${order.id} opened`)
 
@@ -146,9 +154,10 @@ export class Position {
       await sleep(10)
       return this.closeLong()
     }
+    this.order = order.id
 
-    this.newOrderAdjustment(order)
-    this.state = POSITION_STATE.CLOSED
+    this.newOrderWalletAdjustment(order)
+    this.state = POSITION_STATE.CLOSING
 
     this.emitWalletAdjustment({ asset: -this.wallet.asset, currency: 0, type: 'closeLong' })
     this.watchOrder(order)
@@ -163,6 +172,15 @@ export class Position {
     // Do nothing
   }
 
+  private async adjustOrder() {
+    logger.debug(`Adjusting order`)
+
+    await this.orderEngine.cancelOrder(this.order)
+    if (this.state === POSITION_STATE.OPENING) return this.openLong()
+
+    return this.closeLong()
+  }
+
   private watchOrder(order: Order) {
     this.eventListeners.partial = this.eventBusNodes.partial(order.id).listen(this.onParial)
     this.eventListeners.complete = this.eventBusNodes.complete(order.id).listen(this.onComplete)
@@ -171,7 +189,7 @@ export class Position {
     this.orderEngine.checkOrder(order.id)
   }
 
-  private newOrderAdjustment(order: Order) {
+  private newOrderWalletAdjustment(order: Order) {
     const adjustment = { asset: 0, currency: 0 }
     const type = order.side === 'buy' ? 'openLongFill' : 'closeLongFill'
 
@@ -192,6 +210,7 @@ export class Position {
   }
 
   private onComplete = async ({ savedOrder, update }: OnEventType) => {
+    this.order = null
     this.onParial({ savedOrder, update })
     this.stopListen()
 
@@ -201,6 +220,7 @@ export class Position {
     await this.getFees(update)
 
     if (savedOrder.side === 'sell') return this.handleOnClose()
+    this.state = POSITION_STATE.OPEN
 
     this.checkPrice()
     // @todo(notVitaliy): Implement stop-loss / take-profits here
@@ -248,17 +268,22 @@ export class Position {
     this.slPrice = quote - this.limitOrderPriceOffset
     this.tpPrice = quote + this.limitOrderPriceOffset * this.takeProfitFactor
 
-    console.log(this.tpPrice, this.slPrice)
+    console.log(this.tpPrice, this.slPrice, this.tpPrice - this.slPrice)
   }
 
   private async checkPrice() {
+    if (this.state === POSITION_STATE.CLOSED) return
+
     const quote = await this.quoteEngine.getSellPrice()
 
-    if (quote >= this.tpPrice || quote <= this.slPrice) return this.closeLong(quote)
+    // Take profit hit but still in a buy signal trend.
+    if (quote >= this.tpPrice && this.lastSignal !== SIGNAL.OPEN_LONG) return this.closeLong(quote)
 
-    // trailing stop-loss?
-    if (quote > this.lastQuote && this.lastSignal !== SIGNAL.OPEN_LONG && this.takeProfitFactor > 1) this.takeProfitFactor -= 0.01
-    if (quote > this.lastQuote && this.lastSignal === SIGNAL.OPEN_LONG) this.setEntryExitPrices(quote)
+    if (quote <= this.slPrice) return this.closeLong(quote)
+
+    // // trailing stop-loss?
+    // if (quote > this.lastQuote && this.lastSignal !== SIGNAL.OPEN_LONG && this.takeProfitFactor > 1) this.takeProfitFactor -= 0.01
+    // if (quote > this.lastQuote && this.lastSignal === SIGNAL.OPEN_LONG && this.takeProfitFactor > 1) this.setEntryExitPrices(quote)
 
     await sleep(5000)
 

@@ -95,8 +95,8 @@ export class ExchangeWrapper {
     return res
   }
 
-  public async cancelOrder(orderId: string) {
-    const fn = () => this.exchangeConnection.cancelOrder(orderId)
+  public async cancelOrder(orderId: string, symbol: string) {
+    const fn = () => this.exchangeConnection.cancelOrder(orderId, symbol)
     const res = await this.bottleneck.schedule(fn)
 
     const debug = { name: 'cancelOrder', req: { orderId }, res }

@@ -103,7 +103,7 @@ export class OrderEngine {
     const { exchange, symbol, strategy } = this.opts
     try {
       this.orderStore.updateOrderState(this.storeOpts, id, ORDER_STATE.PENDING_CANCEL)
-      await this.exchangeProvider.cancelOrder(exchange, id)
+      await this.exchangeProvider.cancelOrder(exchange, id, symbol)
       this.orderStore.updateOrderState(this.storeOpts, id, ORDER_STATE.CANCELED)
 
       eventBus.get(EVENT.ORDER_CANCEL)(exchange)(symbol)(strategy)(id).emit({ savedOrder })

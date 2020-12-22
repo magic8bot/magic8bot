@@ -76,7 +76,7 @@ export class TradeEngine {
 
     logger.info(`Trade sync for ${this.exchange} on ${symbol} completed backfill.`)
 
-    await this.tradeStore.loadTrades(storeOpts, true)
+    return this.tradeStore.loadTrades(storeOpts, true)
   }
 
   private async tick(symbol: string) {

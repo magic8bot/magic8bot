@@ -6,6 +6,7 @@ import { logger } from '../util'
 
 const singleton = Symbol()
 
+const MAX_TRADES_LOAD = 5000
 export class TradeStore {
   public static get instance(): TradeStore {
     /* istanbul ignore next */
@@ -32,10 +33,7 @@ export class TradeStore {
   public async loadTrades({ exchange, symbol }: StoreOpts, isPreroll = false) {
     const idStr = this.makeIdStr({ exchange, symbol })
     const timestamp = this.tradesMap.get(idStr)
-    const trades = await dbDriver.trade
-      .find({ symbol, exchange, timestamp: { $gt: timestamp } })
-      .sort({ timestamp: 1 })
-      .toArray()
+    const trades = await this.findTrades(exchange, symbol, timestamp)
 
     if (!trades.length) return
 
@@ -44,6 +42,8 @@ export class TradeStore {
 
     const emitter = this.emitters.get(idStr)
     trades.forEach((trade) => emitter(trade))
+
+    if (trades.length === MAX_TRADES_LOAD) return this.loadTrades({ exchange, symbol }, isPreroll)
   }
 
   public async insertTrades({ exchange, symbol }: StoreOpts, newTrades: Trade[]) {
@@ -55,6 +55,14 @@ export class TradeStore {
     } catch {
       // ヽ(。_°)ノ
     }
+  }
+
+  private findTrades(exchange: string, symbol: string, timestamp: number) {
+    return dbDriver.trade
+      .find({ symbol, exchange, timestamp: { $gt: timestamp } })
+      .sort({ timestamp: 1 })
+      .limit(MAX_TRADES_LOAD)
+      .toArray()
   }
 
   private makeIdStr({ exchange, symbol }: StoreOpts) {

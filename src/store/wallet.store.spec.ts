@@ -1,7 +1,7 @@
 const mockId = 'test'
 
 import { WalletStore } from './wallet.store'
-import { dbDriver } from '@lib'
+import { dbDriver } from '@magic8bot/db'
 
 describe('WalletStore', () => {
   const storeOpts = { exchange: mockId, symbol: mockId, strategy: mockId }

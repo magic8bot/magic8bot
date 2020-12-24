@@ -1,9 +1,10 @@
 import { Order } from 'ccxt'
+import { StrategyConfig, Wallet, Adjustment } from '@magic8bot/db'
 
 import { EventBusEmitter, EventBusNode } from '@magic8bot/event-bus'
 
 import { ExchangeProvider, OrderOpts } from '../exchange'
-import { StrategyConfig, Wallet, Adjustment, eventBus, EVENT } from '../lib'
+import { eventBus, EVENT } from '../lib'
 import { OrderEngine, QuoteEngine } from '../engine'
 import { WalletStore } from '../store'
 import { SIGNAL } from '../types'

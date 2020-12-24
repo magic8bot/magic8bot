@@ -26,7 +26,7 @@ jest.mock('../../src/lib/ws-server', () => {
   return { wsServer }
 })
 
-jest.mock('../../src/lib/db/db-driver.lib', () => {
+jest.mock('@magic8bot/db', () => {
   const { db } = global
 
   const dbDriver = {

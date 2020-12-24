@@ -1,5 +1,6 @@
 import { Trade } from 'ccxt'
-import { dbDriver, Marker } from '@lib'
+import { dbDriver, Marker } from '@magic8bot/db'
+
 import { StoreOpts } from '@m8bTypes'
 import { chunkedMax, chunkedMin } from '../util/math'
 

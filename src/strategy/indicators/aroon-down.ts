@@ -1,4 +1,4 @@
-import { PeriodItem } from '@lib'
+import { PeriodItem } from '@m8bTypes'
 
 export class AroonDown {
   public static calculate(allPeriods: PeriodItem[], length = 25) {

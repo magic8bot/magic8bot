@@ -1,10 +1,11 @@
-import { ExchangeAuth } from '@m8bTypes'
 import ccxt, { Trade } from 'ccxt'
+import { ExchangeConfig } from '@magic8bot/db'
+
 import { ExchangeWrapper } from './exchange.wrapper'
 import { ExchangeErrorHandler } from './exchange.error'
-import { ExchangeConfig } from '@lib'
 import { sleep, logger } from '@util'
 import { ChaosXcg } from '../seed/chaos.exchange'
+import { ExchangeAuth } from '@m8bTypes'
 
 const verbose = false
 

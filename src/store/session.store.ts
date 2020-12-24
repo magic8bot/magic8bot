@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 
-import { dbDriver, SessionCollection } from '@lib'
+import { dbDriver, SessionCollection } from '@magic8bot/db'
 
 const singleton = Symbol()
 

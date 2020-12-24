@@ -1,5 +1,7 @@
 import { EventBusListener } from '@magic8bot/event-bus'
-import { dbDriver, Wallet, eventBus, EVENT, Adjustment, wsServer } from '@lib'
+import { dbDriver, Wallet, Adjustment } from '@magic8bot/db'
+
+import { eventBus, EVENT, wsServer } from '@lib'
 import { SessionStore } from './session.store'
 import { AdjustmentStore } from './adjustment.store'
 import { StoreOpts } from '@m8bTypes'

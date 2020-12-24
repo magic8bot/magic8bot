@@ -1,5 +1,5 @@
 import { precisionRound } from '@util'
-import { PeriodItem } from '@lib'
+import { PeriodItem } from '@m8bTypes'
 
 export class RSI {
   public static calculate(lastAvgGain: number, lastAvgLoss: number, periods: PeriodItem[], length: number) {

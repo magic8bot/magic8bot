@@ -5,9 +5,8 @@
  * Limit orders without tying up funds with stop loss calculated on period close
  * @todo when ordersize can be set allow, for multiple sell points to reduce risk
  */
-import { PeriodItem } from '@lib'
 import { BaseStrategy, StrategyField } from '../base-strategy'
-import { SIGNAL } from '@m8bTypes'
+import { SIGNAL, PeriodItem } from '@m8bTypes'
 import { logger } from '../../../util/logger'
 
 export interface SoftCodedPriceOptions {

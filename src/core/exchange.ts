@@ -1,10 +1,11 @@
 import { StrategyStore, WalletStore } from '@store'
-import { ExchangeProvider } from '@exchange'
+import { ExchangeConfig, StrategyConfig } from '@magic8bot/db'
 
+import { ExchangeProvider } from '@exchange'
 import { StrategyCore } from '@core'
 import { TradeEngine } from '@engine'
 import { logger } from '@util'
-import { EVENT, eventBus, ExchangeConfig, StrategyConfig } from '@lib'
+import { EVENT, eventBus } from '@lib'
 
 import { TickerEngine } from '../engine/ticker'
 

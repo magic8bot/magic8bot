@@ -1,6 +1,8 @@
 import { Trade } from 'ccxt'
 import { EventBusEmitter } from '@magic8bot/event-bus'
-import { dbDriver, eventBus, EVENT } from '@lib'
+import { dbDriver } from '@magic8bot/db'
+
+import { eventBus, EVENT } from '@lib'
 import { StoreOpts } from '@m8bTypes'
 import { logger } from '../util'
 

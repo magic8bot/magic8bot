@@ -1,4 +1,5 @@
-import { dbDriver, Wallet, eventBus, EVENT, Adjustment, wsServer } from '@lib'
+import { dbDriver, Adjustment } from '@magic8bot/db'
+
 import { SessionStore } from './session.store'
 import { StoreOpts } from '@m8bTypes'
 

@@ -205,3 +205,14 @@ export interface StoreOpts {
   symbol: string
   strategy?: string
 }
+
+export interface PeriodItem {
+  time: number
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+  trades?: number
+  bucket?: number
+}

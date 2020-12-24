@@ -1,6 +1,9 @@
-import { dbDriver, OrderWithTrades, wsServer } from '@lib'
-import { SessionStore } from './session.store'
 import { Order } from 'ccxt'
+import { dbDriver, OrderWithTrades } from '@magic8bot/db'
+
+import { wsServer } from '@lib'
+
+import { SessionStore } from './session.store'
 import { StoreOpts } from '@m8bTypes'
 
 const singleton = Symbol()

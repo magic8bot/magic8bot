@@ -1,7 +1,8 @@
 import { Exchange, Trade, Order } from 'ccxt'
+import { OrderWithTrades } from '@magic8bot/db'
+
 import { coinbasepro, binance, chaos } from './adapters'
 import { ExchangeAdapter } from './adapters/base'
-import { OrderWithTrades } from '@lib'
 import Bottleneck from 'bottleneck'
 import { logger } from '@util'
 

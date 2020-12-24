@@ -1,5 +1,6 @@
+import { ExchangeCollection, StrategyCollection, ExchangeConfig } from '@magic8bot/db'
+
 import { ExchangeStore, StrategyStore, WalletStore } from '@store'
-import { ExchangeCollection, StrategyCollection, ExchangeConfig } from '@lib'
 import { logger } from '@util'
 
 export class CoreHelpers {

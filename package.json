@@ -25,6 +25,7 @@
     "test:watch": "jest --detectOpenHandles --runInBand --forceExit --watch"
   },
   "dependencies": {
+    "@magic8bot/db": "1.0.3",
     "@magic8bot/event-bus": "^1.1.2",
     "@magic8bot/timebucket": "^1.1.0",
     "body-parser": "^1.19.0",

@@ -1,7 +1,6 @@
-import { PeriodItem } from '@lib'
 import { MACD, RSI } from '../../indicators'
 import { BaseStrategy, StrategyField } from '../base-strategy'
-import { SIGNAL as SIGNAL } from '@m8bTypes'
+import { SIGNAL, PeriodItem } from '@m8bTypes'
 import { logger } from '../../../util/logger'
 
 export interface MacdOptions {

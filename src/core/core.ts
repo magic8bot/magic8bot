@@ -1,7 +1,8 @@
+import { ExchangeConfig, StrategyConfig } from '@magic8bot/db'
+
 import { SessionStore, ExchangeStore, StrategyStore, WalletStore } from '@store'
 import { ExchangeProvider } from '@exchange'
 import { ExchangeCore } from './exchange'
-import { ExchangeConfig, StrategyConfig } from '@lib'
 import { CoreHelpers } from './core.helpers'
 import * as Adapters from '../exchange/adapters'
 import { Strategies } from '../strategy/strategies/strategies'

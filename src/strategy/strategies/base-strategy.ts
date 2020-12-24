@@ -1,6 +1,8 @@
-import { PeriodItem, EVENT, eventBus, StrategyConfig } from '@lib'
+import { StrategyConfig } from '@magic8bot/db'
 import { EventBusListener, EventBusEmitter } from '@magic8bot/event-bus'
-import { SignalEvent, SIGNAL } from '@m8bTypes'
+
+import { EVENT, eventBus } from '@lib'
+import { SignalEvent, SIGNAL, PeriodItem } from '@m8bTypes'
 
 export interface StrategyField {
   name: string

@@ -1,4 +1,5 @@
-import { dbDriver, StrategyConfig } from '@lib'
+import { dbDriver, StrategyConfig } from '@magic8bot/db'
+
 import { SessionStore } from './session.store'
 import { StoreOpts } from '@m8bTypes'
 

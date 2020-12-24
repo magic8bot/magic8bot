@@ -1,5 +1,6 @@
+import { StrategyConfig, Adjustment } from '@magic8bot/db'
 import { SIGNAL } from '@m8bTypes'
-import { eventBus, EVENT, StrategyConfig, Adjustment } from '@lib'
+import { eventBus, EVENT } from '@lib'
 
 import { PeriodStore, WalletStore } from '@store'
 import { BaseStrategy, strategyLoader } from '@strategy'

@@ -1,8 +1,9 @@
 import { OrderNotFound, InsufficientFunds } from 'ccxt'
 import cloneDeep from 'deep-clone'
+import { OrderWithTrades, StrategyConfig } from '@magic8bot/db'
 
 import { WalletStore, OrderStore, ORDER_STATE } from '@store'
-import { EVENT, eventBus, OrderWithTrades, StrategyConfig } from '@lib'
+import { EVENT, eventBus } from '@lib'
 import { ExchangeProvider, OrderOpts } from '@exchange'
 import { StoreOpts } from '@m8bTypes'
 import { sleep, asyncWrap } from '@util'

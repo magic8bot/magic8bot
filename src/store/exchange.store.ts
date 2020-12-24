@@ -1,4 +1,5 @@
-import { dbDriver, ExchangeConfig } from '@lib'
+import { dbDriver, ExchangeConfig } from '@magic8bot/db'
+
 import { SessionStore } from './session.store'
 
 const singleton = Symbol()

@@ -1,5 +1,4 @@
-import { PeriodItem } from '@lib'
-import { SIGNAL } from '@m8bTypes'
+import { SIGNAL, PeriodItem } from '@m8bTypes'
 import { AroonDown, AroonUp } from '../../indicators'
 import { BaseStrategy, StrategyField } from '../base-strategy'
 import { logger } from '../../../util'

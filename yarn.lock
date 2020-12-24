@@ -475,6 +475,15 @@
     "@types/yargs" "^15.0.0"
     chalk "^4.0.0"
 
+"@magic8bot/db@1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@magic8bot/db/-/db-1.0.3.tgz#8e45a9dfc35eb401fe13a3e20184f77cebbba59c"
+  integrity sha512-khGAx+BMjwVCNxzezQVpiX3SjVymRio7BOFaqoVaYZBnuiPAH8wDBp5D1qvs5i6BRa3UCf1AEVb2kWJTfaIHFg==
+  dependencies:
+    cross-env "7.0.2"
+    dotenv "^8.2.0"
+    mongodb "^3.6.3"
+
 "@magic8bot/event-bus@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@magic8bot/event-bus/-/event-bus-1.1.2.tgz#43f456d39acff8e0a766333155e48d3c00663d64"

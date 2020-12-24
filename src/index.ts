@@ -2,7 +2,10 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import semver from 'semver'
-import { dbDriver, wsServer } from '@lib'
+
+import { dbDriver } from '@magic8bot/db'
+
+import { wsServer } from '@lib'
 import { server } from './server'
 import { core } from '@core'
 import { logger } from '@util'

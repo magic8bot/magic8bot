@@ -1,8 +1,11 @@
 import { Trade } from 'ccxt'
+
+import { TradeCollection } from '@magic8bot/db'
 import { timebucket } from '@magic8bot/timebucket'
+
 import { EventBusEmitter, EventBusListener } from '@magic8bot/event-bus'
-import { PeriodItem, eventBus, EVENT, wsServer, TradeCollection } from '@lib'
-import { StoreOpts } from '@m8bTypes'
+import { eventBus, EVENT, wsServer } from '@lib'
+import { StoreOpts, PeriodItem } from '@m8bTypes'
 import { logger } from '../util/logger'
 
 const singleton = Symbol()

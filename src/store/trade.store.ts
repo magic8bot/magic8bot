@@ -1,14 +1,13 @@
-import { Trade } from 'ccxt'
+import { TradeModel, Trade } from '@magic8bot/db'
 import { EventBusEmitter } from '@magic8bot/event-bus'
-import { dbDriver } from '@magic8bot/db'
 
 import { eventBus, EVENT } from '@lib'
 import { StoreOpts } from '@m8bTypes'
 import { logger } from '../util'
 
+const MAX_TRADES_LOAD = 5000
 const singleton = Symbol()
 
-const MAX_TRADES_LOAD = 5000
 export class TradeStore {
   public static get instance(): TradeStore {
     /* istanbul ignore next */
@@ -35,7 +34,7 @@ export class TradeStore {
   public async loadTrades({ exchange, symbol }: StoreOpts, isPreroll = false) {
     const idStr = this.makeIdStr({ exchange, symbol })
     const timestamp = this.tradesMap.get(idStr)
-    const trades = await this.findTrades(exchange, symbol, timestamp)
+    const trades = await TradeModel.findTrades(exchange, symbol, timestamp)
 
     if (!trades.length) return
 
@@ -52,23 +51,8 @@ export class TradeStore {
     trades.forEach((trade) => emitter(trade))
   }
 
-  public async insertTrades({ exchange, symbol }: StoreOpts, newTrades: Trade[]) {
-    try {
-      await dbDriver.trade.insertMany(
-        newTrades.map((trade) => ({ ...trade, exchange, symbol })),
-        { ordered: false }
-      )
-    } catch {
-      // ヽ(。_°)ノ
-    }
-  }
-
-  private findTrades(exchange: string, symbol: string, timestamp: number) {
-    return dbDriver.trade
-      .find({ symbol, exchange, timestamp: { $gt: timestamp } })
-      .sort({ timestamp: 1 })
-      .limit(MAX_TRADES_LOAD)
-      .toArray()
+  public insertTrades(storeOpts: StoreOpts, newTrades: Trade[]) {
+    return TradeModel.insertTrades(storeOpts, newTrades)
   }
 
   private makeIdStr({ exchange, symbol }: StoreOpts) {

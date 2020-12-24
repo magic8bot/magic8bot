@@ -1,5 +1,5 @@
 import { Trade } from 'ccxt'
-import { dbDriver, Marker } from '@magic8bot/db'
+import { MarkerModel, Marker } from '@magic8bot/db'
 
 import { StoreOpts } from '@m8bTypes'
 import { chunkedMax, chunkedMin } from '../util/math'
@@ -21,7 +21,7 @@ export class MarkerStore {
     const marker = this.getMarker(storeOpts)
     if (!marker || !marker.from) return null
 
-    const nextMarker = await this.findInRange(storeOpts, marker.from - 1)
+    const nextMarker = await MarkerModel.findInRange(storeOpts, marker.from - 1)
     if (!nextMarker) return marker.from
 
     this.setMarker(storeOpts, nextMarker)
@@ -29,7 +29,7 @@ export class MarkerStore {
   }
 
   public async getNextForwardMarker(storeOpts: StoreOpts, target: number) {
-    const marker = await this.findInRange(storeOpts, target)
+    const marker = await MarkerModel.findInRange(storeOpts, target)
     if (marker) return this.getNextForwardMarker(storeOpts, marker.to + 1)
     return target
   }
@@ -37,16 +37,14 @@ export class MarkerStore {
   public async saveMarker(storeOpts: StoreOpts, to: number, from: number, trades: Trade[]) {
     const marker = this.makeMarker(storeOpts, to, from, trades)
     this.setMarker(storeOpts, marker)
-    await dbDriver.marker.insertOne(marker)
+    await MarkerModel.saveMarker(marker)
 
     return marker
   }
 
   /* istanbul ignore next */
-  public async findLatestTradeMarker({ exchange, symbol }: StoreOpts) {
-    const marker = await dbDriver.marker.find({ exchange, symbol }).sort({ oldestTime: -1 }).limit(1).toArray()
-
-    return marker.pop()
+  public async findLatestTradeMarker(storeOpts: StoreOpts) {
+    return MarkerModel.findLatestTradeMarker(storeOpts)
   }
 
   private getMarker(storeOpts: StoreOpts) {
@@ -57,10 +55,6 @@ export class MarkerStore {
   private setMarker(storeOpts: StoreOpts, marker: Marker) {
     const idStr = this.makeIdStr(storeOpts)
     this.markers.set(idStr, marker)
-  }
-
-  private async findInRange({ exchange, symbol }: StoreOpts, cursor: number) {
-    return dbDriver.marker.findOne({ exchange, symbol, to: { $gte: cursor }, from: { $lte: cursor } })
   }
 
   private makeMarker({ exchange, symbol }: StoreOpts, to: number, from: number, trades: Trade[]) {

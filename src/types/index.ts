@@ -32,7 +32,6 @@ export interface Base {
   markUp: number
   orderPollInterval: number
   orderSlippageAdjustmentTolerance: number
-  resetSession?: boolean
 
   min_periods: number
   sell_stop_pct: number
@@ -105,7 +104,6 @@ export interface EngineConf extends Base {
 }
 
 export interface Conf extends Partial<Base> {
-  session_id?: string
   exchanges: ExchangeConf[]
   mode: string
 }

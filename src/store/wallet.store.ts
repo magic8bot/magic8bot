@@ -1,8 +1,8 @@
 import { EventBusListener } from '@magic8bot/event-bus'
-import { dbDriver, Wallet, Adjustment } from '@magic8bot/db'
+import { WalletModel, Wallet, Adjustment } from '@magic8bot/db'
 
 import { eventBus, EVENT, wsServer } from '@lib'
-import { SessionStore } from './session.store'
+
 import { AdjustmentStore } from './adjustment.store'
 import { StoreOpts } from '@m8bTypes'
 import { logger } from '../util'
@@ -18,12 +18,7 @@ export class WalletStore {
 
   private readonly adjustmentStore = AdjustmentStore.instance
 
-  private sessionId: string = SessionStore.instance.sessionId
   private wallets: Map<string, Wallet> = new Map()
-
-  private get store() {
-    return dbDriver.wallet
-  }
 
   private subscriptions: Set<string> = new Set()
 
@@ -45,13 +40,11 @@ export class WalletStore {
   }
 
   public loadAll(exchange: string) {
-    return this.store.find({ sessionId: this.sessionId, exchange }, { projection: { _id: 0, sessionId: 0 } }).toArray()
+    return WalletModel.loadAll(exchange)
   }
 
   public async loadWallet(storeOpts: StoreOpts): Promise<Wallet> {
-    const wallet = await this.store.findOne({ sessionId: this.sessionId, ...storeOpts }, { projection: { _id: 0, sessionId: 0 } })
-
-    return !wallet ? null : { asset: wallet.asset, currency: wallet.currency }
+    return WalletModel.loadWallet(storeOpts)
   }
 
   private async loadOrNewWallet(storeOpts: StoreOpts, adjustment: Adjustment) {
@@ -93,12 +86,9 @@ export class WalletStore {
 
   private async saveWallet(storeOpts: StoreOpts) {
     const idStr = this.makeIdStr(storeOpts)
-    const timestamp = new Date().getTime()
     const wallet = this.wallets.get(idStr)
-    await this.store.updateOne({ sessionId: this.sessionId, ...storeOpts }, { $set: { timestamp, ...wallet } }, { upsert: true })
 
-    // @todo(notVitaliy): Find a better place for this
-    wsServer.broadcast('wallet', { ...storeOpts, wallet: this.getWallet(storeOpts) })
+    await WalletModel.saveWallet(storeOpts, wallet)
   }
 
   private makeIdStr({ exchange, symbol, strategy }: StoreOpts) {

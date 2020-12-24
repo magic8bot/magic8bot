@@ -1,6 +1,6 @@
-import { ExchangeConfig, StrategyConfig } from '@magic8bot/db'
+import { ExchangeModel, StrategyModel, ExchangeConfig, StrategyConfig } from '@magic8bot/db'
 
-import { SessionStore, ExchangeStore, StrategyStore, WalletStore } from '@store'
+import { WalletStore } from '@store'
 import { ExchangeProvider } from '@exchange'
 import { ExchangeCore } from './exchange'
 import { CoreHelpers } from './core.helpers'
@@ -20,15 +20,14 @@ class Core {
   }
 
   public async init() {
-    await SessionStore.instance.loadSession()
-    const exchanges = await ExchangeStore.instance.loadAllWithAuth()
+    const exchanges = await ExchangeModel.loadAllWithAuth()
 
     exchanges.forEach((exchangeConfig) => this.initExchangeCore(exchangeConfig))
   }
 
   // Exchange
   public getExchanges() {
-    return ExchangeStore.instance.loadAll()
+    return ExchangeModel.loadAll()
   }
 
   public async addExchange(exchangeConfig: ExchangeConfig) {
@@ -47,7 +46,7 @@ class Core {
         delete exchangeConfig[key]
       })
 
-    await ExchangeStore.instance.save(exchangeConfig)
+    await ExchangeModel.save(exchangeConfig)
     const exchangeAdded = await this.initExchangeCore(exchangeConfig)
     const { auth, ...config } = exchangeConfig
 
@@ -56,7 +55,7 @@ class Core {
 
   public async updateExchange(exchangeConfig: Partial<ExchangeConfig>) {
     // @todo(notVitaliy): Do input sanitizing here
-    await ExchangeStore.instance.save(exchangeConfig as ExchangeConfig)
+    await ExchangeModel.save(exchangeConfig as ExchangeConfig)
 
     const exchange = await this.stopExchange(exchangeConfig.exchange)
 
@@ -74,8 +73,8 @@ class Core {
 
   public async deleteExchange({ exchange }) {
     await this.stopExchange(exchange)
-    await ExchangeStore.instance.delete(exchange)
-    await StrategyStore.instance.deleteAllForExchange(exchange)
+    await ExchangeModel.delete(exchange)
+    await StrategyModel.deleteAllForExchange(exchange)
     return { success: true }
   }
 
@@ -127,7 +126,7 @@ class Core {
 
   // Strategy
   public async getStrategies({ exchange }) {
-    const strategies = await StrategyStore.instance.loadAllForExchange(exchange)
+    const strategies = await StrategyModel.loadAllForExchange(exchange)
 
     return strategies.map((strtgy) => {
       const status = this.exchangeCores.get(exchange).strategyIsRunning(strtgy.symbol, strtgy.strategy)
@@ -141,7 +140,7 @@ class Core {
 
     if (hasExchange !== true) return hasExchange
 
-    await StrategyStore.instance.save(strategyConfig)
+    await StrategyModel.save(strategyConfig)
     this.exchangeCores.get(exchange).addStrategy(strategyConfig)
     return strategyConfig
   }
@@ -156,7 +155,7 @@ class Core {
     const isRunning = exchangeCore.strategyIsRunning(symbol, strategy)
 
     if (isRunning) exchangeCore.strategyStop(symbol, strategy)
-    await StrategyStore.instance.save(strategyConfig)
+    await StrategyModel.save(strategyConfig)
     exchangeCore.updateStrategy(strategyConfig)
     if (isRunning) await exchangeCore.strategyStart(symbol, strategy)
 
@@ -172,7 +171,7 @@ class Core {
     if (exchangeCore.strategyIsRunning(symbol, strategy)) exchangeCore.strategyKill(symbol, strategy)
 
     exchangeCore.deleteStrategy(symbol, strategy)
-    await StrategyStore.instance.delete(exchange, symbol, strategy)
+    await StrategyModel.delete(exchange, symbol, strategy)
 
     return { success: true }
   }
@@ -242,8 +241,8 @@ class Core {
   }
 
   private async stopExchange(name: string) {
-    const exchange = await ExchangeStore.instance.loadWithAuth(name)
-    const strategies = await StrategyStore.instance.loadAllForExchange(name)
+    const exchange = await ExchangeModel.loadWithAuth(name)
+    const strategies = await StrategyModel.loadAllForExchange(name)
     const exchangeCore = this.exchangeCores.get(exchange.exchange)
 
     strategies.forEach(({ symbol, strategy }) => {

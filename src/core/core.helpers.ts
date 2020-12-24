@@ -1,11 +1,11 @@
-import { ExchangeCollection, StrategyCollection, ExchangeConfig } from '@magic8bot/db'
+import { ExchangeModel, StrategyModel, ExchangeCollection, StrategyCollection, ExchangeConfig } from '@magic8bot/db'
 
-import { ExchangeStore, StrategyStore, WalletStore } from '@store'
+import { WalletStore } from '@store'
 import { logger } from '@util'
 
 export class CoreHelpers {
   public async getExchanges() {
-    const exchanges = await ExchangeStore.instance.loadAll()
+    const exchanges = await ExchangeModel.loadAll()
     return this.mapStrategiesToExchanges(exchanges)
   }
 
@@ -33,7 +33,7 @@ export class CoreHelpers {
   }
 
   private async getStrategies(exchange: string) {
-    const strategies = await StrategyStore.instance.loadAllForExchange(exchange)
+    const strategies = await StrategyModel.loadAllForExchange(exchange)
     return this.mapWalletsToStrategies(strategies)
   }
 

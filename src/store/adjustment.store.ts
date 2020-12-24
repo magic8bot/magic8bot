@@ -1,6 +1,5 @@
-import { dbDriver, Adjustment } from '@magic8bot/db'
+import { AdjustmentModel, Adjustment } from '@magic8bot/db'
 
-import { SessionStore } from './session.store'
 import { StoreOpts } from '@m8bTypes'
 
 const singleton = Symbol()
@@ -12,13 +11,9 @@ export class AdjustmentStore {
     return this[singleton]
   }
 
-  private sessionId: string = SessionStore.instance.sessionId
-
   private constructor() {}
 
   public async adjustWallet(storeOpts: StoreOpts, adjustment: Adjustment) {
-    const timestamp = new Date().getTime()
-    const data = { sessionId: this.sessionId, ...storeOpts, timestamp, ...adjustment }
-    await dbDriver.adjustment.insertOne(data)
+    await AdjustmentModel.adjustWallet(storeOpts, adjustment)
   }
 }

@@ -475,10 +475,10 @@
     "@types/yargs" "^15.0.0"
     chalk "^4.0.0"
 
-"@magic8bot/db@1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@magic8bot/db/-/db-1.0.3.tgz#8e45a9dfc35eb401fe13a3e20184f77cebbba59c"
-  integrity sha512-khGAx+BMjwVCNxzezQVpiX3SjVymRio7BOFaqoVaYZBnuiPAH8wDBp5D1qvs5i6BRa3UCf1AEVb2kWJTfaIHFg==
+"@magic8bot/db@2.0.5":
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/@magic8bot/db/-/db-2.0.5.tgz#a42e3a87bd1177f3bcb1f8736ac3eb1f4b40550d"
+  integrity sha512-UTfaaONDCcM+g6yxDq2LfwXLNmn/3giNAiXXyS25lKFsU9nla58S6clGNX6hnrqjyHcRZ+Pmh8ytHD9JQ2X+dw==
   dependencies:
     cross-env "7.0.2"
     dotenv "^8.2.0"

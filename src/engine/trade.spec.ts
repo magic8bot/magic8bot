@@ -104,6 +104,7 @@ describe('TradeEngine', () => {
   test('should load trades after scan', async () => {
     // @ts-ignore
     tradeEngine.scanType = 'back'
+    mockFindLatestTradeMarker.mockResolvedValue({ newestTime: 0 })
 
     jest.spyOn<any, any>(tradeEngine, 'scanBack').mockResolvedValueOnce(null)
     jest.spyOn<any, any>(tradeEngine, 'scanForward').mockResolvedValueOnce(null)

@@ -33,9 +33,6 @@ jest.mock('@magic8bot/db', () => {
     get trade() {
       return db.collection('trades')
     },
-    get session() {
-      return db.collection('sessions')
-    },
     get option() {
       return db.collection('options')
     },
@@ -53,7 +50,52 @@ jest.mock('@magic8bot/db', () => {
     },
   }
 
-  return { dbDriver }
+  const AdjustmentModel = {
+    adjustWallet: jest.fn(),
+  }
+
+  const ExchangeModel = {
+    save: jest.fn(),
+    load: jest.fn(),
+    loadWithAuth: jest.fn(),
+    loadAll: jest.fn(),
+    loadAllWithAuth: jest.fn(),
+    delete: jest.fn(),
+  }
+
+  const MarkerModel = {
+    saveMarker: jest.fn(),
+    findLatestTradeMarker: jest.fn(),
+    findInRange: jest.fn(),
+  }
+
+  const OrderModel = {
+    newOrder: jest.fn(),
+    getOpenOrder: jest.fn(),
+    saveOrder: jest.fn(),
+  }
+
+  const StrategyModel = {
+    save: jest.fn(),
+    load: jest.fn(),
+    loadAll: jest.fn(),
+    loadAllForExchange: jest.fn(),
+    delete: jest.fn(),
+    deleteAllForExchange: jest.fn(),
+  }
+
+  const TradeModel = {
+    insertTrades: jest.fn(),
+    findTrades: jest.fn().mockResolvedValue([]),
+  }
+
+  const WalletModel = {
+    loadAll: jest.fn(),
+    loadWallet: jest.fn(),
+    saveWallet: jest.fn(),
+  }
+
+  return { dbDriver, AdjustmentModel, ExchangeModel, MarkerModel, OrderModel, StrategyModel, TradeModel, WalletModel }
 })
 
 jest.mock('../../src/util/logger', () => {

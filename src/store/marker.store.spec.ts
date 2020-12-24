@@ -29,7 +29,6 @@ describe('MarkerStore', () => {
 
     test('returns marker from if not found in range', async () => {
       jest.spyOn<any, any>(markerStore, 'getMarker').mockReturnValueOnce({ from: true })
-      jest.spyOn<any, any>(markerStore, 'findInRange').mockReturnValueOnce(null)
 
       const result = await markerStore.getNextBackMarker(storeOpts)
 
@@ -39,18 +38,15 @@ describe('MarkerStore', () => {
     test('tries to get next marker', async () => {
       const getNextBackMarker = jest.spyOn<any, any>(markerStore, 'getNextBackMarker')
       jest.spyOn<any, any>(markerStore, 'getMarker').mockReturnValueOnce({ from: true })
-      jest.spyOn<any, any>(markerStore, 'findInRange').mockReturnValueOnce({ from: true })
 
       const result = await markerStore.getNextBackMarker(storeOpts)
 
-      expect(getNextBackMarker).toHaveBeenCalledTimes(2)
+      expect(getNextBackMarker).toHaveBeenCalledTimes(1)
     })
   })
 
   describe('getNextForwardMarker', () => {
     test('returns target if not found in range', async () => {
-      jest.spyOn<any, any>(markerStore, 'findInRange').mockReturnValueOnce(null)
-
       const result = await markerStore.getNextForwardMarker(storeOpts, null)
 
       expect(result).toEqual(null)
@@ -58,11 +54,10 @@ describe('MarkerStore', () => {
 
     test('tries to get next marker', async () => {
       const getNextForwardMarker = jest.spyOn<any, any>(markerStore, 'getNextForwardMarker')
-      jest.spyOn<any, any>(markerStore, 'findInRange').mockReturnValueOnce({ to: true })
 
       await markerStore.getNextForwardMarker(storeOpts, null)
 
-      expect(getNextForwardMarker).toHaveBeenCalledTimes(2)
+      expect(getNextForwardMarker).toHaveBeenCalledTimes(1)
     })
   })
 

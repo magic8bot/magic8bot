@@ -1,18 +1,8 @@
-import { Order } from 'ccxt'
-import { dbDriver, OrderWithTrades } from '@magic8bot/db'
+import { OrderModel, Order, OrderWithTrades } from '@magic8bot/db'
 
-import { wsServer } from '@lib'
-
-import { SessionStore } from './session.store'
 import { StoreOpts } from '@m8bTypes'
 
 const singleton = Symbol()
-
-interface Opts {
-  exchange: string
-  symbol: string
-  strategy: string
-}
 
 export enum ORDER_STATE {
   PENDING = 'pending',
@@ -30,7 +20,6 @@ export class OrderStore {
 
   private openOrders: Map<string, Map<string, OrderWithTrades>> = new Map()
   private orderStates: Map<string, Map<string, ORDER_STATE>> = new Map()
-  private readonly sessionId = SessionStore.instance.sessionId
 
   private constructor() {}
 
@@ -40,18 +29,12 @@ export class OrderStore {
     this.orderStates.set(idStr, new Map())
   }
 
-  public async newOrder({ exchange, symbol, strategy }: StoreOpts, order: Order | OrderWithTrades) {
-    const idStr = this.makeIdStr({ exchange, symbol, strategy })
+  public async newOrder(storeOpts: StoreOpts, order: Order | OrderWithTrades) {
+    const idStr = this.makeIdStr(storeOpts)
     this.openOrders.get(idStr).set(order.id, order as OrderWithTrades)
     this.orderStates.get(idStr).set(order.id, ORDER_STATE.PENDING)
 
-    const { sessionId } = this
-
-    const data = { ...order, sessionId, exchange, symbol, strategy }
-    await dbDriver.order.insertOne(data)
-
-    // @todo(notVitaliy): Find a better place for this
-    wsServer.broadcast('order-new', data)
+    await OrderModel.newOrder(storeOpts, order)
   }
 
   public getOpenOrder(storeOpts: StoreOpts, id: string) {
@@ -89,14 +72,8 @@ export class OrderStore {
     this.orderStates.get(idStr).set(id, state)
   }
 
-  /* istanbul ignore next */
   public async saveOrder(storeOpts: StoreOpts, order: OrderWithTrades) {
-    const { exchange } = storeOpts
-    const { id, ...updatedOrder } = order
-    await dbDriver.order.updateOne({ id, exchange }, { $set: { ...updatedOrder } })
-
-    // @todo(notVitaliy): Find a better place for this
-    wsServer.broadcast('order-update', { ...order, ...storeOpts })
+    return OrderModel.saveOrder(storeOpts, order)
   }
 
   private makeIdStr({ exchange, symbol, strategy }: StoreOpts) {

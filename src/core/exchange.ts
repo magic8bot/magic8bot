@@ -1,6 +1,6 @@
-import { StrategyStore, WalletStore } from '@store'
-import { ExchangeConfig, StrategyConfig } from '@magic8bot/db'
+import { ExchangeConfig, StrategyModel, StrategyConfig } from '@magic8bot/db'
 
+import { WalletStore } from '@store'
 import { ExchangeProvider } from '@exchange'
 import { StrategyCore } from '@core'
 import { TradeEngine } from '@engine'
@@ -23,7 +23,7 @@ export class ExchangeCore {
   }
 
   public async init() {
-    const strategies = await StrategyStore.instance.loadAllForExchange(this.exchange)
+    const strategies = await StrategyModel.loadAllForExchange(this.exchange)
     strategies.forEach((strategyConfig) => this.addStrategy(strategyConfig))
   }
 

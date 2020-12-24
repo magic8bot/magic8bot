@@ -58,23 +58,6 @@ describe('WalletStore', () => {
     expect(adjustWallet).toHaveBeenCalledTimes(0)
   })
 
-  test('loads a saved wallet (from db)', async () => {
-    subcribeToWalletEvents.mockReturnValueOnce(null)
-
-    // Fake save a wallet
-    // @ts-ignore
-    walletStore.wallets.set('test.test.test', { asset: 0, currency: 0 })
-    // @ts-ignore
-    await walletStore.saveWallet(storeOpts)
-    // @ts-ignore
-    walletStore.wallets = new Map()
-
-    await walletStore.initWallet(storeOpts, { asset: 0, currency: 0, type: 'user' })
-
-    expect(loadWallet).toHaveBeenCalledTimes(1)
-    expect(adjustWallet).toHaveBeenCalledTimes(0)
-  })
-
   test('creates a new wallet (from db)', async () => {
     adjustWallet.mockReturnValueOnce(null)
     subcribeToWalletEvents.mockReturnValueOnce(null)

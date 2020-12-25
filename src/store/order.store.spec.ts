@@ -1,5 +1,5 @@
 import { OrderStore, ORDER_STATE } from './order.store'
-import { OrderWithTrades } from '@lib'
+import { OrderWithTrades } from '@magic8bot/db'
 
 const order: OrderWithTrades = {
   id: 'test',
@@ -19,6 +19,7 @@ const order: OrderWithTrades = {
   lastTradeTimestamp: 0,
   trades: [],
   fee: {
+    type: 'maker',
     cost: 0,
     currency: 'btc',
     rate: 0,

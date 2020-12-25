@@ -1,7 +1,7 @@
 const mockId = 'test'
 
 import { BaseStrategy } from './base-strategy'
-import { PeriodItem } from '@lib'
+import { PeriodItem } from '@m8bTypes'
 
 class MockStrategy extends BaseStrategy {
   constructor() {

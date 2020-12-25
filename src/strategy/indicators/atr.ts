@@ -1,6 +1,6 @@
 import deepClone from 'deep-clone'
 
-import { PeriodItem } from '../../lib'
+import { PeriodItem } from '@m8bTypes'
 import { Average } from './average'
 
 interface AtrPeriodItem {

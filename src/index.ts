@@ -6,7 +6,6 @@ import semver from 'semver'
 import { dbDriver } from '@magic8bot/db'
 
 import { wsServer } from '@lib'
-import { server } from './server'
 import { core } from '@core'
 import { logger } from '@util'
 
@@ -22,7 +21,6 @@ const run = async () => {
     await dbDriver.connect('mongo')
 
     wsServer.init()
-    await server.init()
     await core.init()
   } catch (e) {
     console.error(e)

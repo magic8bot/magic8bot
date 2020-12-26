@@ -23,6 +23,34 @@ There are a minimal amount of strategies and technical indicators implemented as
 
 _If you have questions, just ask on discord. The invite link is below._
 
+## Magic8Bot Installation
+
+There are 2 repos (magic8bot and ui) that need to be installed. To do that, you will need to clone them. Let's go!
+
+Clone the magic8bot repo:
+
+    git clone https://github.com/magic8bot/magic8bot.git
+
+Clone the UI repo:
+
+    git clone https://github.com/magic8bot/ui.git
+
+Go to /magic8bot folder and run:
+
+    npm install
+
+Go to /ui folder and run:
+
+    npm install
+
+You also need a `.env` inside the `/magic8bot` folder. You can just copy `.env-sample` and rename it `.env`
+
+Once you're done you need to run this command in both the `magic8bot` and `ui` folders:
+
+    npm run start:dev
+
+> you'll need to open 2 terminals
+
 # Development
 
 M8bot is entering stage 2 of development. I'm separating out all the moving parts into stateless microservices. The idea is to be able to auto-scale individual parts of the bot as load increases on each part.
